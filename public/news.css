@@ -466,6 +466,11 @@ h1, h2, h3, p { margin: 0; }
 .nw-story-clips { display: grid; gap: 8px; }
 .nw-story-clips h3 { font: 600 17px/22px var(--q-font); }
 .nw-story-clips h3 small { color: var(--q-label-2); font: var(--q-t-footnote); font-weight: 400; }
+/* (One or two clips keep a clip's width: never a screen-wide picture on a wide sheet.) */
+.nw-story .nw-story-clips .q-rail { grid-auto-columns: var(--q-rail-w); }
+@container q-sheet (min-width: 640px) {
+  .nw-story .nw-story-clips .q-rail { --q-rail-w: 260px; }
+}
 /* How coverage grew: a bar a day. */
 .nw-days { display: grid; gap: 8px; }
 .nw-days-bars { display: flex; align-items: stretch; gap: 4px; height: 56px; max-width: 560px; }
@@ -562,7 +567,7 @@ h1, h2, h3, p { margin: 0; }
   .nw-hl:hover { background: var(--q-fill-4); }
 }
 /* A wide sheet: the picture beside the headline, not a screen of its own. */
-@container q-sheet (min-width: 760px) {
+@container q-sheet (min-width: 640px) {
   .nw-story-head { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
   .nw-story-pic { max-width: none; }
 }

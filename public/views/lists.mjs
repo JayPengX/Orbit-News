@@ -228,7 +228,7 @@ export function renderSide(box) {
       const n = mine.filter(s => s.blind === side).length;
       const on = blind === side;
       return h('button', { type: 'button', class: `nw-blind-tile${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !n, onclick: () => ((state.blind = on ? '' : side), hooks.render()) }, [
-        h('small', {}, [h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }), W(`${sideFull(side)}的媒體沒報`, `No ${sideFull(side).toLowerCase()} outlet`)]),
+        h('small', {}, [h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }), W(`${sideFull(side)}沒報`, `None ${sideFull(side).toLowerCase()}`)]),
         h('b', { text: String(n) })
       ]);
     })
