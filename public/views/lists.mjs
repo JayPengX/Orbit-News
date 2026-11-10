@@ -55,8 +55,10 @@ export function renderTop(box) {
   for (const s of top) seen.add(s.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
   const world = (tw.length ? intl : []).slice(0, 5);
-  // Each topic's most important not shown above, three at a time.
+  // Each topic's most important not shown above, three at a time (國際's
+  // own section above stands for the world: one 國際 on the page).
   const topics = topicOrder()
+    .filter(t => !(t === 'world' && world.length))
     .map(t => [t, tw.filter(s => s.topics?.[0] === t && !seen.has(s.id))])
     .filter(([, list]) => list.length >= 2)
     .map(([t, list]) =>
