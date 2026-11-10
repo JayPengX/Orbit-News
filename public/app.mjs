@@ -21,6 +21,7 @@ import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
 import { interestsOf } from './lib/mine.mjs';
+import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
@@ -96,6 +97,7 @@ hooks.read = outlet => {
 };
 hooks.render = () => (stamp++, render());
 hooks.tab = tab => showTab(tab, { top: true });
+hooks.word = w => q.go('vocab', `word=${encodeURIComponent(w)}`);
 hooks.reload = () => load({ fresh: true });
 
 // ---- The stories ----------------------------------------------------------------------
@@ -122,8 +124,11 @@ function loadInterests() {
   return import('#kit/family.mjs')
     .then(f => {
       const next = interestsOf(f.heard?.('stock', 'holds') || [], f.heard?.('sports', 'follows') || []);
-      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join()) return;
+      const learn = learnSet(f.heard?.('vocab', 'learning', { maxAge: 30 * 86_400_000 }));
+      const sig = l => (l ? [...l.byForm.keys()].join() : '');
+      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join() && sig(learn) === sig(state.learn)) return;
       state.interests = next;
+      state.learn = learn;
       stamp++;
       quietRefresh();
     })

@@ -33,14 +33,16 @@ export const state = {
   lines: new Map(),
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
   interests: [],
+  // 新聞學單字: the words being learned in Orbit Words on this phone (lib/learn.mjs learnSet), null if none.
+  learn: null,
   log: emptyLog(),
   loaded: false
 };
 
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
-// reads the older stories (a promise).
-export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, past: async () => {} };
+// reads the older stories (a promise); word(w) opens a word's card in Orbit Words.
+export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, past: async () => {} };
 
 // A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
 export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');

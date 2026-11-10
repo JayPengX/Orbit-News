@@ -11,6 +11,24 @@ import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, aiLine } from './parts.mjs';
+import { learnParts, wordsIn } from '../lib/learn.mjs';
+
+// 新聞學單字: on a world story, the words being learned in Orbit Words
+// underlined in its English lines (lib/learn.mjs; the notebook's, nothing
+// sent), and listed under its headlines, each opening its card in Words.
+const learning = story => (story.region === 'intl' && state.learn) || null;
+const marked = (text, story) =>
+  learning(story) ? learnParts(text, state.learn).map(p => (typeof p === 'string' ? p : h('u', { class: 'nw-learn', title: p.zh, text: p.t }))) : [text];
+function learnPart(story) {
+  const set = learning(story);
+  const words = set ? wordsIn([story.title, story.sum, ...(story.items || []).map(it => it[1])], set, 8) : [];
+  if (!words.length) return null;
+  return h('section', { class: 'nw-learn-sec' }, [
+    h('h3', { class: 'nw-story-h', text: W('學單字', 'Words you’re learning') }),
+    h('p', { class: 'nw-learn-note', text: W('這則用到你在 Orbit Words 學的字，點一下看單字卡。', 'This story uses words you’re learning in Orbit Words. Tap one for its card.') }),
+    h('div', { class: 'q-chips nw-learn-words' }, words.map(w => h('button', { type: 'button', class: 'q-chip nw-learn-word', onclick: () => hooks.word(w.w) }, [h('b', { lang: 'en', text: w.w }), w.zh ? h('small', { lang: 'zh-Hant', text: w.zh }) : null].filter(Boolean))))
+  ]);
+}
 
 // A YouTube clip in YouTube's own player (its privacy-enhanced address:
 // no cookie until it plays); counted for 我的閱讀 as its outlet's. Should
@@ -129,7 +147,7 @@ function storyTitle(story, lang) {
   const line = aiLine(story, 'nw-ai-line nw-story-ai');
   return [
     h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text }),
-    t.ai ? h('p', { class: 'nw-story-orig', lang, text: story.title }) : null,
+    t.ai ? h('p', { class: 'nw-story-orig', lang }, marked(story.title, story)) : null,
     line,
     line || t.ai ? h('small', { class: 'nw-ai-note', text: W('AI 依各家標題與摘要整理，只寫各家都報的事', 'Written by AI from the outlets’ own headlines and summaries') }) : null
   ];
@@ -178,7 +196,7 @@ function storyParts(story, { clip = '' } = {}) {
     h('div', { class: 'nw-story-text' }, [
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
       ...storyTitle(story, lang),
-      story.sum ? h('p', { class: 'nw-sum', lang }, [story.sum, story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
+      story.sum ? h('p', { class: 'nw-sum', lang }, [...marked(story.sum, story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })])
     ])
   ]);
@@ -193,6 +211,7 @@ function storyParts(story, { clip = '' } = {}) {
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
     ]),
+    learnPart(story),
     taiwanPart(story),
     worldLink(story),
     growthOf(story),
@@ -283,7 +302,7 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   const line = (it, first) =>
     outletLink(it, [
       first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
-      h('span', { class: 'nw-hl-t', lang, text: it[1] })
+      h('span', { class: 'nw-hl-t', lang }, marked(it[1], story))
     ], first ? 'nw-hl' : 'nw-hl nw-hl-also');
   const group = ([o, [first, ...also]]) => {
     const box = h('div', { class: 'nw-hl-group' }, [line(first, true)]);
