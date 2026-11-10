@@ -232,17 +232,25 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---- 台灣 · 國際: the topics' text tabs, scrolling to the screen's edge ---- */
 .nw-region { display: grid; gap: 12px; }
-/* 單邊: the lede, how many each side left out, then each kind's stories. */
+/* 單邊: the lede, each end's count (a tap filters), then each kind's stories. */
 .nw-oneside { display: grid; gap: 16px; }
-.nw-blind-sum { background: var(--nv-card, var(--q-grouped-2)); gap: 0; padding: 4px 16px; }
-.nw-blind-row { display: grid; grid-template-columns: 4em minmax(0, 1fr); align-items: center; gap: 12px; padding: 12px 0; }
-.nw-blind-row + .nw-blind-row { border-top: 0.5px solid var(--q-sep); }
-.nw-blind-region { font: 600 17px/22px var(--q-font); }
-/* (Wide: Taiwan's and the world's side by side, not a long empty line.) */
-@container page (min-width: 700px) {
-  .nw-blind-sum { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); column-gap: 32px; }
-  .nw-blind-row + .nw-blind-row { border-top: 0; }
+.nw-blind-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 560px; }
+.nw-blind-tile {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--q-r-card);
+  background: var(--nv-card, var(--q-grouped-2));
+  box-shadow: var(--nv-edge, none);
+  color: inherit;
+  text-align: left;
 }
+.nw-blind-tile small { display: flex; align-items: center; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-blind-tile b { font: 600 28px/32px var(--q-font); font-variant-numeric: tabular-nums; }
+.nw-blind-tile.on { box-shadow: inset 0 0 0 2px var(--q-accent); }
+.nw-blind-tile:disabled { opacity: 0.5; }
 .nw-topics { margin: 0 calc(-1 * var(--q-margin, 16px)) -2px; padding: 2px var(--q-margin, 16px) 4px; }
 /* The older stories kept, asked for at a list's end. */
 .nw-past-ask {
@@ -459,9 +467,8 @@ h1, h2, h3, p { margin: 0; }
 .nw-story-clips h3 { font: 600 17px/22px var(--q-font); }
 .nw-story-clips h3 small { color: var(--q-label-2); font: var(--q-t-footnote); font-weight: 400; }
 /* How coverage grew: a bar a day. */
-.nw-days { display: grid; gap: 6px; max-width: 560px; }
-.nw-days > small { color: var(--q-label-2); font: var(--q-t-footnote); }
-.nw-days-bars { display: flex; align-items: stretch; gap: 4px; height: 64px; }
+.nw-days { display: grid; gap: 8px; }
+.nw-days-bars { display: flex; align-items: stretch; gap: 4px; height: 56px; max-width: 560px; }
 .nw-day { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 3px; flex: 1 1 0; max-width: 34px; min-width: 0; }
 .nw-day i { align-self: end; display: block; border-radius: 3px; background: color-mix(in srgb, var(--q-accent) 70%, transparent); }
 .nw-day small { color: var(--q-label-2); font: 500 10px/12px var(--q-font); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -486,31 +493,27 @@ h1, h2, h3, p { margin: 0; }
 .nw-spec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .nw-spec-head b { font: 600 17px/22px var(--q-font); }
 .nw-spec-head small { color: var(--q-label-2); font: var(--q-t-footnote); }
-.nw-legend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
-.nw-legend-part { display: grid; gap: 2px; min-width: 0; }
-.nw-legend-part small { display: flex; align-items: center; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; }
-.nw-legend-part b { font: var(--q-t-figure, 600 17px/22px var(--q-font)); font-variant-numeric: tabular-nums; padding-left: 16px; }
+.nw-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--q-label-2); font: var(--q-t-subhead); }
+.nw-legend-part { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.nw-legend-part b { color: var(--q-label); font-weight: 600; font-variant-numeric: tabular-nums; }
 .nw-spec-note .q-tag { font-weight: 600; }
 .nw-spec-say { color: var(--q-label-2); font: var(--q-t-footnote); text-wrap: pretty; }
-.nw-spec .nw-days { max-width: none; padding-top: 4px; border-top: 0.5px solid var(--q-sep); }
-/* The stories beside: the one before on the left, the one after on the right. */
-.nw-story-nav { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-.nw-story-go {
-  display: grid;
-  gap: 4px;
-  align-content: start;
-  padding: 12px 14px;
-  border: 0;
-  text-align: left;
-  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
-  border-radius: var(--q-r-cell);
-  box-shadow: var(--nv-edge, none);
+/* The sheet's foot: ‹ 上一則 · 3 / 20 · 下一則 ›, always in reach. */
+.nw-story-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+.nw-foot-go { display: grid; gap: 2px; min-height: 44px; align-content: center; padding: 6px 4px; border: 0; background: none; color: var(--q-accent); text-align: left; min-width: 0; }
+.nw-foot-next { text-align: right; }
+.nw-foot-go b { font: 600 17px/22px var(--q-font); }
+.nw-foot-go:disabled { color: var(--q-label-3); }
+.nw-foot-t { display: none; color: var(--q-label-2); font: var(--q-t-footnote); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nw-foot-at { color: var(--q-label-2); font: 500 15px/20px var(--q-font); font-variant-numeric: tabular-nums; text-align: center; }
+@container q-sheet (min-width: 620px) {
+  .nw-foot-t { display: block; }
 }
-.nw-story-go.none { background: none; box-shadow: none; }
-.nw-go-next { text-align: right; }
-.nw-story-go small { color: var(--q-label-2); font: var(--q-t-footnote); }
-.nw-story-go span { font: 500 15px/20px var(--q-font); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.nw-sides { display: grid; gap: 12px; margin-top: 4px; }
+/* A part's own heading on the sheet: 各邊怎麼下標, 每天的報導. */
+.nw-story-h { font: 600 20px/25px var(--q-font); padding: 8px 2px 0; }
+.nw-story-h small { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-sides-sec { display: grid; gap: 10px; }
+.nw-sides { display: grid; gap: 12px; }
 .nw-side {
   display: grid;
   align-content: start;
@@ -544,6 +547,17 @@ h1, h2, h3, p { margin: 0; }
 .nw-hl-src > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nw-hl-src small { margin-left: auto; font: var(--q-t-caption); white-space: nowrap; }
 .nw-hl-t { font: 500 16px/22px var(--q-font); color: var(--q-label); text-wrap: pretty; }
+/* An outlet's other headlines, folded under its newest. */
+.nw-hl-group { display: grid; }
+.nw-hl-also { padding-top: 2px; padding-left: 42px; }
+.nw-hl-also::before { left: 42px; }
+.nw-hl-when { color: var(--q-label-2); font: var(--q-t-caption); }
+.nw-hl-more { justify-self: start; margin: -4px 0 8px 42px; padding: 4px 0; border: 0; background: none; color: var(--q-accent); font: 500 14px/20px var(--q-font); }
+.nw-side .nw-side-more { margin: 0 12px 12px; width: auto; }
+/* A clip YouTube plays only on YouTube: its picture, and the way there. */
+.nw-player-out { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; text-decoration: none; background: #000; }
+.nw-player-out img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
+.nw-player-out span { position: relative; padding: 10px 16px; border-radius: 999px; background: rgb(0 0 0 / 0.6); font: 600 15px/20px var(--q-font); }
 @media (hover: hover) {
   .nw-hl:hover { background: var(--q-fill-4); }
 }
@@ -564,3 +578,23 @@ h1, h2, h3, p { margin: 0; }
 .nw-outlet-head b { font: 600 22px/28px var(--q-font); }
 .nw-outlet-head small { color: var(--q-label-2); font: var(--q-t-subhead); }
 .nw-outlet .q-cell-text > span { white-space: normal; text-wrap: pretty; }
+
+/* A world story's Taiwan part; a Taiwan story's way to the world's. */
+.nw-tw-spec { gap: 10px; }
+.nw-tw-n { color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; }
+.nw-world-go {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--q-r-card);
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  box-shadow: var(--nv-edge, none);
+  color: inherit;
+  text-align: left;
+}
+.nw-world-go small { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-world-go span { grid-column: 1; font: 500 16px/22px var(--q-font); }
+.nw-world-go b { grid-column: 2; grid-row: 1 / span 2; color: var(--q-label-3); font: 400 22px/1 var(--q-font); }

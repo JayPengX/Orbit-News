@@ -26,7 +26,7 @@ remove a feature on purpose, delete its line in the same commit.
 - A swipe across 台灣, 國際 or 單邊 goes to the topic beside, the title and tabs staying put — `public/views/lists.mjs`, `public/app.mjs`: `function swipeTabs`, `q-day-still`
 - The older stories kept (a month), asked for at a list's end or by an old link — `public/views/lists.mjs`, `public/app.mjs`, `public/views/story.mjs`: `function pastPart`, `hooks.past =`, `news/past.json`, `state.past`
 - 單邊: stories only one side carries, grouped by the side that left them out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderSide`, `export function oneSided`
-- 單邊 by kind: a text tab for each kind with one-sided stories (政治, 兩岸, 經濟…), 全部 listing each kind's widest three; above, how many each side left out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `function blindSum`, `export function byKind`, `export const blindCounts`
+- 單邊 by region, side, then kind: a text tab for 台灣 and 國際 (a swipe between), each end's count of stories it left out as a tile that filters to them, then each kind (政治, 兩岸, 經濟…) three at a time with the rest folded — `public/views/lists.mjs`, `public/lib/stories.mjs`: `const sideRegions`, `nw-blind-tile`, `function kindPart`, `export function byKind`
 - 媒體: your reading by side (Taiwan's and the world's), every outlet on its line — `public/views/outlets.mjs`: `export function renderOutlets`, `TW_PLACES`, `INTL_PLACES`
 - A tab or a story from the address (#intl, #s=<id>) — `public/app.mjs`: `function openFromHash`, `s=(\w+)`
 
@@ -37,7 +37,11 @@ remove a feature on purpose, delete its line in the same commit.
 - Video and news together (Jay 11-10): a tap on a story's picture with a play mark plays its clip at the sheet's top; its other clips right under the story; clips from 25 outlets' YouTube channels, each matched to its story by the builder (Orbit-Core `CHANNELS`, `matchClips`) — `public/views/parts.mjs`, `public/views/story.mjs`: `const tapStory`, `hooks.play`
 - How a story's coverage grew, a bar a day — `public/views/story.mjs`: `nw-days`, `每天的報導`
 - A story's coverage card: the bar, each side's count, the side that left it out, the parties named; for a kind sides don't take, who covers it — `public/views/story.mjs`: `function spectrum`, `各邊的報導`, `報導的媒體`
-- A story's sheet goes to the stories beside it in the list it came from: a swipe, ‹ ›, the arrow keys, its place under the title — `public/views/story.mjs`: `function navOf`, `ArrowRight`, `nw-story-at`, `kitUI.daySwipe`
+- A story's sheet goes to the stories beside it in the list it came from: a swipe, the arrow keys, and a foot that stays at the sheet's bottom (‹ 上一則 · 3 / 20 · 下一則 ›, each headline on a wide sheet) — `public/views/story.mjs`: `function footOf`, `ArrowRight`, `nw-story-foot`, `kitUI.daySwipe`
+- A story's headlines grouped by outlet: each outlet's newest, its others folded under it, four outlets a side at first — `public/views/story.mjs`: `function sideCard`, `nw-hl-more`, `nw-side-more`
+- A topic's tab lists the stories of that topic with the topic as their tag; a topic with fewer than three stories has no tab — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export const asTopic`, `export const TAB_MIN`
+- A clip YouTube won't play here (its owner allows it only on YouTube) opens YouTube instead — `public/views/story.mjs`: `enablejsapi=1`, `nw-player-out`
+- A world story shows how Taiwan's outlets put it: their bar and headlines by side — `public/views/story.mjs`, `public/lib/stories.mjs`: `function taiwanPart`, `function twOf`
 - A headline opens the outlet's own page and counts for 我的閱讀 — `public/shell.mjs`: `export function outletLink`, `hooks.read(o)`
 - An outlet: its owner, its place on each line, why (each source linked), its recent stories — `public/views/outlets.mjs`: `export function openOutlet`, `BASIS`, `依據較弱`
 

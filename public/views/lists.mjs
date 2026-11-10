@@ -2,13 +2,13 @@
 // top stories in pictures, the day's clips, the world's, each topic's, the
 // one-sided ones, your reading in a line), 台灣 and 國際 (every story, most
 // important first, by topic, a swipe to the next topic, then the older ones
-// kept), 單邊 (stories only one side carries, by kind, then by the side
-// that left them out).
+// kept), 單邊 (stories only one side carries, Taiwan's or the world's, by
+// the side that left them out, then by kind).
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } from '../shell.mjs';
-import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, blindCounts } from '../lib/stories.mjs';
+import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { storyList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
@@ -127,7 +127,7 @@ export function renderRegion(box, region) {
     box.replaceChildren(chips, h('div', { class: 'nw-region' }, [h('div', { class: 'nw-clip-grid' }, clips.map(c => clipCard(c, play))), builtLine(state.page)]));
     return;
   }
-  const all = onTopic(stories, topic);
+  const all = onTopic(stories, topic).map(s => asTopic(s, topic));
   const shown = all.slice(0, state.shown[region]);
   const left = all.length - shown.length;
   // (Its first story with a picture leads; the rest in their order.)
@@ -148,10 +148,11 @@ export function renderRegion(box, region) {
 // Rows that open with the whole topic's list (not only those shown).
 const storyListIn = (shown, all) => storyList(shown, story => open(story, all));
 // A region's tabs: 全部, its topics in the table's order (those with
-// stories), 影音 when it has clips.
+// TAB_MIN stories at least: a tab of one story isn't a tab, Jay 11-10),
+// 影音 when it has clips.
 function tabsOf(region) {
   const stories = state.page?.[region] || [];
-  const have = new Set(topicsIn(stories).map(([t]) => t));
+  const have = new Set(topicsIn(stories).filter(([, n]) => n >= TAB_MIN).map(([t]) => t));
   return ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(stories.some(s => s.clips?.length) ? ['video'] : [])];
 }
 // A row of text tabs, the chosen one marked (it stays as the list slides).
@@ -190,7 +191,7 @@ function pastPart(region, topic) {
       h('b', { text: state.pastFailed ? W('讀不到更早的新聞，再試一次', 'Couldn’t get older stories; try again') : W('更早的重要新聞', 'Older important stories') }),
       h('small', { text: W('過去一個月仍值得一看的報導', 'Stories from the past month still worth a look') })
     ]);
-  const list = onTopic(state.past[region] || [], topic);
+  const list = onTopic(state.past[region] || [], topic).map(s => asTopic(s, topic));
   if (!list.length) return null;
   const shown = list.slice(0, state.shownPast?.[region] || 20);
   const left = list.length - shown.length;
@@ -200,51 +201,52 @@ function pastPart(region, topic) {
   ]);
 }
 
-// 單邊: the one-sided stories by kind (政治, 兩岸, 經濟…), a text tab each
-// and a swipe to the next; above, how many each side left out. 全部 lists
-// each kind's widest few; a kind lists its stories by the side that left
-// them out.
+// 單邊: the stories only one side's outlets carry, Taiwan's or the world's
+// (a text tab each, a swipe between); how many each side left out, a tap on
+// one shows only those; then by kind (政治, 兩岸, 經濟…), three a kind and
+// the rest folded under it (Jay 11-10: hard to get around).
+const sideRegions = () => ['tw', 'intl'].filter(r => blindAll(state.page).some(s => s.region === r));
 export function renderSide(box) {
   if (notYet(box)) return;
-  const all = blindAll(state.page);
-  const kinds = byKind(all, topicOrder());
-  const tabs = ['all', ...kinds.map(([t]) => t)];
-  const kind = tabs.includes(state.topic.side) ? state.topic.side : 'all';
-  const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, 'tw'));
-  const pick = t => () => ((state.topic.side = t), hooks.render());
-  const chips = tabs.length > 2 ? textTabs(tabs, kind, name, pick) : null;
-  swipeTabs(box, 'side', () => sideTabs());
-  const stories = kind === 'all' ? all : onTopic(all, kind);
   const lede = h('p', { class: 'nw-lede', text: W('三家以上、超過兩小時在報，卻只有一邊的媒體報的新聞。不一定是刻意不報，但另一邊的讀者可能沒看到。', 'Stories three outlets or more have carried for over two hours, all on one side. Not always a choice, but the other side’s readers may not have seen them.') });
-  if (!all.length) {
+  const tabs = sideRegions();
+  if (!tabs.length) {
     box.replaceChildren(h('div', { class: 'nw-oneside' }, [lede, empty({ icon: 'check', title: W('現在沒有單邊的新聞', 'No one-sided stories now'), body: W('每則三家以上在報的新聞，兩邊都有人報。', 'Every story three or more outlets carry has both sides on it.') }), builtLine(state.page)]));
     return;
   }
-  const parts =
-    kind === 'all'
-      ? kinds.map(([t, list]) =>
-          section(name(t), [storyList(list.slice(0, 3), s => open(s, list)), list.length > 3 ? more(W(`${name(t)}的 ${list.length} 則`, `All ${list.length} in ${name(t).toLowerCase()}`), pick(t)) : null], { count: list.length, shd: true })
-        )
-      : oneSided(state.page, kind).map(({ region, missing, stories: list }) =>
-          section(W(`${regionName(region)}：${sideFull(missing)}的媒體沒報`, `${regionName(region)}: none ${sideFull(missing).toLowerCase()}`), [storyList(list, open, { side: false })], { count: list.length, shd: true })
-        );
-  box.replaceChildren(
-    ...[chips, h('div', { class: 'nw-oneside' }, [lede, blindSum(stories), h('div', { class: 'q-flow nw-flow' }, parts), builtLine(state.page)])].filter(Boolean)
+  const region = tabs.includes(state.topic.side) ? state.topic.side : tabs[0];
+  const pick = r => () => ((state.topic.side = r), (state.blind = ''), hooks.render());
+  const chips = tabs.length > 1 ? textTabs(tabs, region, regionName, pick) : null;
+  swipeTabs(box, 'side', sideRegions, () => (state.blind = ''));
+  const mine = blindAll(state.page).filter(s => s.region === region);
+  const blind = ENDS[region].includes(state.blind) ? state.blind : '';
+  // (Each end's count, a tap shows only the stories it left out; again, all.)
+  const tiles = h(
+    'div',
+    { class: 'nw-blind-tiles', role: 'group', 'aria-label': W('各邊沒報的新聞', 'Stories each side left out') },
+    ENDS[region].map(side => {
+      const n = mine.filter(s => s.blind === side).length;
+      const on = blind === side;
+      return h('button', { type: 'button', class: `nw-blind-tile${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !n, onclick: () => ((state.blind = on ? '' : side), hooks.render()) }, [
+        h('small', {}, [h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }), W(`${sideFull(side)}的媒體沒報`, `No ${sideFull(side).toLowerCase()} outlet`)]),
+        h('b', { text: String(n) })
+      ]);
+    })
   );
+  const shown = blind ? mine.filter(s => s.blind === blind) : mine;
+  const parts = byKind(shown, topicOrder()).map(([t, list]) => kindPart(t, list.map(s => asTopic(s, t)), region, !blind));
+  box.replaceChildren(...[chips, h('div', { class: 'nw-oneside' }, [lede, tiles, h('div', { class: 'q-flow nw-flow' }, parts), builtLine(state.page)])].filter(Boolean));
   showTab(chips);
   kitUI.flowColumns?.(box);
 }
-const sideTabs = () => ['all', ...byKind(blindAll(state.page), topicOrder()).map(([t]) => t)];
-// Who left out how many: each region's two ends, a figure each.
-function blindSum(stories) {
-  const rows = blindCounts(stories);
-  if (!rows.length) return null;
-  return h('section', { class: 'nw-spec nw-blind-sum', 'aria-label': W('各邊沒報的新聞', 'Stories each side left out') }, [
-    ...rows.map(({ region, ends }) =>
-      h('div', { class: 'nw-blind-row' }, [
-        h('b', { class: 'nw-blind-region', text: regionName(region) }),
-        h('div', { class: 'nw-legend' }, ends.map(e => h('span', { class: 'nw-legend-part' }, [h('small', {}, [h('i', { class: `nw-dot nw-s-${e.side}`, 'aria-hidden': 'true' }), W(`${sideFull(e.side)}沒報`, `None ${sideFull(e.side).toLowerCase()}`)]), h('b', { text: String(e.n) })])))
-      ])
-    )
-  ]);
+// One kind's one-sided stories: three, the rest folded under them.
+function kindPart(t, list, region, side) {
+  const rows = h('div');
+  const draw = all => {
+    rows.replaceChildren(storyList(all ? list : list.slice(0, 3), s => open(s, list), { side }));
+    kitUI.flowColumns?.(rows.closest('.nw-oneside'));
+  };
+  draw(false);
+  const fold = list.length > 3 ? moreToggle({ more: W(`再看 ${list.length - 3} 則`, `${list.length - 3} more`), less: W('收起', 'Fewer'), onToggle: draw }) : null;
+  return section(topicName(t, region), [rows, fold], { count: list.length, shd: true });
 }

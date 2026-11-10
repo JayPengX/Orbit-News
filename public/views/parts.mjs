@@ -68,7 +68,9 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
     marks(story),
     h('span', { class: 'nw-n', text: W(`${story.n} 家媒體`, `${story.n} outlets`) }),
     withBar && sidesTaken(story) ? bar(story) : null,
-    tail
+    tail,
+    // (A world story Taiwan's outlets carry too: how many.)
+    story.tw?.n ? h('span', { class: 'nw-tw-n', text: W(`台灣 ${story.tw.n} 家`, `Taiwan ${story.tw.n}`) }) : null
   ]);
 }
 

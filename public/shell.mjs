@@ -22,7 +22,9 @@ export const state = {
   page: null,
   failed: false,
   // 台灣 and 國際's topic ('all', a topic's id, or 'video'); how many shown.
-  topic: { tw: 'all', intl: 'all', side: 'all' },
+  topic: { tw: 'all', intl: 'all', side: 'tw' },
+  // 單邊's filter: the side whose missing stories are shown ('' both).
+  blind: '',
   shown: { tw: 20, intl: 20 },
   // The past's page (older stories kept, news/past.json), read when asked.
   past: null,

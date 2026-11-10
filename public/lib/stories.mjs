@@ -27,10 +27,29 @@ export function cleanPage(x) {
           topics: Array.isArray(s.topics) ? s.topics.filter(t => typeof t === 'string') : [],
           days: Array.isArray(s.days) ? s.days.filter(d => Array.isArray(d) && typeof d[0] === 'string') : [],
           clips: (Array.isArray(s.clips) ? s.clips : []).filter(c => Array.isArray(c) && outletOf(c[0]) && /^(?:[\w-]{11})?$/.test(c[1] ?? 'x') && web(c[2])),
-          items: s.items.filter(it => Array.isArray(it) && outletOf(it[0]) && web(it[2]))
+          items: s.items.filter(it => Array.isArray(it) && outletOf(it[0]) && web(it[2])),
+          // (Taiwan's outlets on a world story: their own count and headlines.)
+          tw: twOf(s.tw)
         });
   return page;
 }
+
+// Taiwan's outlets on a world story ({ n, sides: { g, c, b }, items }), or null.
+function twOf(t) {
+  const items = (Array.isArray(t?.items) ? t.items : []).filter(it => Array.isArray(it) && outletOf(it[0])?.region === 'tw' && web(it[2]));
+  if (!items.length) return null;
+  const sides = { g: 0, c: 0, b: 0 };
+  for (const o of new Set(items.map(it => it[0]))) {
+    const s = sideOf(o, 'tw');
+    if (s) sides[s]++;
+  }
+  return { n: new Set(items.map(it => it[0])).size, sides, items };
+}
+// A story shown under one of its topics, that topic first: its tag is the
+// tab's (Jay 11-10: 健康's list said 生活, 社會).
+export const asTopic = (story, topic) => (!topic || topic === 'all' || topic === 'video' || story.topics?.[0] === topic ? story : { ...story, topics: [topic, ...(story.topics || []).filter(t => t !== topic)] });
+// A topic's tab needs this many stories; fewer, it isn't offered.
+export const TAB_MIN = 3;
 
 // A story by its id, on the page or among the past's.
 export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;

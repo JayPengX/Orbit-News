@@ -5,7 +5,7 @@
 // left · centre · right, China's state media apart), one over the other on a
 // phone. A headline opens the outlet's own page. A swipe sideways (or ‹ ›,
 // or the arrow keys) goes to the story beside it in the list it came from.
-import { h, sheet, tag } from '#kit/ui.mjs';
+import { h, sheet, tag, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
@@ -13,18 +13,42 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib
 import { bar, marks, clipCard, playMark } from './parts.mjs';
 
 // A YouTube clip in YouTube's own player (its privacy-enhanced address:
-// no cookie until it plays); counted for 我的閱讀 as its outlet's.
+// no cookie until it plays); counted for 我的閱讀 as its outlet's. Should
+// YouTube refuse to play it here (its owner allows it only on YouTube, or
+// it's gone), the player says so and opens it there (Jay 11-10: clips that
+// won't play).
 export function player(clip) {
   hooks.read(clip[0]);
-  return h('div', { class: 'nw-player' }, [
-    h('iframe', {
-      src: `https://www.youtube-nocookie.com/embed/${clip[1]}?autoplay=1&playsinline=1&rel=0`,
-      title: clip[3] || 'YouTube',
-      allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
-      allowfullscreen: true,
-      referrerpolicy: 'strict-origin-when-cross-origin'
-    })
-  ]);
+  const frame = h('iframe', {
+    src: `https://www.youtube-nocookie.com/embed/${clip[1]}?autoplay=1&playsinline=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`,
+    title: clip[3] || 'YouTube',
+    allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+    allowfullscreen: true,
+    referrerpolicy: 'strict-origin-when-cross-origin'
+  });
+  const box = h('div', { class: 'nw-player' }, [frame]);
+  const refused = () =>
+    box.replaceChildren(
+      h('a', { class: 'nw-player-out', href: `https://www.youtube.com/watch?v=${clip[1]}`, target: '_blank', rel: 'noopener' }, [
+        clip[4] ? h('img', { src: clip[4], alt: '', referrerpolicy: 'no-referrer' }) : null,
+        h('span', { text: W('這段影片只能在 YouTube 看 ›', 'This clip plays only on YouTube ›') })
+      ])
+    );
+  // (YouTube's player tells the page it's in what happens, once asked to: an
+  // error 100, 101 or 150 is a clip that won't play here.)
+  const hear = e => {
+    if (e.source !== frame.contentWindow) return;
+    let m = e.data;
+    try {
+      m = typeof m === 'string' ? JSON.parse(m) : m;
+    } catch {
+      return;
+    }
+    if (m?.event === 'onError' && [2, 5, 100, 101, 150, 153].includes(Number(m.info))) (removeEventListener('message', hear), refused());
+  };
+  addEventListener('message', hear);
+  frame.addEventListener('load', () => frame.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: clip[1], channel: 'widget' }), '*'));
+  return box;
 }
 
 let shown = null;
@@ -39,17 +63,16 @@ export function openStory(id, { clip = '', list = null } = {}) {
   const order = from.some(s => s.id === id) ? from : [story];
   let at = order.findIndex(s => s.id === id);
   const body = h('div', { class: 'nw-story' });
-  // (Where it is in its list, under the sheet's title: 3 / 20.)
-  const where = order.length > 1 ? h('small', { class: 'q-sheet-sub nw-story-at' }) : null;
-  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], label: story.title, onClose: () => (shown = null) });
-  if (where) sh.head.querySelector('h2')?.after(where);
+  // (The way to the stories beside it stays at the sheet's foot: ‹ 上一則 3 / 20 下一則 ›.)
+  const foot = order.length > 1 ? footOf(order, d => step(d)) : null;
+  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: story.title, onClose: () => (shown = null) });
   shown = sh;
   const draw = (i, opts = {}) => {
     at = i;
     const s = order[i];
-    body.replaceChildren(...storyParts(s, { ...opts, nav: order.length > 1 ? navOf(order, i, step) : null }));
+    body.replaceChildren(...storyParts(s, opts));
     sh.el.setAttribute('aria-label', s.title);
-    if (where) where.textContent = `${i + 1} / ${order.length}`;
+    foot?.paint(i);
   };
   // The story beside: drawn at the sheet's top (the kit's own swipe slides it in).
   const step = (dir, { top = true } = {}) => {
@@ -71,20 +94,34 @@ export function openStory(id, { clip = '', list = null } = {}) {
 // A story's clip played from a list (a tap on its picture's play mark).
 hooks.play = (id, clip, list) => openStory(id, { clip, list });
 
-// The way to the stories beside it: ‹ the one before, the one after ›.
-function navOf(order, i, step) {
-  const side = (dir, s) =>
-    s
-      ? h('button', { type: 'button', class: `nw-story-go nw-go-${dir > 0 ? 'next' : 'prev'}`, onclick: () => step(dir) }, [
-          h('small', { text: dir > 0 ? W('下一則 ›', 'Next ›') : W('‹ 上一則', '‹ Previous') }),
-          h('span', { lang: s.region === 'intl' ? 'en' : 'zh-Hant', text: s.title })
-        ])
-      : h('span', { class: 'nw-story-go none' });
-  return h('nav', { class: 'nw-story-nav', 'aria-label': W('上一則、下一則', 'Previous and next') }, [side(-1, order[i - 1]), side(1, order[i + 1])]);
+// The sheet's foot: ‹ the one before, where it is (3 / 20), the one after ›;
+// on a wide sheet each says its headline (Jay 11-10: hard to get around).
+function footOf(order, step) {
+  const go = dir => {
+    const t = h('span', { class: 'nw-foot-t' });
+    const b = h('button', { type: 'button', class: `nw-foot-go nw-foot-${dir > 0 ? 'next' : 'prev'}`, onclick: () => step(dir) }, [
+      h('b', { text: dir > 0 ? W('下一則 ›', 'Next ›') : W('‹ 上一則', '‹ Previous') }),
+      t
+    ]);
+    return Object.assign(b, { t });
+  };
+  const prev = go(-1);
+  const next = go(1);
+  const at = h('small', { class: 'nw-foot-at', 'aria-live': 'polite' });
+  const nav = h('nav', { class: 'q-sheet-foot nw-story-foot', 'aria-label': W('上一則、下一則', 'Previous and next') }, [prev, at, next]);
+  return Object.assign(nav, {
+    paint(i) {
+      prev.disabled = i <= 0;
+      next.disabled = i >= order.length - 1;
+      prev.t.textContent = order[i - 1]?.title || '';
+      next.t.textContent = order[i + 1]?.title || '';
+      at.textContent = `${i + 1} / ${order.length}`;
+    }
+  });
 }
 
 // One story's parts, top to bottom.
-function storyParts(story, { clip = '', nav = null } = {}) {
+function storyParts(story, { clip = '' } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
   const sides = [...Object.keys(groups).filter(k => k !== 'none'), 'none'];
@@ -132,12 +169,19 @@ function storyParts(story, { clip = '', nav = null } = {}) {
     ])
   ]);
   // (Its other clips right under it: watching is part of the story.)
+  // Then who carries it, each side's outlets and how they put it, Taiwan's
+  // outlets on a world story, and how it grew a day at a time.
   return [
     head,
     clipRow,
     spectrum(story),
-    h('div', { class: 'q-sheet-cols nw-sides' }, cards),
-    nav,
+    h('section', { class: 'nw-sides-sec' }, [
+      h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
+      h('div', { class: 'q-sheet-cols nw-sides' }, cards)
+    ]),
+    taiwanPart(story),
+    worldLink(story),
+    growthOf(story),
     h('p', { class: 'nw-foot', text: W('標題、摘要和圖片屬於各家媒體；點標題到原網站看全文。', 'Headlines, summaries and pictures are each outlet’s own; tap one to read it on its site.') })
   ].filter(Boolean); // (replaceChildren would write a missing part as "null")
 }
@@ -151,44 +195,98 @@ function spectrum(story) {
   const sm = stateMedia(story);
   const taken = sidesTaken(story);
   const parties = story.parties?.length ? W(`標題提到 ${story.parties.map(p => PARTY_WORDS[p][0]).join('、')}`, `Headlines name the ${story.parties.map(p => PARTY_WORDS[p][1]).join(', ')}`) : '';
-  const legend = h('div', { class: 'nw-legend' }, [
-    ...parts.map(p => h('span', { class: 'nw-legend-part' }, [h('small', {}, [h('i', { class: `nw-dot nw-s-${p.side}`, 'aria-hidden': 'true' }), sideFull(p.side)]), h('b', { text: String(p.n) })])),
-    sm ? h('span', { class: 'nw-legend-part' }, [h('small', {}, [h('i', { class: 'nw-dot nw-s-none', 'aria-hidden': 'true' }), W('中國官媒', 'China state media')]), h('b', { text: String(sm) })]) : null
+  // (Each side's count in one line under the bar: ● 偏綠 3 ● 中間 7 ● 偏藍 2.)
+  const legend = h('p', { class: 'nw-legend' }, [
+    ...parts.map(p => h('span', { class: 'nw-legend-part' }, [h('i', { class: `nw-dot nw-s-${p.side}`, 'aria-hidden': 'true' }), sideFull(p.side), h('b', { text: String(p.n) })])),
+    sm ? h('span', { class: 'nw-legend-part' }, [h('i', { class: 'nw-dot nw-s-none', 'aria-hidden': 'true' }), W('中國官媒', 'China state media'), h('b', { text: String(sm) })]) : null
   ]);
-  const peak = Math.max(1, ...(story.days || []).map(x => x[1]));
-  const growth =
-    story.days?.length > 1
-      ? h('div', { class: 'nw-days', role: 'img', 'aria-label': story.days.map(([x, n]) => `${x} ${n}`).join(', ') }, [
-          h('small', { text: W('每天的報導', 'Reports a day') }),
-          h('span', { class: 'nw-days-bars' }, story.days.map(([x, n]) => h('span', { class: 'nw-day' }, [h('i', { style: { height: `${Math.max(8, (n / peak) * 100)}%` } }), h('small', { text: x.replace(/^0?(\d+)-0?(\d+)$/, '$1/$2') })])))
-        ])
-      : null;
+  if (!taken)
+    return h('section', { class: 'nw-spec' }, [
+      h('div', { class: 'nw-spec-head' }, [h('b', { text: W('報導的媒體', 'Who covers it') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
+      h('p', { class: 'nw-spec-say', text: W('生活、健康、科學、文化和運動新聞沒有立場之分，這裡不畫光譜。', 'Life, health, science, culture and sport have no sides to take, so no spectrum here.') })
+    ]);
   return h('section', { class: 'nw-spec' }, [
-    h('div', { class: 'nw-spec-head' }, [h('b', { text: taken ? W('各邊的報導', 'Coverage by side') : W('報導的媒體', 'Who covers it') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
+    h('div', { class: 'nw-spec-head' }, [h('b', { text: W('各邊的報導', 'Coverage by side') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
     bar(story, { big: true }),
     legend,
-    taken && story.blind ? h('p', { class: 'nw-spec-note' }, [tag(W(`${sideFull(story.blind)}的媒體都沒報`, `No ${sideFull(story.blind).toLowerCase()} outlet carries it`), 'tint', `var(--nw-${story.blind})`)]) : null,
-    !taken ? h('p', { class: 'nw-spec-say', text: W('生活、健康、科學、文化和運動新聞沒有立場之分，這裡只看哪些媒體在報。', 'Life, health, science, culture and sport have no sides to take: this shows only who covers it.') }) : null,
-    parties ? h('p', { class: 'nw-spec-say', text: parties }) : null,
-    growth
+    story.blind ? h('p', { class: 'nw-spec-note' }, [tag(W(`${sideFull(story.blind)}的媒體都沒報`, `No ${sideFull(story.blind).toLowerCase()} outlet carries it`), 'tint', `var(--nw-${story.blind})`)]) : null,
+    parties ? h('p', { class: 'nw-spec-say', text: parties }) : null
   ]);
 }
 
-// One side's column: its name and count, each outlet's headlines; a side
-// with none says so (that's the point of the page).
-function sideCard(side, items, story) {
-  const outlets = [...new Set(items.map(it => it[0]))];
+// A Taiwan story the world's outlets carry too: the way to theirs.
+function worldLink(story) {
+  const w = story.world && storyById(state.page, story.world, state.past);
+  if (!w) return null;
+  return h('button', { type: 'button', class: 'nw-world-go', onclick: () => openStory(w.id) }, [
+    h('small', { text: W(`國際媒體也在報 · ${w.n} 家`, `World outlets carry it too · ${w.n}`) }),
+    h('span', { lang: 'en', text: w.title }),
+    h('b', { 'aria-hidden': 'true', text: '›' })
+  ]);
+}
+
+// How coverage grew, a bar a day (only past its first day).
+function growthOf(story) {
+  if (!(story.days?.length > 1)) return null;
+  const peak = Math.max(1, ...story.days.map(x => x[1]));
+  return h('section', { class: 'nw-days', role: 'img', 'aria-label': story.days.map(([x, n]) => `${x} ${n}`).join(', ') }, [
+    h('h3', { class: 'nw-story-h', text: W('每天的報導', 'Reports a day') }),
+    h('span', { class: 'nw-days-bars' }, story.days.map(([x, n]) => h('span', { class: 'nw-day' }, [h('i', { style: { height: `${Math.max(8, (n / peak) * 100)}%` } }), h('small', { text: x.replace(/^0?(\d+)-0?(\d+)$/, '$1/$2') })])))
+  ]);
+}
+
+// Taiwan's outlets on a world story (the builder's `tw`): their own bar
+// (偏綠 · 中間 · 偏藍) and headlines, beside the world's (Jay 11-10).
+function taiwanPart(story) {
+  const tw = story.tw;
+  if (story.region !== 'intl' || !tw?.items?.length) return null;
+  const fake = { region: 'tw', sides: tw.sides, n: tw.n, items: tw.items };
+  const groups = bySide(fake);
+  const cards = Object.keys(groups)
+    .filter(k => k !== 'none' && groups[k].length)
+    .map(k => sideCard(k, groups[k], fake, { most: 3 }));
+  return h('section', { class: 'nw-sides-sec nw-tw-sec' }, [
+    h('h3', { class: 'nw-story-h' }, [W('台灣媒體怎麼報', 'How Taiwan’s outlets put it'), h('small', { text: W(` ${tw.n} 家`, ` ${tw.n}`) })]),
+    h('div', { class: 'nw-spec nw-tw-spec' }, [bar(fake, { big: true }), h('p', { class: 'nw-legend' }, barOf(fake).parts.map(p => h('span', { class: 'nw-legend-part' }, [h('i', { class: `nw-dot nw-s-${p.side}`, 'aria-hidden': 'true' }), sideFull(p.side), h('b', { text: String(p.n) })])))]),
+    h('div', { class: 'q-sheet-cols nw-sides' }, cards)
+  ]);
+}
+
+// One side's column: its name and count, then each outlet once, its
+// newest headline (its others folded under it), `most` outlets at first
+// (Jay 11-10: 80 headlines in a row were hard to get through); a side with
+// none says so (that's the point of the page).
+function sideCard(side, items, story, { most = 4 } = {}) {
+  const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
+  const by = new Map();
+  for (const it of [...items].sort((a, b) => b[3] - a[3])) by.set(it[0], [...(by.get(it[0]) || []), it]);
+  const outlets = [...by];
   const head = h('div', { class: 'nw-side-head' }, [
     h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }),
     h('b', { text: side === 'none' ? W('中國官媒', 'China state media') : sideFull(side) }),
     h('small', { text: W(`${outlets.length} 家`, `${outlets.length}`) })
   ]);
-  const rows = items.map(it =>
+  const line = (it, first) =>
     outletLink(it, [
-      h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), h('small', { text: ago(it[3]) })]),
-      h('span', { class: 'nw-hl-t', lang: story.region === 'intl' ? 'en' : 'zh-Hant', text: it[1] })
-    ], 'nw-hl')
-  );
+      first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
+      h('span', { class: 'nw-hl-t', lang, text: it[1] })
+    ], first ? 'nw-hl' : 'nw-hl nw-hl-also');
+  const group = ([o, [first, ...also]]) => {
+    const box = h('div', { class: 'nw-hl-group' }, [line(first, true)]);
+    if (also.length) {
+      const b = h('button', { type: 'button', class: 'nw-hl-more', text: W(`${outletName(o)}還有 ${also.length} 則`, `${also.length} more from ${outletName(o)}`), onclick: () => b.replaceWith(...also.map(it => line(it, false))) });
+      box.append(b);
+    }
+    return box;
+  };
+  const card = h('section', { class: `nw-side nw-side-${side}` });
   const none = !items.length ? h('p', { class: 'nw-side-none', text: W(`沒有${sideFull(side)}的媒體報這則。`, `No ${sideFull(side).toLowerCase()} outlet carries this.`) }) : null;
-  return h('section', { class: `nw-side nw-side-${side}` }, [head, none, ...rows]);
+  const draw = all => {
+    const rest = outlets.length - most;
+    card.replaceChildren(
+      ...[head, none, ...outlets.slice(0, all ? outlets.length : most).map(group), rest > 0 ? moreToggle({ more: W(`再看 ${rest} 家`, `${rest} more outlets`), less: W('收起', 'Fewer'), open: all, onToggle: draw, cls: 'nw-side-more' }) : null].filter(Boolean)
+    );
+  };
+  draw(false);
+  return card;
 }
