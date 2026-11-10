@@ -135,7 +135,7 @@ function storyParts(story, { clip = '', nav = null } = {}) {
     h('div', { class: 'q-sheet-cols nw-sides' }, cards),
     nav,
     h('p', { class: 'nw-foot', text: W('標題、摘要和圖片屬於各家媒體；點標題到原網站看全文。', 'Headlines, summaries and pictures are each outlet’s own; tap one to read it on its site.') })
-  ];
+  ].filter(Boolean); // (replaceChildren would write a missing part as "null")
 }
 
 // Who carries it: the bar with each side's count under it (and China's
