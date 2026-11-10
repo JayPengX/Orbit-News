@@ -34,7 +34,7 @@ export const state = {
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
 // reads the older stories (a promise).
-export const hooks = { read() {}, render() {}, tab() {}, reload() {}, past: async () => {} };
+export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, past: async () => {} };
 
 // A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
 export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');

@@ -68,6 +68,9 @@ export function openStory(id, { clip = '', list = null } = {}) {
   });
 }
 
+// A story's clip played from a list (a tap on its picture's play mark).
+hooks.play = (id, clip, list) => openStory(id, { clip, list });
+
 // The way to the stories beside it: ‹ the one before, the one after ›.
 function navOf(order, i, step) {
   const side = (dir, s) =>
@@ -111,7 +114,7 @@ function storyParts(story, { clip = '', nav = null } = {}) {
   const others = (story.clips || []).filter(c => c[1] !== (clip || yt[0]?.[1]));
   const clipRow = others.length
     ? h('section', { class: 'nw-story-clips' }, [
-        h('h3', { text: W('影音', 'Video') }),
+        h('h3', {}, [W('影音', 'Video'), h('small', { text: ` ${others.length}` })]),
         kitUI.rail(others.map(c => clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), globalThis.open?.(x[2], '_blank', 'noopener'))))))
       ])
     : null;
@@ -128,10 +131,11 @@ function storyParts(story, { clip = '', nav = null } = {}) {
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })])
     ])
   ]);
+  // (Its other clips right under it: watching is part of the story.)
   return [
     head,
-    spectrum(story),
     clipRow,
+    spectrum(story),
     h('div', { class: 'q-sheet-cols nw-sides' }, cards),
     nav,
     h('p', { class: 'nw-foot', text: W('標題、摘要和圖片屬於各家媒體；點標題到原網站看全文。', 'Headlines, summaries and pictures are each outlet’s own; tap one to read it on its site.') })

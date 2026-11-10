@@ -2,7 +2,7 @@
 // many, and the bar of each side's count), its row, its card, the lead
 // stories' carousel, and the line under a list.
 import { h, tag } from '#kit/ui.mjs';
-import { W, en, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
+import { W, en, hooks, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia } from '../lib/stories.mjs';
 
 // An outlet's picture, hotlinked (never kept), gone if it can't be had.
@@ -18,6 +18,12 @@ export const playMark = () => {
 const withClip = (pic, story) => {
   if (pic && story.clips?.some(c => c[1])) pic.append(playMark());
   return pic;
+};
+// A tap on a story: on its picture with a play mark, its clip plays at the
+// sheet's top (video and news one, Jay 11-10); elsewhere, the story opens.
+const tapStory = (story, onOpen, list) => e => {
+  const clip = e.target.closest?.('.nw-thumb, .nw-card-pic, .nw-lead-pic') && story.clips?.find(c => c[1])?.[1];
+  return clip ? hooks.play(story.id, clip, list) : onOpen(story, list);
 };
 // What a story is about and how long it has run: 政治 · 報導 3 天; `when`
 // adds how long ago it was last heard of.
@@ -71,7 +77,7 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
 export function storyRow(story, onOpen, { side = true, list = null } = {}) {
   const pic = withClip(picture(story.img, 'nw-thumb'), story);
-  return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: () => onOpen(story, list) }, [
+  return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     h('span', { class: 'nw-row-main' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { days: false, when: true }) }), h('span', { class: 'nw-row-title', text: story.title }), coverage(story, { side })]),
     pic
   ]);
@@ -83,7 +89,7 @@ export const storyList = (stories, onOpen, opts = {}) => h('div', { class: 'nw-l
 // a narrow one (by the grid's own width, news.css).
 export function storyCard(story, onOpen, list = null) {
   const pic = withClip(picture(story.img, 'nw-card-pic'), story);
-  return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: () => onOpen(story, list) }, [
+  return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), h('span', { class: 'nw-card-title', text: story.title }), coverage(story)])
   ]);
@@ -108,7 +114,7 @@ export function clipCard(entry, onPlay) {
 export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
   const pic = withClip(picture(story.img, 'nw-lead-pic', { eager }), story);
   const about = aboutLine(story, { when: true });
-  return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: () => onOpen(story, list) }, [
+  return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-lead-body' }, [
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
