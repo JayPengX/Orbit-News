@@ -5,7 +5,7 @@
 // left · centre · right, China's state media apart), one over the other on a
 // phone. A headline opens the outlet's own page. A swipe sideways (or ‹ ›,
 // or the arrow keys) goes to the story beside it in the list it came from.
-import { h, sheet, tag, moreToggle } from '#kit/ui.mjs';
+import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
@@ -212,6 +212,7 @@ function storyParts(story, { clip = '' } = {}) {
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
     ]),
     learnPart(story),
+    lawPart(story),
     taiwanPart(story),
     worldLink(story),
     growthOf(story),
@@ -256,6 +257,19 @@ function worldLink(story) {
     h('span', { lang: 'en', text: w.title }),
     h('b', { 'aria-hidden': 'true', text: '›' })
   ]);
+}
+
+// 看法案: the laws its headlines name, each opening in Orbit Law: its bill
+// when a headline speaks of changing it (修法, 草案, 三讀…), else the law
+// itself (Orbit-Core's builders/news-laws.js, code only).
+function lawPart(story) {
+  const laws = (state.laws?.[story.id] || []).filter(l => l?.n && /^[A-Z]\d{7}$/.test(l.p || '') && /^\d+:\d+$/.test(l.k || ''));
+  if (!laws.length) return null;
+  const sub = l => (!l.bill ? W('法規全文', 'The law') : l.open > 0 || !l.passed ? W('法案 · 審議中', 'Bill · before the Legislative Yuan') : W(`法案 · ${l.passed} 三讀`, `Bill · passed ${l.passed}`));
+  return list(
+    laws.map(l => cell({ title: l.n, sub: sub(l), chevron: true, onClick: () => hooks.law(l.bill ? `item=${l.k.replace(':', '-')}` : `law=${l.p}`) })),
+    { head: W('提到的法律', 'Laws it names'), big: true, foot: W('在 Orbit Law 打開', 'Opens in Orbit Law') }
+  );
 }
 
 // How coverage grew, a bar a day (only past its first day).

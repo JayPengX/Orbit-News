@@ -98,6 +98,7 @@ hooks.read = outlet => {
 hooks.render = () => (stamp++, render());
 hooks.tab = tab => showTab(tab, { top: true });
 hooks.word = w => q.go('vocab', `word=${encodeURIComponent(w)}`);
+hooks.law = hash => q.go('law', hash);
 hooks.reload = () => load({ fresh: true });
 
 // ---- The stories ----------------------------------------------------------------------
@@ -116,6 +117,18 @@ function loadLines(fresh) {
       state.lines = cleanLines(raw);
       stamp++;
       quietRefresh();
+    })
+    .catch(() => {});
+}
+// 看法案: the laws Taiwan's stories name (Orbit-Core's builders/news-laws.js), read with the stories.
+const LAWS = 'news/laws.json';
+let lawsBuilt = null;
+function loadLaws(fresh) {
+  return packJson(LAWS, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      if (raw?.built === lawsBuilt) return;
+      lawsBuilt = raw?.built ?? null;
+      state.laws = raw?.stories && typeof raw.stories === 'object' ? raw.stories : {};
     })
     .catch(() => {});
 }
@@ -138,6 +151,7 @@ function load({ fresh = false } = {}) {
   if (reading) return reading;
   loadLines(fresh);
   loadInterests();
+  loadLaws(fresh);
   reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
     .then(raw => {
       const page = cleanPage(raw);

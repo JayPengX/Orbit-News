@@ -35,14 +35,16 @@ export const state = {
   interests: [],
   // 新聞學單字: the words being learned in Orbit Words on this phone (lib/learn.mjs learnSet), null if none.
   learn: null,
+  // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
+  laws: {},
   log: emptyLog(),
   loaded: false
 };
 
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
-// reads the older stories (a promise); word(w) opens a word's card in Orbit Words.
-export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, past: async () => {} };
+// reads the older stories (a promise); word(w) opens a word's card in Orbit Words; law(hash) a law or bill in Orbit Law.
+export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, law() {}, past: async () => {} };
 
 // A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
 export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');
