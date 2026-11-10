@@ -78,6 +78,7 @@ jobs:
         run: node .shared/deploy/cf-site.mjs Orbit-News public
       - name: No token here yet
         if: env.CLOUDFLARE_API_TOKEN == ''
-        run: echo "::notice::No CLOUDFLARE_API_TOKEN in this repo: Orbit-Core's news-site.yml publishes the site."
+        run: |
+          echo "::notice::No CLOUDFLARE_API_TOKEN in this repo; Orbit-Core's news-site.yml publishes the site."
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
