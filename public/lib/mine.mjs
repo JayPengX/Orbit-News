@@ -5,31 +5,28 @@
 // Chinese names as written, English ones as whole words, a Taiwan stock's
 // code only standing alone. No AI, nothing sent.
 
-const latin = w => /^[\x20-\x7e]+$/.test(w);
-// A word long enough not to match by chance (湖人 yes, 人 no; Heat no, it's a word).
-const usable = w => (latin(w) ? w.length >= 5 : w.length >= 2);
+import * as kitNews from '#kit/news-outlets.mjs';
+
 const US = new Set(['nba', 'wnba', 'mlb', 'nfl', 'nhl', 'ncaaf', 'ncaab']);
-const esc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// The kit's matcher (namesRe, shared with Securities' 持股新聞); a phone on an
+// older kit has none yet: nothing matched until it updates.
+const namesRe = (words, codes) => kitNews.namesRe?.(words, codes) || null;
 
 // What to look for: [{ label, kind: 'hold' | 'follow', re }].
 export function interestsOf(holds = [], follows = []) {
   const out = [];
-  const add = (label, kind, words) => {
-    const zh = [...new Set(words.filter(w => w && !latin(w) && usable(w)))];
-    const en = [...new Set(words.filter(w => w && latin(w) && usable(w) && !/^\d+$/.test(w)))];
-    const codes = words.filter(w => /^\d{4,6}$/.test(w || ''));
-    const parts = [...zh.map(esc), ...en.map(w => `\\b${esc(w)}\\b`), ...codes.map(c => `(?<!\\d)${c}(?!\\d)`)];
-    if (label && parts.length) out.push({ label, kind, re: new RegExp(parts.join('|'), 'i') });
+  const add = (label, kind, words, codes = []) => {
+    const re = namesRe(words, codes);
+    if (label && re) out.push({ label, kind, re });
   };
-  for (const s of Array.isArray(holds) ? holds : []) if (s?.name) add(s.name, 'hold', [s.name, s.en, s.market === 'tw' ? s.code : null]);
+  for (const s of Array.isArray(holds) ? holds : []) if (s?.name) add(s.name, 'hold', [s.name, s.en], s.market === 'tw' ? [s.code] : []);
   // (An American team or a player by its last word too: Lakers, Ohtani; a club by its whole name.)
   const last = f => (f.athlete || US.has(f.league) ? String(f.name).trim().split(/\s+/).pop() : null);
   for (const f of Array.isArray(follows) ? follows : []) if (f?.name) add(f.short || f.zh || f.name, 'follow', [f.zh, f.short, f.name, last(f)]);
   return out;
 }
 
-// The headlines a story is known by: its own and each outlet's.
-const textOf = story => [story.title, story.zh, ...(story.items || []).map(it => it[1]), ...(story.tw?.items || []).map(it => it[1])].filter(Boolean).join('\n');
+const textOf = story => (kitNews.storyText ? kitNews.storyText(story) : [story.title, story.zh].filter(Boolean).join('\n'));
 
 // The stories about them, most important first (Taiwan's, then the world's,
 // each in the page's order), each with what it's about: [{ story, why }].
