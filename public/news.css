@@ -1,8 +1,8 @@
 /* Orbit News. The kit draws the frame (orbit.css: tokens, tab bar, sheets,
    lists, the focus card, text tabs). This file is the app's own pieces: the
-   sides' colours, a story's bar and row, the front page's cards and clips,
-   the lead story, the story sheet's player and columns, the outlets' line,
-   我的閱讀. */
+   sides' colours, a story's coverage and row, the front page's carousel,
+   cards and clips, the story sheet's coverage card, player and columns, the
+   outlets' line, 我的閱讀. */
 :root {
   color-scheme: light;
   font-family: var(--q-font);
@@ -70,18 +70,27 @@ h1, h2, h3, p { margin: 0; }
 .nw-bar {
   display: flex;
   gap: 2px;
-  flex: 0 0 64px;
-  height: 6px;
+  flex: 0 1 56px;
+  min-width: 32px;
+  height: 5px;
   border-radius: 3px;
   overflow: hidden;
   background: var(--q-fill-2);
 }
 .nw-bar > i { display: block; min-width: 4px; }
-.nw-bar.big { flex: 1 1 auto; width: 100%; height: 8px; border-radius: 4px; }
+.nw-bar.big { flex: 1 1 auto; width: 100%; height: 10px; border-radius: 5px; gap: 3px; }
 .nw-counts { color: var(--q-label-2); font: var(--q-t-footnote); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .nw-counts b { font-weight: 600; }
-.nw-ago { color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; margin-left: auto; }
-.nw-row-meta .q-tag { margin-left: auto; }
+
+/* What a story is about and when, over its headline: grey, plain words. */
+.nw-kicker { color: var(--q-label-2); font: 500 13px/18px var(--q-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A story's coverage: the outlets' marks overlapping, how many, the bar. */
+.nw-cover { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.nw-cover .q-tag { margin-left: auto; flex: none; }
+.nw-marks { display: inline-flex; flex: none; }
+.nw-marks .q-logo { border-radius: 50%; box-shadow: 0 0 0 1.5px var(--nv-card, var(--q-grouped-2)); }
+.nw-marks .q-logo + .q-logo { margin-left: -5px; }
+.nw-n { color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ---- A list of stories: rows in one card, a hairline between ---- */
 .nw-list {
@@ -96,7 +105,7 @@ h1, h2, h3, p { margin: 0; }
   display: grid;
   gap: 6px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border: 0;
   background: none;
   text-align: left;
@@ -111,7 +120,7 @@ h1, h2, h3, p { margin: 0; }
   border-top: 0.5px solid var(--q-sep);
 }
 .nw-row-title {
-  font: 500 16px/22px var(--q-font);
+  font: 500 17px/23px var(--q-font);
   color: var(--q-label);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -119,7 +128,6 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
   text-wrap: pretty;
 }
-.nw-row-meta { display: flex; align-items: center; gap: 8px; min-width: 0; }
 @media (hover: hover) {
   .nw-row:hover { background: var(--q-fill-4); }
 }
@@ -133,10 +141,12 @@ h1, h2, h3, p { margin: 0; }
   .nw-region > .nw-list > .nw-row:nth-child(even) { border-left: 0.5px solid var(--q-sep); }
 }
 
-/* ---- The lead story: its picture, the headline at a title's size ---- */
+/* ---- A lead story: its picture, the headline at a title's size ---- */
 .nw-lead {
   display: grid;
+  align-content: start;
   width: 100%;
+  height: 100%;
   padding: 0;
   border: 0;
   text-align: left;
@@ -153,19 +163,72 @@ h1, h2, h3, p { margin: 0; }
   background: var(--q-fill-3);
 }
 .nw-lead-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.nw-lead-body { display: grid; gap: 8px; padding: 14px 16px 16px; }
-.nw-lead-title { font: 600 21px/28px var(--q-font); color: var(--q-label); text-wrap: pretty; }
+.nw-lead.has-pic { grid-template-rows: auto minmax(0, 1fr); }
+/* (The words from the top, the coverage at the foot: slides of one height line up.) */
+.nw-lead-body { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; min-width: 0; }
+.nw-lead-gap { flex: 1 1 0; margin: -4px 0; }
+.nw-lead-title { font: 600 22px/29px var(--q-font); color: var(--q-label); text-wrap: pretty; }
+.nw-lead-bar { display: grid; gap: 6px; margin-top: 2px; }
 .nw-credit { color: var(--q-label-3, var(--q-label-2)); font: var(--q-t-caption); }
-.nw-lead-sec { margin-top: 4px !important; container: nw-lead / inline-size; }
-.nw-lead .nw-row-meta { flex-wrap: wrap; row-gap: 2px; }
+.nw-region-lead, .nw-hero-slide { container: nw-lead / inline-size; }
 /* Wide enough (its own column's width, not the screen's): the picture beside
    the words, never half the screen. */
+/* A narrow phone: the lead a step smaller, so a screen holds more than it. */
+@container nw-lead (max-width: 340px) {
+  .nw-lead-title { font-size: 20px; line-height: 26px; }
+  .nw-lead-sum { -webkit-line-clamp: 2; }
+}
 @container nw-lead (min-width: 560px) {
-  .nw-lead { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-  .nw-lead-pic { aspect-ratio: auto; max-height: none; min-height: 200px; }
-  .nw-lead-body { align-content: center; }
+  .nw-lead.has-pic { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .nw-lead-pic { aspect-ratio: auto; max-height: none; min-height: 240px; }
+  .nw-lead-body { justify-content: center; padding: 20px; }
+  .nw-lead-gap { flex: 0 0 0; }
 }
 .nw-wait .nw-list { min-height: 300px; margin-top: 14px; }
+
+/* A phone on its side is short: a lead story half the screen at most, its
+   headline and coverage only (DESIGN §10). */
+@media (max-height: 500px) {
+  .nw-lead { max-height: 50vh; }
+  .nw-lead-pic { min-height: 0 !important; max-height: 50vh; }
+  .nw-lead .nw-lead-sum, .nw-lead .nw-lead-bar .nw-counts, .nw-lead .nw-credit { display: none; }
+  .nw-lead .nw-lead-title { font-size: 19px; line-height: 25px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .nw-lead .nw-lead-body { padding: 12px 16px; }
+  .nw-lead-body > * { flex-shrink: 0; }
+}
+
+/* ---- 頭條's lead stories: one at a time, swiped sideways, the next one
+   peeking at the edge; two at a time on a wide page ---- */
+.nw-date { color: var(--q-label-2); font: 500 15px/20px var(--q-font); margin: 2px 0 -4px; }
+.nw-hero { display: grid; gap: 10px; container: nw-hero / inline-size; }
+.nw-hero-track {
+  display: flex;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--q-margin, 16px));
+  padding: 2px var(--q-margin, 16px) 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--q-margin, 16px);
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.nw-hero-track::-webkit-scrollbar { display: none; }
+.nw-hero-slide { flex: 0 0 calc(100% - 28px); scroll-snap-align: start; display: grid; }
+.nw-hero-slide:only-child { flex-basis: 100%; }
+@container nw-hero (min-width: 900px) {
+  .nw-hero-slide { flex-basis: calc((100% - 40px) / 2); }
+}
+.nw-hero-nav { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.nw-dots { display: flex; gap: 2px; }
+.nw-dotbtn { width: 22px; height: 22px; padding: 0; border: 0; background: none; display: grid; place-items: center; }
+.nw-dotbtn::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--q-fill-1); transition: width 0.2s var(--q-ease, ease), background 0.2s; }
+.nw-dotbtn.on::after { width: 18px; border-radius: 4px; background: var(--q-label-2); }
+.nw-step { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--q-label-2); font: 400 24px/30px var(--q-font); }
+.nw-step:disabled { opacity: 0.3; cursor: default; }
+/* (A finger swipes: the steps only where a pointer points.) */
+@media (pointer: coarse) {
+  .nw-step { display: none; }
+}
 
 /* ---- 台灣 · 國際: the topics' text tabs, scrolling to the screen's edge ---- */
 .nw-region { display: grid; gap: 12px; }
@@ -182,7 +245,7 @@ h1, h2, h3, p { margin: 0; }
   border-radius: var(--q-r-card);
   box-shadow: var(--nv-edge, none);
 }
-.nw-past-ask b { font: 600 16px/22px var(--q-font); color: var(--q-accent); }
+.nw-past-ask b { font: 600 16px/22px var(--q-font); color: var(--q-label); }
 .nw-past-ask small { color: var(--q-label-2); font: var(--q-t-footnote); }
 .nw-past-ask:disabled { opacity: 0.6; }
 
@@ -217,8 +280,6 @@ h1, h2, h3, p { margin: 0; }
   .nw-thumb { width: 80px; }
 }
 
-/* What a story is about and how long it has run: 政治 · 報導 3 天. */
-.nw-about { color: var(--q-accent); font: 600 13px/18px var(--q-font); letter-spacing: 0.01em; }
 .nw-lead-sum {
   color: var(--q-label-2);
   font: var(--q-t-subhead);
@@ -247,7 +308,7 @@ h1, h2, h3, p { margin: 0; }
   grid-template-columns: minmax(0, 1fr);
   column-gap: 12px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border: 0;
   background: none;
   text-align: left;
@@ -258,7 +319,7 @@ h1, h2, h3, p { margin: 0; }
 .nw-card-pic { order: 2; width: 96px; aspect-ratio: 3 / 2; border-radius: 10px; margin-top: 2px; }
 .nw-card-body { display: grid; gap: 6px; min-width: 0; align-content: start; }
 .nw-card-title {
-  font: 500 16px/22px var(--q-font);
+  font: 500 17px/23px var(--q-font);
   color: var(--q-label);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -397,9 +458,44 @@ h1, h2, h3, p { margin: 0; }
 .nw-story-title { font: 600 22px/29px var(--q-font); text-wrap: pretty; max-width: 40em; }
 .nw-sum { color: var(--q-label-2); font: var(--q-t-subhead); max-width: 40em; text-wrap: pretty; }
 .nw-sum small { color: var(--q-label-3, var(--q-label-2)); font: inherit; }
-.nw-story-bar { display: grid; gap: 6px; max-width: 560px; }
-.nw-story-line { color: var(--q-label-2); font: var(--q-t-footnote); }
-.nw-story-note .q-tag { font-weight: 600; }
+.nw-story-line { display: flex; align-items: center; gap: 8px; color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-story-line .nw-marks .q-logo { box-shadow: 0 0 0 1.5px var(--q-sheet, var(--q-bg)); }
+/* Who carries it: a card of its own on the sheet. */
+.nw-spec {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-spec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.nw-spec-head b { font: 600 17px/22px var(--q-font); }
+.nw-spec-head small { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-legend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.nw-legend-part { display: grid; gap: 2px; min-width: 0; }
+.nw-legend-part small { display: flex; align-items: center; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; }
+.nw-legend-part b { font: var(--q-t-figure, 600 17px/22px var(--q-font)); font-variant-numeric: tabular-nums; padding-left: 16px; }
+.nw-spec-note .q-tag { font-weight: 600; }
+.nw-spec-say { color: var(--q-label-2); font: var(--q-t-footnote); text-wrap: pretty; }
+.nw-spec .nw-days { max-width: none; padding-top: 4px; border-top: 0.5px solid var(--q-sep); }
+/* The stories beside: the one before on the left, the one after on the right. */
+.nw-story-nav { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.nw-story-go {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 12px 14px;
+  border: 0;
+  text-align: left;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-cell);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-story-go.none { background: none; box-shadow: none; }
+.nw-go-next { text-align: right; }
+.nw-story-go small { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-story-go span { font: 500 15px/20px var(--q-font); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .nw-sides { display: grid; gap: 12px; margin-top: 4px; }
 .nw-side {
   display: grid;

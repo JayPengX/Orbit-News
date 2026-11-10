@@ -10,6 +10,8 @@ remove a feature on purpose, delete its line in the same commit.
 - A new build looked for every 5 minutes and on coming back — `public/app.mjs`: `5 * 60_000`, `visibilitychange`
 - Pull to refresh — `public/app.mjs`: `pullToRefresh`
 - A story's bar: each side's outlets as lengths, the counts in words — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function bar`, `export function counts`, `export function barOf`
+- A story's coverage on its row: the outlets' marks, how many, the bar only for a kind sides take (the spectrum one feature) — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function coverage`, `export function marks`, `export const sidesTaken`
+- China's state media counted apart (官媒), every other outlet on a side — `public/lib/stories.mjs`, `public/views/story.mjs`: `export const stateMedia`, `中國官媒`
 - A one-sided story says which side left it out — `public/views/parts.mjs`: `story.blind`, `沒報`
 - The lead story with its picture, credited to its outlet — `public/views/parts.mjs`: `export function leadCard`, `圖：`
 - Every story's picture beside it in a list, a play mark when it has a clip — `public/views/parts.mjs`: `nw-thumb`, `export const playMark`
@@ -18,8 +20,10 @@ remove a feature on purpose, delete its line in the same commit.
 
 ## The tabs
 
-- 頭條: a front page: the lead story with its summary, 要聞 in pictures, the outlets' clips, the world's, each topic's, the one-sided ones, your reading in a line — `public/views/lists.mjs`, `public/views/parts.mjs`: `export function renderTop`, `要聞`, `export function storyCard`, `export function clipCard`, `nw-topic-sec`, `export function readingLine`
-- 台灣 and 國際: every story, most important first, by topic (全部, 政治, 兩岸…, 影音), 20 at a time — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderRegion`, `nw-topics`, `export const onTopic`, `export function topicsIn`
+- 頭條's lead stories (Taiwan's top three, the world's top two) swiped sideways, a dot each, ‹ › on a computer — `public/views/parts.mjs`, `public/views/lists.mjs`: `export function carousel`, `nw-hero-track`, `const leadsOf`
+- 頭條: a front page: the lead stories with their summaries, 要聞 in pictures, the outlets' clips, the world's, each topic's, the one-sided ones, your reading in a line — `public/views/lists.mjs`, `public/views/parts.mjs`: `export function renderTop`, `要聞`, `export function storyCard`, `export function clipCard`, `nw-topic-sec`, `export function readingLine`
+- 台灣 and 國際: every story, most important first, by topic (全部, 政治, 兩岸… 生活, 健康, 科學, 文化, 運動, 影音), the topic's lead in its picture, 20 at a time — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderRegion`, `nw-topics`, `nw-region-lead`, `export const onTopic`, `export function topicsIn`
+- A swipe across 台灣 or 國際 goes to the topic beside, the title and tabs staying put — `public/views/lists.mjs`, `public/app.mjs`: `function swipeTopics`, `q-day-still`
 - The older stories kept (a month), asked for at a list's end or by an old link — `public/views/lists.mjs`, `public/app.mjs`, `public/views/story.mjs`: `function pastPart`, `hooks.past =`, `news/past.json`, `state.past`
 - 單邊: stories only one side carries, grouped by the side that left them out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderSide`, `export function oneSided`
 - 媒體: your reading by side (Taiwan's and the world's), every outlet on its line — `public/views/outlets.mjs`: `export function renderOutlets`, `TW_PLACES`, `INTL_PLACES`
@@ -30,6 +34,8 @@ remove a feature on purpose, delete its line in the same commit.
 - A story: picture and summary credited, the bar, which parties its headlines name, every side's headlines side by side, a side with none saying so — `public/views/story.mjs`: `export function openStory`, `function sideCard`, `標題提到`, `的媒體報這則`
 - A story's clips: the outlet's own YouTube clip played in the sheet (YouTube's privacy-enhanced player), the others in a row, an outlet's video page opened on its site — `public/views/story.mjs`, `public/views/lists.mjs`: `export function player`, `youtube-nocookie.com/embed`, `nw-story-clips`, `export function play`
 - How a story's coverage grew, a bar a day — `public/views/story.mjs`: `nw-days`, `每天的報導`
+- A story's coverage card: the bar, each side's count, the side that left it out, the parties named; for a kind sides don't take, who covers it — `public/views/story.mjs`: `function spectrum`, `各邊的報導`, `報導的媒體`
+- A story's sheet goes to the stories beside it in the list it came from: a swipe, ‹ ›, the arrow keys, its place under the title — `public/views/story.mjs`: `function navOf`, `ArrowRight`, `nw-story-at`, `kitUI.daySwipe`
 - A headline opens the outlet's own page and counts for 我的閱讀 — `public/shell.mjs`: `export function outletLink`, `hooks.read(o)`
 - An outlet: its owner, its place on each line, why (each source linked), its recent stories — `public/views/outlets.mjs`: `export function openOutlet`, `BASIS`, `依據較弱`
 

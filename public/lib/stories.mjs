@@ -7,6 +7,7 @@
 // [[outlet, youtubeId or '', url, title, picture]], items: [[outlet,
 // headline, url, at, video?]] }.
 import { sideOf, SIDES, outletOf } from '#kit/news-outlets.mjs';
+import * as kitNews from '#kit/news-outlets.mjs';
 
 export const REGIONS = ['tw', 'intl'];
 // The two ends of a region's line (the middle is c).
@@ -80,7 +81,12 @@ export function bySide(story) {
 
 // The outlets of a story, one each, in the order their headlines come.
 export const outletsOf = story => [...new Set(story.items.map(it => it[0]))];
-
+// How many of them are China's state media (on no side: counted apart).
+export const stateMedia = story => outletsOf(story).filter(o => outletOf(o)?.kind === 'state').length;
+// A story of a kind sides take (politics, the economy…), not one past them
+// (life, health, science, culture, sport: the kit's TOPICS `spectrum: false`).
+const SPECTRUM = new Set((kitNews.TOPICS || []).filter(t => t.spectrum !== false).map(t => t.id));
+export const sidesTaken = story => !story.topics?.length || story.topics.some(t => SPECTRUM.has(t) || !(kitNews.TOPICS || []).some(x => x.id === t));
 
 // The one-sided stories (the builder's `blind`: carried by one end, none of
 // the other), grouped by the side that left them out, widest first:

@@ -1,6 +1,7 @@
 // 媒體: your reading (近 30 天 by side, Taiwan's and the world's), then
 // every outlet on its line: Taiwan's from 深綠 to 深藍, the English ones from
-// left to right, those not rated and China's state media apart. An outlet
+// left to right (AllSides', else Media Bias/Fact Check's: none unrated),
+// China's state media apart. An outlet
 // opens its sheet: its owner, its place on each line, why (each source
 // linked), and the stories it's in today.
 import { h, section, sheet, list, cell, empty } from '#kit/ui.mjs';
@@ -16,7 +17,6 @@ import { openStory } from './story.mjs';
 const TW_PLACES = [-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'g' : v > 0 ? 'b' : 'c', label: placeWord('tw', v, lang), of: o => o.region === 'tw' && o.tw === v }));
 const INTL_PLACES = [
   ...[-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'l' : v > 0 ? 'r' : 'c', label: placeWord('lr', v, lang), of: o => o.region === 'intl' && o.lr === v })),
-  { side: 'none', label: W('未評（AllSides 沒評過）', 'Not rated (no AllSides rating)'), of: o => o.region === 'intl' && o.lr == null && o.kind !== 'state' },
   { side: 'none', label: W('中國官媒', 'Chinese state media'), of: o => o.kind === 'state' }
 ];
 
@@ -63,7 +63,7 @@ export function renderOutlets(box) {
   const parts = [
     reading,
     section(W('台灣媒體', 'Taiwan’s outlets'), [h('p', { class: 'nw-lede', text: W('藍綠的位置依學術研究；各家在統獨上的位置也一樣排。', 'Placed blue–green by published research; each stands the same way on unification–independence.') }), places(TW_PLACES)]),
-    section(W('國際媒體', 'World outlets'), [h('p', { class: 'nw-lede', text: W('美國左右的位置依 AllSides Media Bias Ratings™。', 'US left and right as rated by AllSides Media Bias Ratings™.') }), places(INTL_PLACES)]),
+    section(W('國際媒體', 'World outlets'), [h('p', { class: 'nw-lede', text: W('左右的位置依 AllSides Media Bias Ratings™；AllSides 沒評過的，依 Media Bias/Fact Check。', 'Left and right as rated by AllSides Media Bias Ratings™; where AllSides has none, by Media Bias/Fact Check.') }), places(INTL_PLACES)]),
     h('p', { class: 'nw-foot', text: W('點一家看它的擁有者、位置和依據。位置說的是一家媒體整體的傾向，不是每一篇報導。', 'Tap one for its owner, place and why. A place is an outlet’s lean as a whole, not each report’s.') })
   ];
   box.replaceChildren(h('div', { class: 'q-flow nw-flow' }, parts));
@@ -81,7 +81,7 @@ export function openOutlet(id) {
           cell({ title: W('統獨', 'Unification–independence'), value: placeWord('cs', o.cs, lang) })
         ]
       : [
-          cell({ title: W('美國左右', 'US left–right'), value: o.kind === 'state' ? W('不適用', 'Not placed') : placeWord('lr', o.lr, lang) }),
+          cell({ title: W('左右', 'Left–right'), value: o.kind === 'state' ? W('不適用', 'Not placed') : placeWord('lr', o.lr, lang) }),
           o.cs != null ? cell({ title: W('統獨', 'Unification–independence'), value: placeWord('cs', o.cs, lang) }) : null
         ].filter(Boolean);
   const why = o.basis.map(k => BASIS[k]).filter(Boolean).map(b => cell({ title: en ? b.en : b.zh, href: b.url || '', chevron: Boolean(b.url) }));
@@ -91,7 +91,7 @@ export function openOutlet(id) {
     h('div', { class: 'nw-outlet-head' }, [outletMark(id, 56), h('span', {}, [h('b', { text: outletName(id) }), h('small', { text: en ? o.owner.en : o.owner.zh })])]),
     list(places, { head: W('位置', 'Place') }),
     list(why, { head: W('依據', 'Why'), foot: o.weak ? W('沒有研究評過這家，依擁有者和公開立場判斷，依據較弱。', 'No study has rated it: placed by owner and stated stance, weaker evidence.') : '' }),
-    stories.length ? section(W(`最近的 ${stories.length} 則`, `${stories.length} recent stories`), [storyList(stories.slice(0, 12), s => openStory(s.id))], { shd: true }) : null
+    stories.length ? section(W(`最近的 ${stories.length} 則`, `${stories.length} recent stories`), [storyList(stories.slice(0, 12), s => openStory(s.id, { list: stories }))], { shd: true }) : null
   ]);
   sheet({ title: outletName(id), cls: 'nw-outlet-sheet', body: [body] });
 }

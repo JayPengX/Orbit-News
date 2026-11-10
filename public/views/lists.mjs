@@ -1,18 +1,20 @@
-// The story tabs: 頭條 (a front page: the lead story, the top stories in
-// pictures, the day's clips, the world's, each topic's, the one-sided ones,
-// your reading in a line), 台灣 and 國際 (every story outlets could take
-// sides on, most important first, by topic, then the older ones kept),
-// 單邊 (stories only one side carries, grouped by the side that left them out).
+// The story tabs: 頭條 (a front page: the lead stories swiped sideways, the
+// top stories in pictures, the day's clips, the world's, each topic's, the
+// one-sided ones, your reading in a line), 台灣 and 國際 (every story, most
+// important first, by topic, a swipe to the next topic, then the older ones
+// kept), 單邊 (stories only one side carries, grouped by the side that left
+// them out).
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
-import { state, hooks, W, sideFull, regionName, today, topicName } from '../shell.mjs';
+import { state, hooks, W, en, sideFull, regionName, today, topicName } from '../shell.mjs';
 import { oneSided, onTopic, topicsIn, clipsOf } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
-import { storyList, storyCards, clipCard, leadCard, builtLine, bar } from './parts.mjs';
+import { storyList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
 
-const open = story => openStory(story.id);
+// A story opened, with the list it was in (its sheet swipes through it).
+const open = (story, list) => openStory(story.id, { list });
 const goTab = tab => () => hooks.tab(tab);
 // A clip played: a YouTube one in its story's sheet, an outlet's own video
 // page on its site (counted for 我的閱讀).
@@ -46,15 +48,20 @@ const more = (words, to) => {
   return kitUI.goBar?.(words, onTap) || h('button', { type: 'button', class: 'q-more', onclick: onTap, text: words });
 };
 
+// The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
+const leadsOf = (tw, intl) => [tw[0], tw[1], intl[0], tw[2], intl[1]].filter(Boolean);
+// Today, as a front page dates itself: 11月10日 星期二.
+const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
+
 export function renderTop(box) {
   if (notYet(box)) return;
   const { tw, intl } = state.page;
-  const [lead, ...rest] = tw.length ? tw : intl;
-  const seen = new Set([lead?.id]);
-  const top = rest.slice(0, 6);
+  const leads = leadsOf(tw, intl);
+  const seen = new Set(leads.map(s => s.id));
+  const top = tw.filter(s => !seen.has(s.id)).slice(0, 6);
   for (const s of top) seen.add(s.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
-  const world = (tw.length ? intl : []).slice(0, 5);
+  const world = (tw.length ? intl : []).filter(s => !seen.has(s.id)).slice(0, 5);
   // Each topic's most important not shown above, three at a time (國際's
   // own section above stands for the world: one 國際 on the page).
   const topics = topicOrder()
@@ -62,18 +69,19 @@ export function renderTop(box) {
     .map(t => [t, tw.filter(s => s.topics?.[0] === t && !seen.has(s.id))])
     .filter(([, list]) => list.length >= 2)
     .map(([t, list]) =>
-      section(topicName(t, 'tw'), [storyList(list.slice(0, 3), open), more(W(`更多${topicName(t, 'tw')}新聞`, `More ${topicName(t, 'tw').toLowerCase()}`), go('tw', t))], { cls: 'nw-topic-sec' })
+      section(topicName(t, 'tw'), [storyList(list.slice(0, 3), s => open(s, list)), more(W(`更多${topicName(t, 'tw')}新聞`, `More ${topicName(t, 'tw').toLowerCase()}`), go('tw', t))], { cls: 'nw-topic-sec' })
     );
   const sides = oneSided(state.page);
   const one = sides.flatMap(g => g.stories).sort((a, b) => b.n - a.n).slice(0, 3);
   const mine = balanceOf(state.log, 'tw', today());
   const hero = h('div', { class: 'nw-front' }, [
-    lead ? h('section', { class: 'q-section nw-lead-sec' }, [leadCard(lead, open)]) : null,
+    h('p', { class: 'nw-date', text: dateLine() }),
+    leads.length ? carousel(leads, open) : null,
     top.length ? section(W('要聞', 'Top stories'), [storyCards(top, open)], { cls: 'nw-top-sec' }) : null,
     clips.length ? section(W('影音', 'Video'), [kitUI.rail(clips.map(c => clipCard(c, play))), h('p', { class: 'nw-foot', text: W('各家媒體自己的影片，在 YouTube 的播放器裡播。', 'Each outlet’s own clips, played in YouTube’s player.') })], { cls: 'nw-clips-sec' }) : null
   ]);
   const parts = [
-    world.length ? section(regionName('intl'), [storyList(world, open), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
+    world.length ? section(regionName('intl'), [storyList(world, s => open(s, intl)), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
     ...topics,
     one.length ? section(W('單邊', 'One side'), [h('p', { class: 'nw-lede', text: W('只有一邊的媒體在報的新聞。', 'Stories only one side’s outlets carry.') }), storyList(one, open), more(W('看全部單邊新聞', 'All one-sided stories'), 'side')]) : null,
     section(W('我的閱讀', 'Your reading'), [readingLine(mine), more(W('看各家媒體的位置', 'Where each outlet stands'), 'outlets')])
@@ -97,12 +105,13 @@ export function readingLine(b) {
 }
 
 // 台灣 or 國際: every story, most important first, 20 at a time; a topic's
-// text tabs (全部, 政治, 兩岸…, 影音); past the list, the older stories kept.
+// text tabs (全部, 政治, 兩岸…, 影音), a swipe across the list to the next
+// one; the topic's lead story in its picture, then the rest; past the list,
+// the older stories kept.
 export function renderRegion(box, region) {
   if (notYet(box)) return;
   const stories = state.page[region];
-  const have = new Set(topicsIn(stories).map(([t]) => t));
-  const tabs = ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(stories.some(s => s.clips?.length) ? ['video'] : [])];
+  const tabs = tabsOf(region);
   const topic = tabs.includes(state.topic[region]) ? state.topic[region] : 'all';
   const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
   const pick = t => () => {
@@ -110,25 +119,59 @@ export function renderRegion(box, region) {
     state.shown[region] = 20;
     hooks.render();
   };
-  const chips = h('div', { class: 'q-chips q-texttabs nw-topics', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${topic === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(topic === t), onclick: pick(t), text: name(t) })));
+  const chips = h('div', { class: 'q-chips q-texttabs nw-topics q-day-still', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${topic === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(topic === t), onclick: pick(t), text: name(t) })));
+  swipeTopics(box, region);
+  // (The chosen tab in view, as a swipe moves it past the row's edge.)
+  requestAnimationFrame(() => {
+    const on = chips.querySelector('.on');
+    if (on && chips.scrollWidth > chips.clientWidth) chips.scrollTo({ left: Math.max(0, on.offsetLeft - chips.clientWidth / 2 + on.offsetWidth / 2), behavior: 'smooth' });
+  });
   if (topic === 'video') {
     const clips = stories.flatMap(s => (s.clips || []).slice(0, 2).map(clip => ({ story: s, clip })));
-    box.replaceChildren(h('div', { class: 'nw-region' }, [chips, h('div', { class: 'nw-clip-grid' }, clips.map(c => clipCard(c, play))), builtLine(state.page)]));
+    box.replaceChildren(chips, h('div', { class: 'nw-region' }, [h('div', { class: 'nw-clip-grid' }, clips.map(c => clipCard(c, play))), builtLine(state.page)]));
     return;
   }
   const all = onTopic(stories, topic);
   const shown = all.slice(0, state.shown[region]);
   const left = all.length - shown.length;
+  // (Its first story with a picture leads; the rest in their order.)
+  const lead = shown.find(s => s.img) && shown.indexOf(shown.find(s => s.img)) < 3 ? shown.find(s => s.img) : null;
+  const rest = shown.filter(s => s !== lead);
   const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`), less: null, onToggle: () => ((state.shown[region] += 20), hooks.render()) }) : null;
   box.replaceChildren(
+    chips,
     h('div', { class: 'nw-region' }, [
-      chips,
-      all.length ? storyList(shown, open) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') }),
+      lead ? h('div', { class: 'nw-region-lead' }, [leadCard(lead, open, { list: all })]) : null,
+      all.length ? storyListIn(rest, all) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') }),
       pager,
       left > 0 ? null : pastPart(region, topic),
       builtLine(state.page)
     ])
   );
+}
+// Rows that open with the whole topic's list (not only those shown).
+const storyListIn = (shown, all) => storyList(shown, story => open(story, all));
+// A region's tabs: 全部, its topics in the table's order (those with
+// stories), 影音 when it has clips.
+function tabsOf(region) {
+  const stories = state.page?.[region] || [];
+  const have = new Set(topicsIn(stories).map(([t]) => t));
+  return ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(stories.some(s => s.clips?.length) ? ['video'] : [])];
+}
+// A swipe across 台灣 or 國際 goes to the topic beside (the kit's daySwipe:
+// the list follows the finger and slides in; the title and tabs stay).
+function swipeTopics(box, region) {
+  if (box.dataset.swipe) return;
+  box.dataset.swipe = '1';
+  kitUI.daySwipe?.(box, dir => {
+    const tabs = tabsOf(region);
+    const i = tabs.indexOf(tabs.includes(state.topic[region]) ? state.topic[region] : 'all') + dir;
+    if (i < 0 || i >= tabs.length) return false;
+    state.topic[region] = tabs[i];
+    state.shown[region] = 20;
+    hooks.render();
+    return true;
+  });
 }
 
 // The older stories kept (news/past.json): asked for at a list's end, then

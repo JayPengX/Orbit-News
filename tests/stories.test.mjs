@@ -18,7 +18,7 @@ const raw = {
     story('b', 'tw', { g: 0, c: 1, b: 2 }, [['udn', 'B', 'https://udn.com/2', T - 3 * H], ['ctinews', 'B', 'https://ctinews.com/2', T - 3 * H], ['cna', 'B', 'https://cna.com.tw/2', T - 3 * H]], { blind: 'g', at: T - 2 * H }),
     { id: 'broken' }
   ],
-  intl: [story('c', 'intl', { l: 1, c: 0, r: 1 }, [['nyt', 'C', 'https://nyt.com/3', T], ['fox', 'C', 'https://fox.com/3', T], ['dw', 'C', 'https://dw.com/3', T]])]
+  intl: [story('c', 'intl', { l: 1, c: 0, r: 1 }, [['nyt', 'C', 'https://nyt.com/3', T], ['fox', 'C', 'https://fox.com/3', T], ['xinhua', 'C', 'https://english.news.cn/3', T]])]
 };
 
 test('a page as read: broken stories and unknown outlets left out, each story knows its region', () => {
@@ -35,13 +35,24 @@ test("a story's bar: each side's count and share of the outlets with a side", ()
   assert.deepEqual(parts.map(p => [p.side, p.n, p.share]), [['g', 1, 0.25], ['c', 1, 0.25], ['b', 2, 0.5]]);
 });
 
-test('headlines by side, the unrated apart', () => {
+test('headlines by side, China\'s state media apart', () => {
   const page = cleanPage(raw);
   const tw = bySide(page.tw[0]);
   assert.deepEqual(tw.b.map(i => i[0]), ['udn', 'chinatimes']);
   assert.deepEqual(tw.g.map(i => i[0]), ['ltn']);
   const intl = bySide(page.intl[0]);
-  assert.deepEqual([intl.l.length, intl.r.length, intl.none.map(i => i[0])], [1, 1, ['dw']]);
+  assert.deepEqual([intl.l.length, intl.r.length, intl.none.map(i => i[0])], [1, 1, ['xinhua']]);
+});
+
+test('a story counts China\'s state media apart; the sides\' bar only for a kind sides take', async () => {
+  const { stateMedia, sidesTaken } = await import('../public/lib/stories.mjs');
+  const page = cleanPage(raw);
+  assert.equal(stateMedia(page.intl[0]), 1);
+  assert.equal(stateMedia(page.tw[0]), 0);
+  assert.equal(sidesTaken({ topics: ['pol'] }), true);
+  assert.equal(sidesTaken({ topics: ['sport'] }), false);
+  assert.equal(sidesTaken({ topics: ['life', 'pol'] }), true);
+  assert.equal(sidesTaken({ topics: [] }), true);
 });
 
 test('one-sided stories by the side that left them out; orders; an outlet\'s stories', () => {

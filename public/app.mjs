@@ -1,9 +1,10 @@
-// Orbit News: Taiwan's and the world's news outlets could take sides on,
-// each story with every outlet that carries it, counted by side. Five tabs:
-// 頭條 (a front page: the lead story, the top ones in pictures, clips, each
-// topic's), 台灣, 國際 (by topic, most important first, then the older ones
-// kept), 單邊 (stories only one side's outlets carry) and 媒體 (each
-// outlet's place and why; your reading by side).
+// Orbit News: Taiwan's and the world's news, each story with every outlet
+// that carries it, counted by side (the spectrum one feature). Five tabs:
+// 頭條 (a front page: the lead stories swiped sideways, the top ones in
+// pictures, clips, each topic's), 台灣, 國際 (by topic, a swipe to the next,
+// most important first, then the older ones kept), 單邊 (stories only one
+// side's outlets carry) and 媒體 (each outlet's place and why; your reading
+// by side).
 //
 // This file starts the app, reads the stories and opens tabs; the screens
 // are views/*.mjs. The stories are the builder's (Orbit-Core builders/news.js,
@@ -138,7 +139,12 @@ function render({ ifChanged = false } = {}) {
   if (ifChanged && box.dataset.drawn === String(stamp)) return;
   box.dataset.drawn = String(stamp);
   VIEWS[state.tab](box);
-  if (state.tab !== TABS[0]) box.prepend(kitUI.navTitle(TITLES[state.tab]));
+  // (The title stays put as a swipe moves the list under it.)
+  if (state.tab !== TABS[0]) {
+    const title = kitUI.navTitle(TITLES[state.tab]);
+    title.classList.add('q-day-still');
+    box.prepend(title);
+  }
 }
 const tabNav = tabBar({
   tabs: TABS.map(id => ({ id, label: TITLES[id], icon: TAB_ICONS[id] })),
