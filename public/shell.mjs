@@ -29,6 +29,8 @@ export const state = {
   // The past's page (older stories kept, news/past.json), read when asked.
   past: null,
   pastFailed: false,
+  // The AI's one lines and titles by story (lib/lines.mjs), an empty Map until read.
+  lines: new Map(),
   log: emptyLog(),
   loaded: false
 };

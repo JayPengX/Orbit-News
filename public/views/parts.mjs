@@ -2,7 +2,9 @@
 // many, and the bar of each side's count), its row, its card, the lead
 // stories' carousel, and the line under a list.
 import { h, tag } from '#kit/ui.mjs';
-import { W, en, hooks, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
+import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
+import * as kitUI from '#kit/ui.mjs';
+import { titleOf, lineOf } from '../lib/lines.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia } from '../lib/stories.mjs';
 
 // An outlet's picture, hotlinked (never kept), gone if it can't be had.
@@ -25,6 +27,22 @@ const tapStory = (story, onOpen, list) => e => {
   const clip = e.target.closest?.('.nw-thumb, .nw-card-pic, .nw-lead-pic') && story.clips?.find(c => c[1])?.[1];
   return clip ? hooks.play(story.id, clip, list) : onOpen(story, list);
 };
+// The headline as the reader sees it (a world story's in Chinese, by the
+// AI, from the outlets' own) and the AI's neutral one line under it, its
+// spark marking it the AI's (lib/lines.mjs).
+export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en);
+export function aiLine(story, cls = 'nw-ai-line') {
+  const text = lineOf(story, state.lines?.get?.(story.id), en);
+  if (!text) return null;
+  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'AI' });
+  mark.innerHTML = kitUI.icons?.spark || '';
+  return h('span', { class: cls, lang: 'zh-Hant' }, [mark, h('span', { text })]);
+}
+const titleSpan = (story, cls) => {
+  const t = shownTitle(story);
+  return h('span', { class: cls, lang: t.lang, text: t.text });
+};
+
 // What a story is about and how long it has run: 政治 · 報導 3 天; `when`
 // adds how long ago it was last heard of.
 export function aboutLine(story, { days = true, when = false } = {}) {
@@ -80,7 +98,7 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 export function storyRow(story, onOpen, { side = true, list = null } = {}) {
   const pic = withClip(picture(story.img, 'nw-thumb'), story);
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
-    h('span', { class: 'nw-row-main' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { days: false, when: true }) }), h('span', { class: 'nw-row-title', text: story.title }), coverage(story, { side })]),
+    h('span', { class: 'nw-row-main' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { days: false, when: true }) }), titleSpan(story, 'nw-row-title'), aiLine(story), coverage(story, { side })]),
     pic
   ]);
 }
@@ -93,7 +111,7 @@ export function storyCard(story, onOpen, list = null) {
   const pic = withClip(picture(story.img, 'nw-card-pic'), story);
   return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
-    h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), h('span', { class: 'nw-card-title', text: story.title }), coverage(story)])
+    h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), titleSpan(story, 'nw-card-title'), coverage(story)])
   ]);
 }
 export const storyCards = (stories, onOpen) => h('div', { class: 'nw-cards q-rows-full' }, stories.map(s => storyCard(s, onOpen, stories)));
@@ -120,8 +138,9 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
     pic,
     h('span', { class: 'nw-lead-body' }, [
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
-      h('span', { class: 'nw-lead-title', text: story.title }),
-      story.sum ? h('span', { class: 'nw-lead-sum', text: story.sum }) : null,
+      titleSpan(story, 'nw-lead-title'),
+      // (The AI's neutral line in place of one outlet's summary, when there is one.)
+      aiLine(story, 'nw-ai-line nw-lead-line') || (story.sum ? h('span', { class: 'nw-lead-sum', text: story.sum }) : null),
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),
       sidesTaken(story) ? h('span', { class: 'nw-lead-bar' }, [bar(story, { big: true }), counts(story, { full: true })]) : null,
       coverage(story, { bar: false }),

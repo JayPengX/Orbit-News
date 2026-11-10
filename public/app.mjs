@@ -19,6 +19,7 @@ import { passSync } from '#kit/pass-sync.mjs';
 import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
 import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
+import { cleanLines } from './lib/lines.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
@@ -101,8 +102,23 @@ hooks.reload = () => load({ fresh: true });
 // Read through the kit (memory, the phone's copy, then /data/): a copy two
 // minutes old is used as is; a failed read keeps the last one.
 let reading = null;
+// (一句話講清楚: the AI's lines beside them, read the same way; none read, the outlets' own titles only.)
+const LINES = 'news/lines.json';
+let linesBuilt = null;
+function loadLines(fresh) {
+  return packJson(LINES, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      if (raw?.built === linesBuilt) return;
+      linesBuilt = raw?.built ?? null;
+      state.lines = cleanLines(raw);
+      stamp++;
+      quietRefresh();
+    })
+    .catch(() => {});
+}
 function load({ fresh = false } = {}) {
   if (reading) return reading;
+  loadLines(fresh);
   reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
     .then(raw => {
       const page = cleanPage(raw);

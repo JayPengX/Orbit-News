@@ -10,7 +10,7 @@ import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
-import { bar, marks, clipCard, playMark } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, aiLine } from './parts.mjs';
 
 // A YouTube clip in YouTube's own player (its privacy-enhanced address:
 // no cookie until it plays); counted for 我的閱讀 as its outlet's. Should
@@ -121,6 +121,20 @@ function footOf(order, step) {
 }
 
 // One story's parts, top to bottom.
+// The sheet's headline: the AI's in the reader's language over the outlets'
+// own (a world story on a Chinese phone), then the AI's neutral one line,
+// said to be the AI's from the outlets' headlines.
+function storyTitle(story, lang) {
+  const t = shownTitle(story);
+  const line = aiLine(story, 'nw-ai-line nw-story-ai');
+  return [
+    h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text }),
+    t.ai ? h('p', { class: 'nw-story-orig', lang, text: story.title }) : null,
+    line,
+    line || t.ai ? h('small', { class: 'nw-ai-note', text: W('AI 依各家標題與摘要整理，只寫各家都報的事', 'Written by AI from the outlets’ own headlines and summaries') }) : null
+  ];
+}
+
 function storyParts(story, { clip = '' } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
@@ -163,7 +177,7 @@ function storyParts(story, { clip = '' } = {}) {
     pic,
     h('div', { class: 'nw-story-text' }, [
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
-      h('h2', { class: 'nw-story-title', lang, text: story.title }),
+      ...storyTitle(story, lang),
       story.sum ? h('p', { class: 'nw-sum', lang }, [story.sum, story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })])
     ])
