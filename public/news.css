@@ -232,6 +232,17 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---- 台灣 · 國際: the topics' text tabs, scrolling to the screen's edge ---- */
 .nw-region { display: grid; gap: 12px; }
+/* 單邊: the lede, how many each side left out, then each kind's stories. */
+.nw-oneside { display: grid; gap: 16px; }
+.nw-blind-sum { background: var(--nv-card, var(--q-grouped-2)); gap: 0; padding: 4px 16px; }
+.nw-blind-row { display: grid; grid-template-columns: 4em minmax(0, 1fr); align-items: center; gap: 12px; padding: 12px 0; }
+.nw-blind-row + .nw-blind-row { border-top: 0.5px solid var(--q-sep); }
+.nw-blind-region { font: 600 17px/22px var(--q-font); }
+/* (Wide: Taiwan's and the world's side by side, not a long empty line.) */
+@container page (min-width: 700px) {
+  .nw-blind-sum { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); column-gap: 32px; }
+  .nw-blind-row + .nw-blind-row { border-top: 0; }
+}
 .nw-topics { margin: 0 calc(-1 * var(--q-margin, 16px)) -2px; padding: 2px var(--q-margin, 16px) 4px; }
 /* The older stories kept, asked for at a list's end. */
 .nw-past-ask {

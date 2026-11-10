@@ -23,9 +23,10 @@ remove a feature on purpose, delete its line in the same commit.
 - 頭條's lead stories (Taiwan's top three, the world's top two) swiped sideways, a dot each, ‹ › on a computer — `public/views/parts.mjs`, `public/views/lists.mjs`: `export function carousel`, `nw-hero-track`, `const leadsOf`
 - 頭條: a front page: the lead stories with their summaries, 要聞 in pictures, the outlets' clips, the world's, each topic's, the one-sided ones, your reading in a line — `public/views/lists.mjs`, `public/views/parts.mjs`: `export function renderTop`, `要聞`, `export function storyCard`, `export function clipCard`, `nw-topic-sec`, `export function readingLine`
 - 台灣 and 國際: every story, most important first, by topic (全部, 政治, 兩岸… 生活, 健康, 科學, 文化, 運動, 影音), the topic's lead in its picture, 20 at a time — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderRegion`, `nw-topics`, `nw-region-lead`, `export const onTopic`, `export function topicsIn`
-- A swipe across 台灣 or 國際 goes to the topic beside, the title and tabs staying put — `public/views/lists.mjs`, `public/app.mjs`: `function swipeTopics`, `q-day-still`
+- A swipe across 台灣, 國際 or 單邊 goes to the topic beside, the title and tabs staying put — `public/views/lists.mjs`, `public/app.mjs`: `function swipeTabs`, `q-day-still`
 - The older stories kept (a month), asked for at a list's end or by an old link — `public/views/lists.mjs`, `public/app.mjs`, `public/views/story.mjs`: `function pastPart`, `hooks.past =`, `news/past.json`, `state.past`
 - 單邊: stories only one side carries, grouped by the side that left them out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderSide`, `export function oneSided`
+- 單邊 by kind: a text tab for each kind with one-sided stories (政治, 兩岸, 經濟…), 全部 listing each kind's widest three; above, how many each side left out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `function blindSum`, `export function byKind`, `export const blindCounts`
 - 媒體: your reading by side (Taiwan's and the world's), every outlet on its line — `public/views/outlets.mjs`: `export function renderOutlets`, `TW_PLACES`, `INTL_PLACES`
 - A tab or a story from the address (#intl, #s=<id>) — `public/app.mjs`: `function openFromHash`, `s=(\w+)`
 

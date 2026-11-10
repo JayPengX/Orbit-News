@@ -2,13 +2,13 @@
 // top stories in pictures, the day's clips, the world's, each topic's, the
 // one-sided ones, your reading in a line), 台灣 and 國際 (every story, most
 // important first, by topic, a swipe to the next topic, then the older ones
-// kept), 單邊 (stories only one side carries, grouped by the side that left
-// them out).
+// kept), 單邊 (stories only one side carries, by kind, then by the side
+// that left them out).
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName } from '../shell.mjs';
-import { oneSided, onTopic, topicsIn, clipsOf } from '../lib/stories.mjs';
+import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, blindCounts } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { storyList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
@@ -119,13 +119,9 @@ export function renderRegion(box, region) {
     state.shown[region] = 20;
     hooks.render();
   };
-  const chips = h('div', { class: 'q-chips q-texttabs nw-topics q-day-still', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${topic === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(topic === t), onclick: pick(t), text: name(t) })));
-  swipeTopics(box, region);
-  // (The chosen tab in view, as a swipe moves it past the row's edge.)
-  requestAnimationFrame(() => {
-    const on = chips.querySelector('.on');
-    if (on && chips.scrollWidth > chips.clientWidth) chips.scrollTo({ left: Math.max(0, on.offsetLeft - chips.clientWidth / 2 + on.offsetWidth / 2), behavior: 'smooth' });
-  });
+  const chips = textTabs(tabs, topic, name, pick);
+  swipeTabs(box, region, () => tabsOf(region), () => (state.shown[region] = 20));
+  showTab(chips);
   if (topic === 'video') {
     const clips = stories.flatMap(s => (s.clips || []).slice(0, 2).map(clip => ({ story: s, clip })));
     box.replaceChildren(chips, h('div', { class: 'nw-region' }, [h('div', { class: 'nw-clip-grid' }, clips.map(c => clipCard(c, play))), builtLine(state.page)]));
@@ -158,17 +154,29 @@ function tabsOf(region) {
   const have = new Set(topicsIn(stories).map(([t]) => t));
   return ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(stories.some(s => s.clips?.length) ? ['video'] : [])];
 }
-// A swipe across 台灣 or 國際 goes to the topic beside (the kit's daySwipe:
-// the list follows the finger and slides in; the title and tabs stay).
-function swipeTopics(box, region) {
+// A row of text tabs, the chosen one marked (it stays as the list slides).
+const textTabs = (tabs, on, name, pick) =>
+  h('div', { class: 'q-chips q-texttabs nw-topics q-day-still', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${on === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(on === t), onclick: pick(t), text: name(t) })));
+// The chosen tab in view, as a swipe moves it past the row's edge.
+function showTab(chips) {
+  if (!chips) return;
+  requestAnimationFrame(() => {
+    const on = chips.querySelector('.on');
+    if (on && chips.scrollWidth > chips.clientWidth) chips.scrollTo({ left: Math.max(0, on.offsetLeft - chips.clientWidth / 2 + on.offsetWidth / 2), behavior: 'smooth' });
+  });
+}
+// A swipe across 台灣, 國際 or 單邊 goes to the tab beside (the kit's
+// daySwipe: the list follows the finger and slides in; the title and tabs
+// stay). `key`: the tab's place in state.topic.
+function swipeTabs(box, key, tabsNow, reset) {
   if (box.dataset.swipe) return;
   box.dataset.swipe = '1';
   kitUI.daySwipe?.(box, dir => {
-    const tabs = tabsOf(region);
-    const i = tabs.indexOf(tabs.includes(state.topic[region]) ? state.topic[region] : 'all') + dir;
+    const tabs = tabsNow();
+    const i = tabs.indexOf(tabs.includes(state.topic[key]) ? state.topic[key] : 'all') + dir;
     if (i < 0 || i >= tabs.length) return false;
-    state.topic[region] = tabs[i];
-    state.shown[region] = 20;
+    state.topic[key] = tabs[i];
+    reset?.();
     hooks.render();
     return true;
   });
@@ -192,20 +200,51 @@ function pastPart(region, topic) {
   ]);
 }
 
-// 單邊: each side that left stories out, its stories.
+// 單邊: the one-sided stories by kind (政治, 兩岸, 經濟…), a text tab each
+// and a swipe to the next; above, how many each side left out. 全部 lists
+// each kind's widest few; a kind lists its stories by the side that left
+// them out.
 export function renderSide(box) {
   if (notYet(box)) return;
-  const groups = oneSided(state.page);
-  const head = h('p', { class: 'nw-lede', text: W('三家以上、超過兩小時在報，卻只有一邊的媒體報的新聞（另一邊一家都沒有）。不一定是刻意不報，但另一邊的讀者可能沒看到。', 'Stories three outlets or more have carried for over two hours, all on one side, none on the other. Not always a choice, but the other side’s readers may not have seen them.') });
-  const parts = groups.map(({ region, missing, stories }) =>
-    section(W(`${regionName(region)}：${sideFull(missing)}的媒體沒報`, `${regionName(region)}: none ${sideFull(missing).toLowerCase()}`), [storyList(stories, open, { side: false })], { count: stories.length, shd: true })
-  );
+  const all = blindAll(state.page);
+  const kinds = byKind(all, topicOrder());
+  const tabs = ['all', ...kinds.map(([t]) => t)];
+  const kind = tabs.includes(state.topic.side) ? state.topic.side : 'all';
+  const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, 'tw'));
+  const pick = t => () => ((state.topic.side = t), hooks.render());
+  const chips = tabs.length > 2 ? textTabs(tabs, kind, name, pick) : null;
+  swipeTabs(box, 'side', () => sideTabs());
+  const stories = kind === 'all' ? all : onTopic(all, kind);
+  const lede = h('p', { class: 'nw-lede', text: W('三家以上、超過兩小時在報，卻只有一邊的媒體報的新聞。不一定是刻意不報，但另一邊的讀者可能沒看到。', 'Stories three outlets or more have carried for over two hours, all on one side. Not always a choice, but the other side’s readers may not have seen them.') });
+  if (!all.length) {
+    box.replaceChildren(h('div', { class: 'nw-oneside' }, [lede, empty({ icon: 'check', title: W('現在沒有單邊的新聞', 'No one-sided stories now'), body: W('每則三家以上在報的新聞，兩邊都有人報。', 'Every story three or more outlets carry has both sides on it.') }), builtLine(state.page)]));
+    return;
+  }
+  const parts =
+    kind === 'all'
+      ? kinds.map(([t, list]) =>
+          section(name(t), [storyList(list.slice(0, 3), s => open(s, list)), list.length > 3 ? more(W(`${name(t)}的 ${list.length} 則`, `All ${list.length} in ${name(t).toLowerCase()}`), pick(t)) : null], { count: list.length, shd: true })
+        )
+      : oneSided(state.page, kind).map(({ region, missing, stories: list }) =>
+          section(W(`${regionName(region)}：${sideFull(missing)}的媒體沒報`, `${regionName(region)}: none ${sideFull(missing).toLowerCase()}`), [storyList(list, open, { side: false })], { count: list.length, shd: true })
+        );
   box.replaceChildren(
-    h('div', { class: 'nw-oneside' }, [
-      head,
-      parts.length ? h('div', { class: 'q-flow nw-flow' }, parts) : empty({ icon: 'check', title: W('現在沒有單邊的新聞', 'No one-sided stories now'), body: W('每則三家以上在報的新聞，兩邊都有人報。', 'Every story three or more outlets carry has both sides on it.') }),
-      builtLine(state.page)
-    ])
+    ...[chips, h('div', { class: 'nw-oneside' }, [lede, blindSum(stories), h('div', { class: 'q-flow nw-flow' }, parts), builtLine(state.page)])].filter(Boolean)
   );
+  showTab(chips);
   kitUI.flowColumns?.(box);
+}
+const sideTabs = () => ['all', ...byKind(blindAll(state.page), topicOrder()).map(([t]) => t)];
+// Who left out how many: each region's two ends, a figure each.
+function blindSum(stories) {
+  const rows = blindCounts(stories);
+  if (!rows.length) return null;
+  return h('section', { class: 'nw-spec nw-blind-sum', 'aria-label': W('各邊沒報的新聞', 'Stories each side left out') }, [
+    ...rows.map(({ region, ends }) =>
+      h('div', { class: 'nw-blind-row' }, [
+        h('b', { class: 'nw-blind-region', text: regionName(region) }),
+        h('div', { class: 'nw-legend' }, ends.map(e => h('span', { class: 'nw-legend-part' }, [h('small', {}, [h('i', { class: `nw-dot nw-s-${e.side}`, 'aria-hidden': 'true' }), W(`${sideFull(e.side)}沒報`, `None ${sideFull(e.side).toLowerCase()}`)]), h('b', { text: String(e.n) })])))
+      ])
+    )
+  ]);
 }

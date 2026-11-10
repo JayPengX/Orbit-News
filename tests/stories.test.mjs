@@ -88,3 +88,15 @@ test('topics, clips, how long a story ran, and the past', () => {
   assert.equal(storyById(page, 'old'), null);
   assert.equal(storyById(page, 'old', past).title, 'old');
 });
+
+test('單邊 by kind: each one-sided story once, under its first kind; each side’s count', async () => {
+  const { byKind, blindAll, blindCounts, oneSided } = await import('../public/lib/stories.mjs');
+  const st = (id, region, blind, topics, n = 3) => ({ id, region, blind, topics, n, at: 0, items: [] });
+  const page = { tw: [st('a', 'tw', 'b', ['pol', 'cs'], 5), st('b', 'tw', 'g', ['eco']), st('c', 'tw', '', ['pol'])], intl: [st('d', 'intl', 'r', ['cs', 'world'], 4)] };
+  const all = blindAll(page);
+  assert.deepEqual(all.map(s => s.id), ['a', 'd', 'b']);
+  assert.deepEqual(byKind(all, ['pol', 'cs', 'eco']).map(([t, l]) => [t, l.map(s => s.id)]), [['pol', ['a']], ['cs', ['d']], ['eco', ['b']]]);
+  assert.deepEqual(blindCounts(all), [{ region: 'tw', ends: [{ side: 'g', n: 1 }, { side: 'b', n: 1 }] }, { region: 'intl', ends: [{ side: 'l', n: 0 }, { side: 'r', n: 1 }] }]);
+  assert.deepEqual(oneSided(page, 'cs').map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'b', ['a']], ['intl', 'r', ['d']]]);
+});
+

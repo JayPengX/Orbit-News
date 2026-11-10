@@ -91,15 +91,31 @@ export const sidesTaken = story => !story.topics?.length || story.topics.some(t 
 // The one-sided stories (the builder's `blind`: carried by one end, none of
 // the other), grouped by the side that left them out, widest first:
 // [{ region, missing, stories }], only groups with any.
-export function oneSided(page) {
+export function oneSided(page, topic = 'all') {
   const out = [];
   for (const region of REGIONS)
     for (const missing of ENDS[region]) {
-      const stories = (page?.[region] || []).filter(s => s.blind === missing).sort((a, b) => b.n - a.n || b.at - a.at);
+      const stories = onTopic(page?.[region] || [], topic).filter(s => s.blind === missing).sort((a, b) => b.n - a.n || b.at - a.at);
       if (stories.length) out.push({ region, missing, stories });
     }
   return out;
 }
+
+// Every one-sided story, Taiwan's and the world's, widest first.
+export const blindAll = page => REGIONS.flatMap(r => (page?.[r] || []).filter(s => s.blind)).sort((a, b) => b.n - a.n || b.at - a.at);
+// Stories by kind, `order` the kinds' order: [[topic, stories]], each story
+// once, under the first of its topics in `order`; only kinds with any.
+export function byKind(stories, order) {
+  const m = new Map(order.map(t => [t, []]));
+  for (const s of stories) {
+    const t = (s.topics || []).find(x => m.has(x));
+    if (t) m.get(t).push(s);
+  }
+  return [...m].filter(([, list]) => list.length);
+}
+// How many each side left out, a region at a time: [{ region, ends: [{ side, n }] }].
+export const blindCounts = stories =>
+  REGIONS.map(region => ({ region, ends: ENDS[region].map(side => ({ side, n: stories.filter(s => s.region === region && s.blind === side).length })) })).filter(r => r.ends.some(e => e.n));
 
 // The stories one outlet is in, newest first.
 export function storiesWith(page, outlet) {
