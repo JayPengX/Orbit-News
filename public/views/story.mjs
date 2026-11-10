@@ -10,7 +10,7 @@ import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, aiLine } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
 
@@ -141,16 +141,13 @@ function footOf(order, step) {
 
 // One story's parts, top to bottom.
 // The sheet's headline: the AI's in the reader's language over the outlets'
-// own (a world story on a Chinese phone), then the AI's neutral one line,
-// said to be the AI's from the outlets' headlines.
+// own (a world story on a Chinese phone), said to be the AI's.
 function storyTitle(story, lang) {
   const t = shownTitle(story);
-  const line = aiLine(story, 'nw-ai-line nw-story-ai');
   return [
     h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text }),
     t.ai ? h('p', { class: 'nw-story-orig', lang }, marked(story.title, story)) : null,
-    line,
-    line || t.ai ? h('small', { class: 'nw-ai-note', text: W('AI 依各家標題與摘要整理，只寫各家都報的事', 'Written by AI from the outlets’ own headlines and summaries') }) : null
+    t.ai ? h('small', { class: 'nw-ai-note', text: W('標題由 AI 依各家標題翻譯', 'Headline translated by AI from the outlets’ own') }) : null
   ];
 }
 

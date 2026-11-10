@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanLines, titleOf, lineOf } from '../public/lib/lines.mjs';
+import { cleanLines, titleOf } from '../public/lib/lines.mjs';
 
 const lines = cleanLines({ lines: { a: { line: '立法院三讀通過預算案，總額 3 兆元。', zh: '立院三讀通過總預算', en: 'Legislature passes the budget' }, b: { line: '', zh: '美聯準會維持利率不變', en: '' }, bad: 3 } });
 
@@ -18,9 +18,7 @@ test('a world story in Chinese on a Chinese phone, a Taiwan story in English on 
   assert.deepEqual(titleOf(intl, undefined), { text: 'Fed holds rates', ai: false, lang: 'en' });
 });
 
-test('the one line only on Chinese phones, never the headline again', () => {
-  const tw = { id: 'a', region: 'tw', title: '總預算三讀' };
-  assert.equal(lineOf(tw, lines.get('a')), '立法院三讀通過預算案，總額 3 兆元。');
-  assert.equal(lineOf(tw, lines.get('a'), true), '');
-  assert.equal(lineOf({ ...tw, title: '立法院三讀通過預算案，總額 3 兆元' }, lines.get('a')), '');
+test('no AI line under a headline: it only said the headline again (Jay 11-10)', async () => {
+  const mod = await import('../public/lib/lines.mjs');
+  assert.equal(mod.lineOf, undefined);
 });
