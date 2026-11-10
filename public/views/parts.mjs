@@ -95,10 +95,13 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // One story in a list: what it's about and when, its headline, its
 // coverage; its picture beside it, a play mark on it when it has a clip.
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
-export function storyRow(story, onOpen, { side = true, list = null } = {}) {
+// `why(story)`: what of the person's it's about (你關心的: 持股 台積電, 追蹤 湖人), before the kicker.
+export function storyRow(story, onOpen, { side = true, list = null, why = null } = {}) {
   const pic = withClip(picture(story.img, 'nw-thumb'), story);
+  const mine = why?.(story);
+  const kicker = h('small', { class: 'nw-kicker' }, [mine ? h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: `${mine.kind === 'hold' ? W('持股', 'Held') : W('追蹤', 'Following')} ${mine.label}` }) : null, aboutLine(story, { days: false, when: true })]);
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
-    h('span', { class: 'nw-row-main' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { days: false, when: true }) }), titleSpan(story, 'nw-row-title'), aiLine(story), coverage(story, { side })]),
+    h('span', { class: 'nw-row-main' }, [kicker, titleSpan(story, 'nw-row-title'), aiLine(story), coverage(story, { side })]),
     pic
   ]);
 }

@@ -627,3 +627,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-world-go small { color: var(--q-label-2); font: var(--q-t-footnote); }
 .nw-world-go span { grid-column: 1; font: 500 16px/22px var(--q-font); }
 .nw-world-go b { grid-column: 2; grid-row: 1 / span 2; color: var(--q-label-3); font: 400 22px/1 var(--q-font); }
+
+/* 你關心的: what of yours a story is about (持股 台積電, 追蹤 湖人), before its kicker. */
+.nw-mine-tag { color: var(--q-accent); font-weight: 600; margin-inline-end: 6px; }

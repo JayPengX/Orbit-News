@@ -20,6 +20,7 @@ import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOfflin
 import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
+import { interestsOf } from './lib/mine.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
@@ -116,9 +117,22 @@ function loadLines(fresh) {
     })
     .catch(() => {});
 }
+// (你關心的: the family's notebook, read again with each load; a holding or team gone, its stories go.)
+function loadInterests() {
+  return import('#kit/family.mjs')
+    .then(f => {
+      const next = interestsOf(f.heard?.('stock', 'holds') || [], f.heard?.('sports', 'follows') || []);
+      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join()) return;
+      state.interests = next;
+      stamp++;
+      quietRefresh();
+    })
+    .catch(() => {});
+}
 function load({ fresh = false } = {}) {
   if (reading) return reading;
   loadLines(fresh);
+  loadInterests();
   reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
     .then(raw => {
       const page = cleanPage(raw);

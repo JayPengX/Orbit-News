@@ -11,6 +11,7 @@ remove a feature on purpose, delete its line in the same commit.
 - Pull to refresh — `public/app.mjs`: `pullToRefresh`
 - A story's bar: each side's outlets as lengths, the counts in words — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function bar`, `export function counts`, `export function barOf`
 - A story's coverage on its row: the outlets' marks, how many, the bar only for a kind sides take (the spectrum one feature) — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function coverage`, `export function marks`, `export const sidesTaken`
+- 你關心的: on 頭條, the stories about the stocks you hold in Orbit Securities and the teams and players you follow in Orbit Sports, marked 持股 or 追蹤 (`lib/mine.mjs`, `views/lists.mjs`; read from the phone's family notebook, nothing sent).
 - 一句話講清楚: each story's neutral one line by the AI (built once, from the outlets' own headlines) under its headline, marked with the spark; 國際新聞中文標題: a world story's Chinese headline on a Chinese phone (a Taiwan story's English one on an English phone), the outlets' own under it in the sheet — `public/lib/lines.mjs`, `public/views/parts.mjs`: `shownTitle`, `aiLine`, `public/views/story.mjs`: `storyTitle`
 - China's state media counted apart (官媒), every other outlet on a side — `public/lib/stories.mjs`, `public/views/story.mjs`: `export const stateMedia`, `中國官媒`
 - A one-sided story says which side left it out — `public/views/parts.mjs`: `story.blind`, `沒報`

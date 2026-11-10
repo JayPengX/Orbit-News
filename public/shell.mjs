@@ -31,6 +31,8 @@ export const state = {
   pastFailed: false,
   // The AI's one lines and titles by story (lib/lines.mjs), an empty Map until read.
   lines: new Map(),
+  // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
+  interests: [],
   log: emptyLog(),
   loaded: false
 };
