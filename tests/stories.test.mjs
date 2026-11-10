@@ -2,7 +2,7 @@
 // the way in, each story's bar, its headlines by side, the one-sided ones.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanPage, barOf, bySide, oneSided, ordered, storiesWith, agoOf, storyById } from '../public/lib/stories.mjs';
+import { cleanPage, barOf, bySide, oneSided, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf } from '../public/lib/stories.mjs';
 
 const T = Date.parse('2026-11-10T03:00:00Z');
 const H = 3_600_000;
@@ -10,7 +10,11 @@ const story = (id, region, sides, items, extra = {}) => ({ id, title: id, at: T,
 const raw = {
   built: T,
   tw: [
-    story('a', 'tw', { g: 1, c: 1, b: 2 }, [['udn', 'A1', 'https://udn.com/1', T], ['ltn', 'A2', 'https://ltn.com.tw/1', T - H], ['chinatimes', 'A3', 'https://chinatimes.com/1', T - 2 * H], ['cna', 'A4', 'https://cna.com.tw/1', T], ['nobody', 'x', 'https://x/1', T]]),
+    story('a', 'tw', { g: 1, c: 1, b: 2 }, [['udn', 'A1', 'https://udn.com/1', T], ['ltn', 'A2', 'https://ltn.com.tw/1', T - H], ['chinatimes', 'A3', 'https://chinatimes.com/1', T - 2 * H], ['cna', 'A4', 'https://cna.com.tw/1', T], ['nobody', 'x', 'https://x/1', T]], {
+      topics: ['pol', 'def', 3],
+      days: [['11-09', 3], ['11-10', 2]],
+      clips: [['pts', 'AbCdEfGhIjK', 'https://pts.org.tw/1', 'A clip', 'https://i.ytimg.com/vi/AbCdEfGhIjK/hqdefault.jpg'], ['nobody', 'AbCdEfGhIjK', 'https://x/1'], ['pts', 'not an id', 'https://pts.org.tw/2'], ['cbs', '', 'https://cbsnews.com/video/1', 'Video page', '']]
+    }),
     story('b', 'tw', { g: 0, c: 1, b: 2 }, [['udn', 'B', 'https://udn.com/2', T - 3 * H], ['ctinews', 'B', 'https://ctinews.com/2', T - 3 * H], ['cna', 'B', 'https://cna.com.tw/2', T - 3 * H]], { blind: 'g', at: T - 2 * H }),
     { id: 'broken' }
   ],
@@ -43,7 +47,6 @@ test('headlines by side, the unrated apart', () => {
 test('one-sided stories by the side that left them out; orders; an outlet\'s stories', () => {
   const page = cleanPage(raw);
   assert.deepEqual(oneSided(page).map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'g', ['b']]]);
-  assert.deepEqual(ordered(page.tw, 'new').map(s => s.id), ['a', 'b']);
   assert.deepEqual(storiesWith(page, 'cna').map(s => s.id), ['a', 'b']);
   assert.deepEqual(storiesWith(page, 'fox').map(s => s.id), ['c']);
 });
@@ -53,4 +56,22 @@ test('how long ago, in both languages', () => {
   assert.equal(agoOf(T - 12 * 60_000, T), '12 分鐘前');
   assert.equal(agoOf(T - 3 * H, T, true), '3 hr ago');
   assert.equal(agoOf(T - 49 * H, T), '2 天前');
+});
+
+test('topics, clips, how long a story ran, and the past', () => {
+  const page = cleanPage(raw);
+  const a = page.tw[0];
+  assert.deepEqual(a.topics, ['pol', 'def']);
+  assert.deepEqual(a.clips.map(c => c[1]), ['AbCdEfGhIjK', '']);
+  assert.equal(daysOf(a), 1);
+  assert.equal(daysOf({ first: T - 50 * H, at: T }), 3);
+  assert.equal(daysOf({ first: T - 23 * H, at: T }), 1);
+  assert.deepEqual(onTopic(page.tw, 'def').map(s => s.id), ['a']);
+  assert.deepEqual(onTopic(page.tw, 'all').map(s => s.id), ['a', 'b']);
+  assert.deepEqual(onTopic(page.tw, 'video').map(s => s.id), ['a']);
+  assert.deepEqual(topicsIn(page.tw), [['pol', 1], ['def', 1]]);
+  assert.deepEqual(clipsOf(page.tw).map(c => [c.story.id, c.clip[1]]), [['a', 'AbCdEfGhIjK']]);
+  const past = cleanPage({ tw: [story('old', 'tw', { g: 1, c: 0, b: 0 }, [['ltn', 'Old', 'https://ltn.com.tw/9', T - 200 * H]])] });
+  assert.equal(storyById(page, 'old'), null);
+  assert.equal(storyById(page, 'old', past).title, 'old');
 });

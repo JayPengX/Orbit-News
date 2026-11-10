@@ -1,23 +1,60 @@
 // The stories as the builder wrote them (Orbit-Core builders/news.js →
-// news/index.json: { built, tw: [story], intl: [story] }), read for the
-// screens. A story: { id, title, by, sum, sumBy, img, imgBy, at, first, n,
-// sides, blind, parties, items: [[outlet, headline, url, at]] }.
+// news/index.json: { built, tw: [story], intl: [story] }, the stories heard
+// of in the last 3 days, most important first; news/past.json the same for
+// older ones kept, by importance), read for the screens. A story: { id,
+// title, by, sum, sumBy, img, imgBy, at, first, n (outlets), m (headlines),
+// days: [['MM-DD', headlines]], sides, blind, parties, topics, imp, clips:
+// [[outlet, youtubeId or '', url, title, picture]], items: [[outlet,
+// headline, url, at, video?]] }.
 import { sideOf, SIDES, outletOf } from '#kit/news-outlets.mjs';
 
 export const REGIONS = ['tw', 'intl'];
 // The two ends of a region's line (the middle is c).
 export const ENDS = { tw: ['g', 'b'], intl: ['l', 'r'] };
 
-// A page as read: anything not a story list left out, each story checked.
+const web = u => /^https?:\/\//.test(u || '');
+// A page as read: anything not a story list left out, each story checked
+// (its headlines and clips from known outlets, a clip's id YouTube's shape).
 export function cleanPage(x) {
   const page = { built: Number(x?.built) || 0, tw: [], intl: [] };
   for (const r of REGIONS)
     for (const s of Array.isArray(x?.[r]) ? x[r] : [])
-      if (s && typeof s.id === 'string' && typeof s.title === 'string' && Array.isArray(s.items)) page[r].push({ ...s, region: r, items: s.items.filter(it => Array.isArray(it) && outletOf(it[0]) && /^https?:\/\//.test(it[2] || '')) });
+      if (s && typeof s.id === 'string' && typeof s.title === 'string' && Array.isArray(s.items))
+        page[r].push({
+          ...s,
+          region: r,
+          topics: Array.isArray(s.topics) ? s.topics.filter(t => typeof t === 'string') : [],
+          days: Array.isArray(s.days) ? s.days.filter(d => Array.isArray(d) && typeof d[0] === 'string') : [],
+          clips: (Array.isArray(s.clips) ? s.clips : []).filter(c => Array.isArray(c) && outletOf(c[0]) && /^(?:[\w-]{11})?$/.test(c[1] ?? 'x') && web(c[2])),
+          items: s.items.filter(it => Array.isArray(it) && outletOf(it[0]) && web(it[2]))
+        });
   return page;
 }
 
-export const storyById = (page, id) => REGIONS.map(r => page?.[r]?.find(s => s.id === id)).find(Boolean) || null;
+// A story by its id, on the page or among the past's.
+export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
+
+// The stories on a topic ('all': every one), in the builder's order.
+export const onTopic = (stories, topic) => (topic === 'all' ? stories : topic === 'video' ? stories.filter(s => s.clips?.length) : stories.filter(s => s.topics?.includes(topic)));
+// The topics these stories have, most stories first: [[topic, count]].
+export function topicsIn(stories) {
+  const n = new Map();
+  for (const s of stories) for (const t of s.topics || []) n.set(t, (n.get(t) || 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1]);
+}
+// Clips to watch: each story's first YouTube clip, stories in order, `most` at most.
+export function clipsOf(stories, most = 12) {
+  const out = [];
+  for (const s of stories) {
+    const c = s.clips?.find(x => x[1]);
+    if (c) out.push({ story: s, clip: c });
+    if (out.length >= most) break;
+  }
+  return out;
+}
+// How long a story has run, in days: 1 under a day from its first headline
+// to its latest, 2 under two… (a night and its morning are one).
+export const daysOf = story => Math.max(1, Math.floor(((story.at || 0) - (story.first || story.at || 0)) / 86_400_000) + 1);
 
 // The bar: each side of the region with its count and share (of the outlets
 // with a side), in the line's order; `rated` how many have one.
@@ -44,11 +81,6 @@ export function bySide(story) {
 // The outlets of a story, one each, in the order their headlines come.
 export const outletsOf = story => [...new Set(story.items.map(it => it[0]))];
 
-// A list in one order: 'wide' (the builder's: most outlets, fading with
-// age) or 'new' (the latest headline first).
-export function ordered(stories, how = 'wide') {
-  return how === 'new' ? [...stories].sort((a, b) => b.at - a.at) : stories;
-}
 
 // The one-sided stories (the builder's `blind`: carried by one end, none of
 // the other), grouped by the side that left them out, widest first:

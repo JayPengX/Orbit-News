@@ -1,6 +1,6 @@
 # Orbit News: the map
 
-Taiwan's and the world's news, each event gathered into one story with every
+Taiwan's and the world's news outlets could take sides on (politics in the wide sense: tech, the economy, society too), each event gathered into one story with every
 outlet that carries it, counted by side: Taiwan's 偏綠 · 中間 · 偏藍, the
 English left · centre · right. Signs in with the Orbit Pass; 我的閱讀 syncs on
 it. In Orbit's own look (Orbit-Core DESIGN §11): `data-look="native"`,
@@ -13,34 +13,48 @@ Live: https://orbit.jaypengx.com/news/
 
 - **The builder** (Orbit-Core `builders/news.js`, on the Runner's :00 :10 :18
   :30 :40 :50 slots) reads every outlet's RSS, Atom or Google-News sitemap
-  (`FEEDS`; an unchanged feed answers 304), keeps 48 hours of headlines
-  (R2 `private/news/items.json.gz`), groups them into stories (TF-IDF over
+  (`FEEDS`; an unchanged feed answers 304), keeps 48 hours of headlines,
+  leaves filler out (gossip, fortune, lottery, sport, viral, clickbait,
+  promos: `fillerOf`, `softOf`), groups them into stories (TF-IDF over
   two-character pieces for Chinese, stemmed words and summaries for English;
-  `groupStories`) and writes `news/index.json`: `{ built, tw: [story], intl:
-  [story] }`, only stories two outlets or more carry, ranked by outlets and
-  freshness, 120 a region at most. No AI. A story: `{ id, title, by, sum,
-  sumBy, img, imgBy, at, first, n, sides, blind, parties, items: [[outlet,
-  headline, url, at]] }`; `blind` is the side that left it out (3 outlets
-  or more, 2 hours or more, all on one side).
+  `groupStories`) and adds each group to the story it continues (`deskOf`),
+  so a story is kept for days or weeks (3, 14 or 30 days after its last
+  headline, by how many outlets carried it), growing as coverage comes. A
+  story outlets couldn't take sides on (no topic: the kit's `TOPICS`) isn't
+  shown. Ranked by importance (outlets, headlines 4 an outlet, days),
+  fading by half in 36 hours. Each build reads 12 of the top stories'
+  pages once (`pageOf`): the outlet's picture (og:image) where the feed gave
+  none, and its own YouTube clip (a VideoObject's embedUrl or the article's
+  embed; one on every page of an outlet is its channel's, dropped). Writes
+  `news/index.json` (stories heard of in 3 days, 120 Taiwan's, 80 the
+  world's) and `news/past.json` (older ones by importance, each outlet's
+  newest headline); its state in R2 `private/news/items.json.gz`. No AI. A
+  story: `{ id, title, by, sum, sumBy, img, imgBy, at, first, n, m, days,
+  sides, blind, parties, topics, imp, clips: [[outlet, youtubeId or '', url,
+  title, picture]], items: [[outlet, headline, url, at, video?]] }`;
+  `blind` is the side that left it out (3 outlets or more, 2 hours or more,
+  all on one side).
 - **The outlets** (Orbit-Core `kit/news-outlets.mjs`, one table for the
   builder and the app): each outlet's name, site, owner, kind, its place on
   藍綠 (`tw`), 統獨 (`cs`) or US left–right (`lr`), and the sources for it
   (`BASIS`, `weak` where it rests on owner and stance alone). No outlet is
   placed 白: no study rates one so; a story names the parties its headlines
-  name (`partiesIn`).
+  name (`partiesIn`). Its `TOPICS` (政治, 兩岸, 國際, 國防, 經濟, 科技,
+  能源, 司法, 社會) are what News covers: one line widens it.
 - **The phone** reads the page with the kit's `packJson` (the proxy's
   `/data/`, edge-cached 2 minutes), painting first from its own copy
-  (`peekPack`), and again every 5 minutes in view and on return.
+  (`peekPack`), and again every 5 minutes in view and on return; the past
+  only when asked (a list's end, an old story's link: `hooks.past`).
 
 ## Files
 
-- `public/app.mjs`: starts the app, reads the stories, the Pass sync, tabs and the address (`#tw`, `#s=<story id>`).
+- `public/app.mjs`: starts the app, reads the stories (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`).
 - `public/shell.mjs`: state, words, outlets' names and marks, `outletLink` (a headline that opens the outlet and counts a read).
-- `public/lib/stories.mjs`: the page as read (`cleanPage`), a story's bar (`barOf`), headlines by side (`bySide`), one-sided groups (`oneSided`), orders, `agoOf`.
+- `public/lib/stories.mjs`: the page as read (`cleanPage`), a story's bar (`barOf`), headlines by side (`bySide`), one-sided groups (`oneSided`), topics (`onTopic`, `topicsIn`), clips (`clipsOf`), `daysOf`, `agoOf`.
 - `public/lib/reading.mjs`: 我的閱讀's log `{ v: 1, days: { day: { outlet: taps } } }`, merged by each day's larger count, 60 days kept; `balanceOf`, `leanOf`.
-- `public/views/parts.mjs`: the bar, a story row, the lead card, the page's foot.
-- `public/views/lists.mjs`: 頭條, 台灣 / 國際, 單邊.
-- `public/views/story.mjs`: a story's sheet (`.q-sheet-wide`; each side a card, `.q-sheet-cols`).
+- `public/views/parts.mjs`: the bar, a story row (its picture beside it), a card (`storyCard`: a row on a phone, picture over words when wide, by its section's width), a clip card, the lead card, the page's foot.
+- `public/views/lists.mjs`: 頭條 (a front page: lead, 要聞 cards, 影音 rail, the world's, each topic's), 台灣 / 國際 (topic text tabs, the past at the end), 單邊; `play` (a YouTube clip in its story's sheet, a video page on its site).
+- `public/views/story.mjs`: a story's sheet (`.q-sheet-wide`; its picture or its clip in YouTube's privacy-enhanced player, `player`; the other clips; each day's headlines; each side a card, `.q-sheet-cols`).
 - `public/views/outlets.mjs`: 媒體 and an outlet's sheet.
 - `public/news.css`, `public/look.css`: the sides' colours (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`; never the app's violet), rows, cards.
 - `public/sw.js`: the kit's service worker. Outlets' pictures are never kept (no `sw-images.js`): they're theirs, hotlinked.
@@ -48,9 +62,11 @@ Live: https://orbit.jaypengx.com/news/
 ## Terms
 
 Headlines, links, the outlet's own summary (≤ 80 Chinese characters, 160
-English) and its feed picture, each credited (`by`, `sumBy`, `imgBy`); every
-tap opens the outlet's site. AllSides' ratings are credited where shown (CC
-BY-NC 4.0: no money is made here).
+English) and its picture (its feed's, or the one its page sets for sharing),
+each credited (`by`, `sumBy`, `imgBy`); every tap opens the outlet's site. An
+outlet's YouTube clip plays in YouTube's own player (youtube-nocookie.com),
+credited, with a link to it on YouTube; nothing of it is kept. AllSides'
+ratings are credited where shown (CC BY-NC 4.0: no money is made here).
 
 ## Deploying
 

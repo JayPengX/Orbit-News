@@ -1,12 +1,14 @@
-// Orbit News: Taiwan's and the world's news, each story with every outlet
-// that carries it, counted by side. Five tabs: 頭條 (the lead story, the
-// widest of each, the one-sided ones, your reading in a line), 台灣, 國際,
-// 單邊 (stories only one side's outlets carry) and 媒體 (each outlet's
-// place and why; your reading by side).
+// Orbit News: Taiwan's and the world's news outlets could take sides on,
+// each story with every outlet that carries it, counted by side. Five tabs:
+// 頭條 (a front page: the lead story, the top ones in pictures, clips, each
+// topic's), 台灣, 國際 (by topic, most important first, then the older ones
+// kept), 單邊 (stories only one side's outlets carry) and 媒體 (each
+// outlet's place and why; your reading by side).
 //
 // This file starts the app, reads the stories and opens tabs; the screens
 // are views/*.mjs. The stories are the builder's (Orbit-Core builders/news.js,
-// every 10 minutes → R2 news/index.json, read through the proxy's /data/);
+// every 10 minutes → R2 news/index.json and news/past.json, read through the
+// proxy's /data/);
 // the reading log is this app's payload on the Orbit Pass (`news`), kept on
 // the phone too, merged with the Pass's copy before anything is written
 // (the kit's pass-sync.mjs).
@@ -37,6 +39,7 @@ const TAB_ICONS = {
 };
 const VERSION = document.querySelector('meta[name="build-version"]')?.content || 'dev';
 const PAGE = 'news/index.json';
+const PAST = 'news/past.json';
 
 const q = orbitSession('news', { lang });
 
@@ -114,6 +117,16 @@ function load({ fresh = false } = {}) {
     .finally(() => (reading = null));
   return reading;
 }
+// The older stories kept, read only when asked (a list's end, an old link).
+let pastReading = null;
+hooks.past = () =>
+  (pastReading ||= packJson(PAST, { ttl: 30 * 60_000, timeout: 20_000 })
+    .then(raw => {
+      state.past = cleanPage(raw);
+      state.pastFailed = false;
+    })
+    .catch(() => (state.pastFailed = true))
+    .finally(() => (pastReading = null)));
 // A new build every 10 minutes: looked for every 5 while the app is in view.
 setInterval(() => document.visibilityState === 'visible' && load(), 5 * 60_000);
 

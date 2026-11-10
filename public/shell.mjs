@@ -6,6 +6,7 @@ import * as fmt from '#kit/format.mjs';
 import * as orbitKit from '#kit/orbit.mjs';
 import { h, logoTile } from '#kit/ui.mjs';
 import { outletOf, outletIcon, sideName, sideWord } from '#kit/news-outlets.mjs';
+import * as kitNews from '#kit/news-outlets.mjs';
 import { emptyLog } from './lib/reading.mjs';
 import { agoOf } from './lib/stories.mjs';
 
@@ -20,16 +21,23 @@ export const state = {
   // last read failed and nothing was kept.
   page: null,
   failed: false,
-  // 台灣 and 國際's order: 'wide' (most outlets) or 'new'; how many shown.
-  order: { tw: 'wide', intl: 'wide' },
+  // 台灣 and 國際's topic ('all', a topic's id, or 'video'); how many shown.
+  topic: { tw: 'all', intl: 'all' },
   shown: { tw: 20, intl: 20 },
+  // The past's page (older stories kept, news/past.json), read when asked.
+  past: null,
+  pastFailed: false,
   log: emptyLog(),
   loaded: false
 };
 
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
-// tab(id) opens a tab at its top; reload() reads the stories again.
-export const hooks = { read() {}, render() {}, tab() {}, reload() {} };
+// tab(id) opens a tab at its top; reload() reads the stories again; past()
+// reads the older stories (a promise).
+export const hooks = { read() {}, render() {}, tab() {}, reload() {}, past: async () => {} };
+
+// A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
+export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');
 
 // An outlet's name in the page's language, short.
 export const outletName = id => {
