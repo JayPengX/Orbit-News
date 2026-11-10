@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-Hant" data-app="news" data-look="native">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+<meta name="build-version" content="dev" />
+<!-- brand: Orbit-Core/brand/generate.mjs writes this block -->
+<title>Orbit News</title>
+<meta name="description" content="同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<meta name="application-name" content="Orbit News" />
+<meta name="apple-mobile-web-app-title" content="News" />
+<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Orbit" />
+<meta property="og:title" content="Orbit News" />
+<meta property="og:description" content="同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<meta property="og:url" content="https://orbit.jaypengx.com/news/" />
+<meta property="og:locale" content="zh_TW" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:image" content="https://orbit.jaypengx.com/news/share/og.jpg?v=fc72311f" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Orbit News — 同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<meta property="og:image" content="https://orbit.jaypengx.com/news/share/square.jpg?v=3ca02427" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="1200" />
+<meta property="og:image:alt" content="Orbit News — 同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Orbit News" />
+<meta name="twitter:description" content="同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<meta name="twitter:image" content="https://orbit.jaypengx.com/news/share/x.jpg?v=26580b1b" />
+<meta name="twitter:image:alt" content="Orbit News — 同一則新聞，偏綠、偏藍、中間的媒體各怎麼報，誰沒報一眼就知道" />
+<!-- /brand -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<!-- kit:head: where the app's stylesheets end, before any module. The kit
+     comes from one place for every app (Orbit-Core's GitHub Pages, same
+     site as the apps), each file at the hash this device last saw (orbit.kit
+     and orbit.kitFiles, noted from the kit's version.json by boot.js and
+     orbit.mjs kitLatest; on a first visit the hashes the app's deploy
+     baked in, the `null` at the end), so a change to the kit is one push
+     to Orbit-Core and a phone downloads only the files it changed. A kit
+     file newer than the app's deploy (not in its list) is mapped from those
+     hashes too, never left at a bare address the browser keeps 10 minutes. -->
+<script>!function(b,d,v,h,n,m,f,i,u){try{v=localStorage.getItem('orbit.kit')||'';h=JSON.parse(localStorage.getItem('orbit.kitFiles')||'null')}catch(e){v=''}n=!!v;if(!n&&d){v=d.version;h=d}h=h&&h.version===v?h.files:null;u=function(x){var k=h&&h[x];return b+x+(k?'?v='+k:v?'?v='+encodeURIComponent(v):'')};m={'#kit/':b};f=['brand.mjs','catalog.mjs','dayoff.mjs','devconfig.mjs','domain.mjs','f1live.mjs','feedback.mjs','flight.mjs','format.mjs','gov.mjs','help.mjs','hold-place.mjs','holidays.mjs','lang.mjs','logos.mjs','mirror.mjs','names.mjs','news-outlets.mjs','orbit.mjs','pass-sync.mjs','pass.mjs','passkey.mjs','pay.mjs','photo-urls.mjs','photos.mjs','postseason.mjs','qrcode.mjs','share.mjs','sports-broadcast.mjs','sports-espn.mjs','sports-highlights.mjs','sports-winprob.mjs','steady-pics.mjs','stock-access.mjs','stock-account.mjs','stock-bonds.mjs','stock-codec.mjs','stock-credit.mjs','stock-hk-lots.mjs','stock-holidays.mjs','stock-ipo.mjs','stock-jp-lists.mjs','stock-markets.mjs','stock-quotes.mjs','stock-savings.mjs','ui.mjs'];for(i=0;i<f.length;i++)m['#kit/'+f[i]]=u(f[i]);if(h)for(i in h)/\.mjs$/.test(i)&&(m['#kit/'+i]=u(i));window.ORBIT_KIT={base:b,version:v,noted:n,url:u};document.write('<script type="import'+'map">'+JSON.stringify({imports:m})+'<\/script><link rel="stylesheet" href="'+u('orbit.css')+'"><link rel="modulepreload" href="'+u('orbit.mjs')+'"><link rel="modulepreload" href="'+u('brand.mjs')+'">')}('../Orbit-Core/kit/',null)</script>
+<!-- /kit:head -->
+<link rel="stylesheet" href="./news.css" />
+<!-- Orbit's own look (Orbit-Core DESIGN §11), after the app's own stylesheet. -->
+<link rel="stylesheet" href="./look.css" />
+</head>
+<body>
+<div id="loading" data-title="Orbit News"></div>
+<!-- kit:boot: right after <div id="loading">. -->
+<script>document.write('<script src="'+ORBIT_KIT.url('boot.js')+'"><\/script>')</script>
+<!-- /kit:boot -->
+<header class="q-appbar">
+  <div class="q-appbar-inner">
+    <div class="q-brand">
+      <img class="q-brand-logo" src="./favicon.svg" alt="" width="34" height="34" />
+      <div class="q-brand-text">
+        <h1 id="title">Orbit News</h1>
+      </div>
+    </div>
+    <nav id="tabs" class="q-tabbar" role="tablist"></nav>
+    <div id="top-actions" class="q-actions"></div>
+  </div>
+</header>
+<main class="page">
+  <section id="panel-top" class="tab-panel"></section>
+  <section id="panel-tw" class="tab-panel" hidden></section>
+  <section id="panel-intl" class="tab-panel" hidden></section>
+  <section id="panel-side" class="tab-panel" hidden></section>
+  <section id="panel-outlets" class="tab-panel" hidden></section>
+</main>
+<script type="module" src="./app.mjs" onerror="window.__fxFail&&window.__fxFail()"></script>
+</body>
+</html>

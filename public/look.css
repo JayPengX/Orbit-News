@@ -1,0 +1,13 @@
+/* Orbit News in Orbit's own look (Orbit-Core DESIGN §11), linked after
+   news.css on a page with <html data-look="native">. The kit's layer draws
+   the cards graphite and the text tabs; here only News' own: a story row's
+   press, and 我的閱讀's card as the focus card with no big number. */
+
+html[data-look='native'] .nw-row:active,
+html[data-look='native'] .nw-hl:active,
+html[data-look='native'] .nw-lead:active {
+  background: var(--q-fill-4);
+}
+html[data-look='native'] .nw-mine-card.q-focus {
+  padding: 16px;
+}

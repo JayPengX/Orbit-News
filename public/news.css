@@ -1,0 +1,286 @@
+/* Orbit News. The kit draws the frame (orbit.css: tokens, tab bar, sheets,
+   lists, the focus card, text tabs). This file is the app's own pieces: the
+   sides' colours, a story's bar and row, the lead story, the story sheet's
+   columns, the outlets' line, 我的閱讀. */
+:root {
+  color-scheme: light;
+  font-family: var(--q-font);
+  /* The sides: Taiwan's 綠 · 中 · 藍, the English left · centre · right
+     (the US's own blue and red). Only ever on a bar, a dot or a side's
+     name: the app's violet is never a side. */
+  --nw-g: #1f9a52;
+  --nw-c: #9a9aa3;
+  --nw-b: #2d62d6;
+  --nw-l: #2f7cf0;
+  --nw-r: #dc3b3f;
+  --nw-none: var(--q-fill-1);
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --nw-g: #36c272;
+  --nw-c: #8a8a93;
+  --nw-b: #5d8cf2;
+  --nw-l: #5a9cff;
+  --nw-r: #ff6a6a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --nw-g: #36c272;
+    --nw-c: #8a8a93;
+    --nw-b: #5d8cf2;
+    --nw-l: #5a9cff;
+    --nw-r: #ff6a6a;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--q-page); color: var(--q-text); line-height: 1.45; }
+button { font: inherit; color: inherit; cursor: pointer; }
+[hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
+
+.page { padding: 0 16px calc(96px + var(--q-nav)) 16px; container: page / inline-size; }
+.tab-panel { display: grid; gap: 14px; padding-top: 8px; }
+.tab-panel > .q-nav-title { margin-bottom: -6px; }
+.tab-panel .q-section { display: grid; gap: 8px; margin: 10px 0 0; }
+.tab-panel .q-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.q-section-head h2 { font: 600 20px/25px var(--q-font); }
+/* Wide: the page laid out in columns (DESIGN §10). */
+:root.q-wide { --q-page-max: var(--q-wide-max, 1180px); }
+
+.nw-lede { color: var(--q-label-2); font: var(--q-t-subhead); text-wrap: pretty; }
+.nw-foot { color: var(--q-label-3, var(--q-label-2)); font: var(--q-t-footnote); margin: 8px 4px 0; text-wrap: pretty; }
+
+/* ---- The sides' colours, on a bar's segment, a dot, a name ---- */
+.nw-s-g { background: var(--nw-g); }
+.nw-s-c { background: var(--nw-c); }
+.nw-s-b { background: var(--nw-b); }
+.nw-s-l { background: var(--nw-l); }
+.nw-s-r { background: var(--nw-r); }
+.nw-s-none { background: var(--q-label-3, var(--q-label-2)); }
+.nw-t-g { color: var(--nw-g); }
+.nw-t-c { color: var(--q-label-2); }
+.nw-t-b { color: var(--nw-b); }
+.nw-t-l { color: var(--nw-l); }
+.nw-t-r { color: var(--nw-r); }
+
+/* A story's bar: how many outlets of each side carry it, as lengths. */
+.nw-bar {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 64px;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--q-fill-2);
+}
+.nw-bar > i { display: block; min-width: 4px; }
+.nw-bar.big { flex: 1 1 auto; width: 100%; height: 8px; border-radius: 4px; }
+.nw-counts { color: var(--q-label-2); font: var(--q-t-footnote); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nw-counts b { font-weight: 600; }
+.nw-ago { color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; margin-left: auto; }
+.nw-row-meta .q-tag { margin-left: auto; }
+
+/* ---- A list of stories: rows in one card, a hairline between ---- */
+.nw-list {
+  display: grid;
+  background: var(--nv-card, var(--q-grouped-2));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+  overflow: hidden;
+}
+.nw-list:empty { display: none; }
+.nw-row {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  position: relative;
+}
+.nw-row + .nw-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--q-sep);
+}
+.nw-row-title {
+  font: 500 16px/22px var(--q-font);
+  color: var(--q-label);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-wrap: pretty;
+}
+.nw-row-meta { display: flex; align-items: center; gap: 8px; min-width: 0; }
+@media (hover: hover) {
+  .nw-row:hover { background: var(--q-fill-4); }
+}
+/* Wide: a list's rows in a grid of their own width (two from 640). */
+@container page (min-width: 640px) {
+  .nw-region > .nw-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0;
+  }
+  .nw-region > .nw-list > .nw-row:nth-child(2)::before { display: none; }
+  .nw-region > .nw-list > .nw-row:nth-child(even) { border-left: 0.5px solid var(--q-sep); }
+}
+
+/* ---- The lead story: its picture, the headline at a title's size ---- */
+.nw-lead {
+  display: grid;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  background: var(--nv-card, var(--q-grouped-2));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+  overflow: hidden;
+}
+.nw-lead-pic {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 46vh;
+  background: var(--q-fill-3);
+}
+.nw-lead-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nw-lead-body { display: grid; gap: 8px; padding: 14px 16px 16px; }
+.nw-lead-title { font: 600 21px/28px var(--q-font); color: var(--q-label); text-wrap: pretty; }
+.nw-credit { color: var(--q-label-3, var(--q-label-2)); font: var(--q-t-caption); }
+.nw-lead-sec { margin-top: 4px !important; container: nw-lead / inline-size; }
+.nw-lead .nw-row-meta { flex-wrap: wrap; row-gap: 2px; }
+/* Wide enough (its own column's width, not the screen's): the picture beside
+   the words, never half the screen. */
+@container nw-lead (min-width: 560px) {
+  .nw-lead { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .nw-lead-pic { aspect-ratio: auto; max-height: none; min-height: 200px; }
+  .nw-lead-body { align-content: center; }
+}
+.nw-wait .nw-list { min-height: 300px; margin-top: 14px; }
+
+/* ---- 台灣 · 國際: the order's text tabs ---- */
+.nw-region { display: grid; gap: 12px; }
+.nw-order { margin: 0 0 -2px; }
+
+/* ---- 我的閱讀 ---- */
+.nw-mine { display: grid; gap: 8px; }
+.nw-mine p { color: var(--q-label-2); font: var(--q-t-subhead); text-wrap: pretty; }
+.nw-mine-card { display: grid; gap: 16px; }
+.nw-mine-card .nw-mine-lede { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-mine-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.nw-mine-head b { font: 600 17px/22px var(--q-font); }
+.nw-mine-head small { color: var(--q-label-2); font: var(--q-t-subhead); }
+.nw-mine-card .nw-mine-top { font: var(--q-t-footnote); }
+
+/* ---- 媒體: each place on the line, its outlets, in one card ---- */
+.nw-places {
+  display: grid;
+  background: var(--nv-card, var(--q-grouped-2));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+  overflow: hidden;
+}
+.nw-place { display: grid; gap: 8px; padding: 12px 16px 14px; position: relative; }
+.nw-place + .nw-place::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--q-sep);
+}
+.nw-place-name { display: flex; align-items: center; gap: 8px; font: 600 15px/20px var(--q-font); }
+/* (A lean, ±1, is its side's dot as a ring; the far end, ±2, filled.) */
+.nw-dot.lean { background: none; box-shadow: inset 0 0 0 2.5px var(--dot); }
+.nw-dot.nw-s-g { --dot: var(--nw-g); }
+.nw-dot.nw-s-b { --dot: var(--nw-b); }
+.nw-dot.nw-s-l { --dot: var(--nw-l); }
+.nw-dot.nw-s-r { --dot: var(--nw-r); }
+.nw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.nw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--q-fill-3);
+  font: 500 14px/20px var(--q-font);
+  white-space: nowrap;
+}
+.nw-chip .q-logo { border-radius: 50%; }
+
+/* ---- A story's sheet ---- */
+.nw-story { display: grid; gap: 12px; padding: 0 var(--q-margin, 16px) 24px; }
+.nw-story-head, .nw-story-text { display: grid; gap: 12px; align-content: start; }
+.nw-story-pic { margin: 0; border-radius: var(--q-r-cell); overflow: hidden; background: var(--q-fill-3); max-width: 720px; }
+.nw-story-pic img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.nw-story-pic figcaption { color: var(--q-label-2); font: var(--q-t-caption); padding: 6px 10px; }
+.nw-story-title { font: 600 22px/29px var(--q-font); text-wrap: pretty; max-width: 40em; }
+.nw-sum { color: var(--q-label-2); font: var(--q-t-subhead); max-width: 40em; text-wrap: pretty; }
+.nw-sum small { color: var(--q-label-3, var(--q-label-2)); font: inherit; }
+.nw-story-bar { display: grid; gap: 6px; max-width: 560px; }
+.nw-story-line { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-story-note .q-tag { font-weight: 600; }
+.nw-sides { display: grid; gap: 12px; margin-top: 4px; }
+.nw-side {
+  display: grid;
+  align-content: start;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+  overflow: hidden;
+}
+.nw-side-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px; }
+.nw-side-head b { font: 600 17px/22px var(--q-font); }
+.nw-side-head small { color: var(--q-label-2); font: var(--q-t-footnote); margin-left: auto; }
+.nw-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.nw-side-none { color: var(--q-label-2); font: var(--q-t-subhead); padding: 0 16px 14px; }
+.nw-hl {
+  display: grid;
+  gap: 4px;
+  padding: 10px 16px 12px;
+  color: inherit;
+  text-decoration: none;
+  position: relative;
+}
+.nw-hl::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--q-sep);
+}
+.nw-hl-src { display: flex; align-items: center; gap: 6px; color: var(--q-label-2); font: 500 13px/18px var(--q-font); min-width: 0; }
+.nw-hl-src > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nw-hl-src small { margin-left: auto; font: var(--q-t-caption); white-space: nowrap; }
+.nw-hl-t { font: 500 16px/22px var(--q-font); color: var(--q-label); text-wrap: pretty; }
+@media (hover: hover) {
+  .nw-hl:hover { background: var(--q-fill-4); }
+}
+/* A wide sheet: the picture beside the headline, not a screen of its own. */
+@container q-sheet (min-width: 760px) {
+  .nw-story-head { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+  .nw-story-pic { max-width: none; }
+}
+/* Three sides side by side from 900 (the sheet's own width). */
+@container q-sheet (min-width: 900px) {
+  .nw-story .nw-sides.q-sheet-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ---- An outlet's sheet ---- */
+.nw-outlet { display: grid; gap: 16px; padding: 0 var(--q-margin, 16px) 24px; }
+.nw-outlet-head { display: flex; align-items: center; gap: 14px; }
+.nw-outlet-head span { display: grid; gap: 2px; min-width: 0; }
+.nw-outlet-head b { font: 600 22px/28px var(--q-font); }
+.nw-outlet-head small { color: var(--q-label-2); font: var(--q-t-subhead); }
+.nw-outlet .q-cell-text > span { white-space: normal; text-wrap: pretty; }

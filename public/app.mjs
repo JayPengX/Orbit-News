@@ -1,0 +1,203 @@
+// Orbit News: Taiwan's and the world's news, each story with every outlet
+// that carries it, counted by side. Five tabs: 頭條 (the lead story, the
+// widest of each, the one-sided ones, your reading in a line), 台灣, 國際,
+// 單邊 (stories only one side's outlets carry) and 媒體 (each outlet's
+// place and why; your reading by side).
+//
+// This file starts the app, reads the stories and opens tabs; the screens
+// are views/*.mjs. The stories are the builder's (Orbit-Core builders/news.js,
+// every 10 minutes → R2 news/index.json, read through the proxy's /data/);
+// the reading log is this app's payload on the Orbit Pass (`news`), kept on
+// the phone too, merged with the Pass's copy before anything is written
+// (the kit's pass-sync.mjs).
+import * as kitUI from '#kit/ui.mjs';
+import * as orbitKit from '#kit/orbit.mjs';
+import { passSync } from '#kit/pass-sync.mjs';
+import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
+import { state, hooks, lang, W, today } from './shell.mjs';
+import { cleanPage } from './lib/stories.mjs';
+import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
+import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
+import { renderOutlets } from './views/outlets.mjs';
+import { openStory } from './views/story.mjs';
+
+document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
+const $ = id => document.getElementById(id);
+const TABS = ['top', 'tw', 'intl', 'side', 'outlets'];
+const VIEWS = { top: renderTop, tw: box => renderRegion(box, 'tw'), intl: box => renderRegion(box, 'intl'), side: renderSide, outlets: renderOutlets };
+const TITLES = { top: W('頭條', 'Top'), tw: W('台灣', 'Taiwan'), intl: W('國際', 'World'), side: W('單邊', 'One side'), outlets: W('媒體', 'Outlets') };
+// (The app's own glyphs where the kit has none: an island, a globe, an eye
+// half shut, outlets on a line.)
+const TAB_ICONS = {
+  top: 'home',
+  tw: '<path d="M15.8 2.8c-2 .7-3.7 2-4.9 3.8-1.5 2.2-2.5 4.7-2.9 7.3-.3 2 .1 4 1 5.8.4.8.9 1.6 1.7 1.7.6-.7.8-1.6 1.2-2.4 1.1-2.2 2.6-4.3 3.6-6.6.9-2.1 1.5-4.4 1.4-6.7 0-1.1-.3-2.1-1.1-2.9z"/>',
+  intl: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5S9.7 5.9 12 3.5z"/>',
+  side: '<path d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .4 4.3 1.1M21.5 12S18 18.5 12 18.5c-1.6 0-3-.4-4.3-1.1"/><path d="M4.5 19.5 19.5 4.5"/>',
+  outlets: '<path d="M3.5 12h17"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 6.5v-2M18 6.5v-2M12 19.5v-2"/>'
+};
+const VERSION = document.querySelector('meta[name="build-version"]')?.content || 'dev';
+const PAGE = 'news/index.json';
+
+const q = orbitSession('news', { lang });
+
+// ---- The reading log ----------------------------------------------------------------
+
+let stamp = 1;
+const LOCAL_KEY = 'orbit-news.log.v1';
+function keepLocal() {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify({ account: storedAccount(), payload: encodeLog(state.log) }));
+  } catch {}
+}
+function localCopy() {
+  try {
+    const kept = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null');
+    return kept && kept.account === storedAccount() ? kept.payload : null;
+  } catch {
+    return null;
+  }
+}
+const absorb = theirs => (state.log = trimLog(mergeLogs(state.log, theirs), today()));
+const pass = passSync(q, {
+  decode: decodeLog,
+  encode: () => encodeLog(state.log),
+  apply: theirs => {
+    absorb(theirs);
+    keepLocal();
+    stamp++;
+    if (state.tab === 'outlets' || state.tab === 'top') quietRefresh();
+  }
+});
+let timer = 0;
+function sync({ soon = false } = {}) {
+  clearTimeout(timer);
+  if (soon) return (timer = setTimeout(() => sync(), 4000));
+  if (!state.loaded) return Promise.resolve();
+  return pass.sync();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') sync();
+  else load();
+});
+// A headline opened: counted for its outlet today (the page itself isn't
+// redrawn under the person; 我的閱讀 is when they're back).
+hooks.read = outlet => {
+  addRead(state.log, outlet, today());
+  stamp++;
+  pass.changed();
+  keepLocal();
+  sync({ soon: true });
+};
+hooks.render = () => (stamp++, render());
+hooks.tab = tab => showTab(tab, { top: true });
+hooks.reload = () => load({ fresh: true });
+
+// ---- The stories ----------------------------------------------------------------------
+
+// Read through the kit (memory, the phone's copy, then /data/): a copy two
+// minutes old is used as is; a failed read keeps the last one.
+let reading = null;
+function load({ fresh = false } = {}) {
+  if (reading) return reading;
+  reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      const page = cleanPage(raw);
+      const changed = page.built !== state.page?.built;
+      state.page = page;
+      state.failed = false;
+      if (changed) (stamp++, quietRefresh());
+    })
+    .catch(() => {
+      state.failed = !state.page;
+      if (!state.page) (stamp++, quietRefresh());
+    })
+    .finally(() => (reading = null));
+  return reading;
+}
+// A new build every 10 minutes: looked for every 5 while the app is in view.
+setInterval(() => document.visibilityState === 'visible' && load(), 5 * 60_000);
+
+// ---- Drawing ----------------------------------------------------------------------
+
+function render({ ifChanged = false } = {}) {
+  const box = $(`panel-${state.tab}`);
+  if (!box) return;
+  if (ifChanged && box.dataset.drawn === String(stamp)) return;
+  box.dataset.drawn = String(stamp);
+  VIEWS[state.tab](box);
+  if (state.tab !== TABS[0]) box.prepend(kitUI.navTitle(TITLES[state.tab]));
+}
+const tabNav = tabBar({
+  tabs: TABS.map(id => ({ id, label: TITLES[id], icon: TAB_ICONS[id] })),
+  onSelect: tab => showTab(tab),
+  hash: id => `#${id}`
+});
+function showTab(tab, { top = false } = {}) {
+  state.tab = tab;
+  tabNav.select(tab, top ? { top: true } : undefined);
+  render({ ifChanged: true });
+}
+const quietRefresh = () => {
+  if (document.querySelector('dialog.q-sheet[open]')) return;
+  if (state.loaded) render({ ifChanged: true });
+};
+// A sheet closed: what changed under it drawn now.
+document.addEventListener('close', () => setTimeout(quietRefresh), true);
+
+window.__fxStarted = true;
+const gated = installGate('news', lang);
+watchUpdates({ current: VERSION, key: 'orbitNews', cachePrefix: 'orbit-news-' });
+topActions(q);
+kitUI.pullToRefresh?.(() => load({ fresh: true }), { disabled: () => Boolean(reading) || !state.loaded });
+
+async function boot() {
+  const starting = q.start();
+  // The stories this phone kept, drawn at once; the fresh ones as they come.
+  const kept = await orbitKit.peekPack?.(PAGE).catch(() => null);
+  if (kept?.data) state.page = cleanPage(kept.data);
+  const mine = decodeLog(localCopy() || cachedPayload('news'));
+  if (mine) absorb(mine);
+  const first = load();
+  const show = () => {
+    if (!state.loaded) {
+      state.loaded = true;
+      openFromHash(true);
+    } else (stamp++, render());
+  };
+  if (state.page) show();
+  else await first;
+  show();
+  kitUI.ready(Promise.resolve());
+  const signed = await starting;
+  await pass.first(signed, { local: Boolean(mine) });
+  for (const item of signed?.inbox || []) absorb(decodeLog(item.payload) || {});
+  keepLocal();
+  pass.watch();
+  stamp++;
+  quietRefresh();
+  await sync();
+  for (const item of signed?.inbox || []) q.dropInbox(item.id).catch(() => {});
+}
+if (!gated) boot();
+
+// The address: a tab (#intl), or a story (#s=<id>) over its tab.
+function openFromHash(start = false) {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  const story = /^s=(\w+)$/.exec(hash)?.[1];
+  const tab = TABS.includes(hash) ? hash : start ? 'top' : null;
+  if (tab) showTab(tab);
+  if (story) openStory(story);
+}
+window.addEventListener('hashchange', () => state.loaded && openFromHash());
+
+// A turn of the phone or a window resized: the page laid out again.
+let fitNow = '';
+orbitKit.onScreen?.(fit => {
+  const key = `${fit.w3}${fit.wide}${globalThis.innerHeight > 600}`;
+  if (key === fitNow) return;
+  fitNow = key;
+  stamp++;
+  if (state.loaded) render();
+});
+
+keepOffline();
