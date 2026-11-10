@@ -52,8 +52,13 @@ export const sideFull = side => sideName(side, lang);
 export const ago = at => agoOf(at, Date.now(), en);
 export const regionName = r => (r === 'tw' ? W('台灣', 'Taiwan') : W('國際', 'World'));
 
+// A page out of the app, opened by code: the way the person chose on the Pass
+// sheet (iOS's quick view, or the Safari app: the kit's openLink; an older kit,
+// a new tab). A plain <a> follows that choice by itself.
+export const openOut = url => (orbitKit.openLink ? orbitKit.openLink(url) : globalThis.open?.(url, '_blank', 'noopener'));
+
 // A headline that opens the outlet's own page (in a new tab: the app stays
-// where it was), counted for 我的閱讀.
+// where it was; the Safari app when the person chose it), counted for 我的閱讀.
 export function outletLink(item, children, cls = '') {
   const [o, , url] = item;
   return h('a', { class: cls, href: url, target: '_blank', rel: 'noopener', onclick: () => hooks.read(o) }, children);

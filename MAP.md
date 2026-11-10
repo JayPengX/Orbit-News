@@ -57,7 +57,7 @@ Live: https://orbit.jaypengx.com/news/
 ## Files
 
 - `public/app.mjs`: starts the app, reads the stories (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`).
-- `public/shell.mjs`: state, words, outlets' names and marks, `outletLink` (a headline that opens the outlet and counts a read).
+- `public/shell.mjs`: state, words, outlets' names and marks, `outletLink` (a headline that opens the outlet and counts a read), `openOut` (a page opened by code: the kit's `openLink`, so iOS's quick view or the Safari app, as the person chose on the Pass sheet's 連結; a plain link follows that by itself).
 - `public/lib/stories.mjs`: the page as read (`cleanPage`), a story's bar (`barOf`), headlines by side (`bySide`), China's state media (`stateMedia`), whether sides take it (`sidesTaken`), one-sided groups (`oneSided`, by kind `blindAll`, `byKind`, `blindCounts`), topics (`onTopic`, `topicsIn`), clips (`clipsOf`), `daysOf`, `agoOf`.
 - `public/lib/reading.mjs`: 我的閱讀's log `{ v: 1, days: { day: { outlet: taps } } }`, merged by each day's larger count, 60 days kept; `balanceOf`, `leanOf`.
 - `public/views/parts.mjs`: a story's coverage (`coverage`: the outlets' marks overlapping, `marks`, how many, the bar), a story row (what it's about and when over its headline, its picture beside it), a card (`storyCard`: a row on a phone, picture over words when wide, by its section's width), a clip card, the lead card, the lead stories' `carousel` (scroll-snap, a peek of the next, dots and ‹ ›; two at a time from 900 wide), the page's foot.

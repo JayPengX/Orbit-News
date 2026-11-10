@@ -7,7 +7,7 @@
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
-import { state, hooks, W, en, sideFull, regionName, today, topicName } from '../shell.mjs';
+import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } from '../shell.mjs';
 import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, blindCounts } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { storyList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
@@ -21,7 +21,7 @@ const goTab = tab => () => hooks.tab(tab);
 export function play({ story, clip }) {
   if (clip[1]) return openStory(story.id, { clip: clip[1] });
   hooks.read(clip[0]);
-  globalThis.open?.(clip[2], '_blank', 'noopener');
+  openOut(clip[2]);
 }
 // The topics in their table's order (政治 first), those with stories.
 const topicOrder = () => (kitNews.TOPICS || []).filter(t => t.on !== false).map(t => t.id);

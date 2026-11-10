@@ -8,7 +8,7 @@
 import { h, sheet, tag } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
-import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName } from '../shell.mjs';
+import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
 import { bar, marks, clipCard, playMark } from './parts.mjs';
 
@@ -115,7 +115,7 @@ function storyParts(story, { clip = '', nav = null } = {}) {
   const clipRow = others.length
     ? h('section', { class: 'nw-story-clips' }, [
         h('h3', {}, [W('影音', 'Video'), h('small', { text: ` ${others.length}` })]),
-        kitUI.rail(others.map(c => clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), globalThis.open?.(x[2], '_blank', 'noopener'))))))
+        kitUI.rail(others.map(c => clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), openOut(x[2]))))))
       ])
     : null;
   const topics = (story.topics || []).map(t => topicName(t, story.region)).filter(Boolean);
