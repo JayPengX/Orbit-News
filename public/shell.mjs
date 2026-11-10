@@ -37,6 +37,8 @@ export const state = {
   learn: null,
   // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
   laws: {},
+  // 各方怎麼說: how each side framed a story, by id (news/sides.json, lib/sides.mjs), empty until read.
+  sides: new Map(),
   log: emptyLog(),
   loaded: false
 };

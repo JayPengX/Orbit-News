@@ -8,10 +8,11 @@
 import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
-import { state, hooks, W, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
+import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, aiLine } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
+import { sidesOf } from '../lib/sides.mjs';
 
 // 新聞學單字: on a world story, the words being learned in Orbit Words
 // underlined in its English lines (lib/learn.mjs; the notebook's, nothing
@@ -207,6 +208,7 @@ function storyParts(story, { clip = '' } = {}) {
     head,
     clipRow,
     spectrum(story),
+    sidesSay(story),
     h('section', { class: 'nw-sides-sec' }, [
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
@@ -256,6 +258,25 @@ function worldLink(story) {
     h('small', { text: W(`國際媒體也在報 · ${w.n} 家`, `World outlets carry it too · ${w.n}`) }),
     h('span', { lang: 'en', text: w.title }),
     h('b', { 'aria-hidden': 'true', text: '›' })
+  ]);
+}
+
+// 各方怎麼說: each side's angle in a line, the one difference that matters
+// most on top (the AI's, from their headlines only; lib/sides.mjs), over
+// the headlines themselves, which show it's so.
+function sidesSay(story) {
+  const said = sidesTaken(story) && sidesOf(story, state.sides?.get?.(story.id));
+  if (!said) return null;
+  const pick = x => (en ? x.en : x.zh);
+  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'AI' });
+  mark.innerHTML = kitUI.icons?.spark || '';
+  return h('section', { class: 'nw-say' }, [
+    h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), mark]),
+    h('div', { class: 'nw-say-card' }, [
+      said.diff ? h('p', { class: 'nw-say-diff', lang: en ? 'en' : 'zh-Hant', text: pick(said.diff) }) : null,
+      h('div', { class: 'nw-say-rows' }, said.rows.map(r => h('div', { class: 'nw-say-row' }, [h('span', { class: 'nw-say-who' }, [h('i', { class: `nw-dot nw-s-${r.side}`, 'aria-hidden': 'true' }), h('b', { text: sideFull(r.side) })]), h('p', { lang: en ? 'en' : 'zh-Hant', text: pick(r) })]))),
+      h('small', { class: 'nw-ai-note', text: W('AI 只依各邊的標題整理角度，不評斷誰對；標題在下面。', 'Written by AI from each side’s headlines only, never who’s right; the headlines are below.') })
+    ].filter(Boolean))
   ]);
 }
 

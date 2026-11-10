@@ -639,3 +639,26 @@ h1, h2, h3, p { margin: 0; }
 .nw-learn-words { display: flex; flex-wrap: wrap; gap: 8px; }
 .nw-learn-word { display: inline-flex; align-items: center; gap: 6px; line-height: 1.2; }
 .nw-learn-word small { color: var(--q-label-2); font: var(--q-t-caption); }
+
+/* 各方怎麼說: each side's angle in a line (the AI's, from their headlines),
+   the difference that matters most on top; side by side on a wide sheet. */
+.nw-say { display: grid; gap: 10px; }
+.nw-say .nw-story-h { display: flex; align-items: center; gap: 6px; }
+.nw-say .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-accent, var(--q-label-3)); }
+.nw-say-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-say-diff { font: 600 17px/24px var(--q-font); text-wrap: pretty; max-width: 40em; }
+.nw-say-rows { display: grid; gap: 12px; }
+.nw-say-row { display: grid; gap: 3px; }
+.nw-say-who { display: inline-flex; align-items: center; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-say-who b { font-weight: 600; }
+.nw-say-row p { font: var(--q-t-subhead); text-wrap: pretty; }
+@container q-sheet (min-width: 620px) {
+  .nw-say-rows { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 16px; }
+}

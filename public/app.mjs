@@ -20,6 +20,7 @@ import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOfflin
 import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
+import { cleanSides } from './lib/sides.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
@@ -132,6 +133,18 @@ function loadLaws(fresh) {
     })
     .catch(() => {});
 }
+// 各方怎麼說: how each side framed the top stories (Orbit-Core's builders/ai.js newsSides), read with the stories.
+const SIDES = 'news/sides.json';
+let sidesBuilt = null;
+function loadSides(fresh) {
+  return packJson(SIDES, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      if (raw?.built === sidesBuilt) return;
+      sidesBuilt = raw?.built ?? null;
+      state.sides = cleanSides(raw);
+    })
+    .catch(() => {});
+}
 // (你關心的: the family's notebook, read again with each load; a holding or team gone, its stories go.)
 function loadInterests() {
   return import('#kit/family.mjs')
@@ -152,6 +165,7 @@ function load({ fresh = false } = {}) {
   loadLines(fresh);
   loadInterests();
   loadLaws(fresh);
+  loadSides(fresh);
   reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
     .then(raw => {
       const page = cleanPage(raw);
