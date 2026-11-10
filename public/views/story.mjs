@@ -266,7 +266,7 @@ function sidesSay(story) {
   if (!said) return null;
   const pick = x => (en ? x.en : x.zh);
   const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'AI' });
-  mark.innerHTML = kitUI.icons?.spark || '';
+  mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
   return h('section', { class: 'nw-say' }, [
     h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), mark]),
     h('div', { class: 'nw-say-card' }, [
