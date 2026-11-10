@@ -47,7 +47,7 @@ function mine(region) {
   return h('div', { class: 'nw-mine' }, [
     h('div', { class: 'nw-mine-head' }, [h('b', { text: regionName(region) }), h('small', { text: say })]),
     b.total ? bar({ region, sides: b.sides, n: b.total }, { big: true }) : null,
-    b.total ? counts({ region, sides: b.sides, n: b.total }, { full: true }) : null,
+    b.total ? counts({ region, sides: b.sides, n: b.total, state: b.none }, { full: true }) : null,
     h('p', { class: 'nw-mine-top', text: W(`最常點開：${b.outlets.slice(0, 3).map(([o, n]) => `${outletName(o)} ${n}`).join('、')}`, `Opened most: ${b.outlets.slice(0, 3).map(([o, n]) => `${outletName(o)} ${n}`).join(', ')}`) })
   ]);
 }

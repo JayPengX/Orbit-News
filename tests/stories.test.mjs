@@ -49,6 +49,8 @@ test('a story counts China\'s state media apart; the sides\' bar only for a kind
   const page = cleanPage(raw);
   assert.equal(stateMedia(page.intl[0]), 1);
   assert.equal(stateMedia(page.tw[0]), 0);
+  // (A reading's bar has no headlines: 媒體 went blank for anyone who'd opened one, 11-10.)
+  assert.equal(stateMedia({ region: 'tw', sides: { g: 2, c: 1, b: 0 }, n: 3 }), 0);
   assert.equal(sidesTaken({ topics: ['pol'] }), true);
   assert.equal(sidesTaken({ topics: ['sport'] }), false);
   assert.equal(sidesTaken({ topics: ['life', 'pol'] }), true);

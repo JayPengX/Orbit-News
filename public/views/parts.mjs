@@ -37,10 +37,11 @@ export function bar(story, { big = false } = {}) {
   for (const p of parts) if (p.n) el.append(h('i', { class: `nw-s-${p.side}`, style: { flexGrow: String(p.n) } }));
   return el;
 }
-// Each side's count in words (綠 1 中 4 藍 3), China's state media apart.
+// Each side's count in words (綠 1 中 4 藍 3), China's state media apart
+// (a reading's own count of them as `state`: it has no headlines).
 export function counts(story, { full = false } = {}) {
   const { parts, rated } = barOf(story);
-  const state = stateMedia(story);
+  const state = story.state ?? stateMedia(story);
   return h('span', { class: 'nw-counts' }, [
     ...parts.flatMap((p, i) => [i ? ' ' : '', h('b', { class: `nw-t-${p.side}`, text: full ? sideFull(p.side) : sideText(p.side) }), ` ${p.n}`]),
     full && state ? W(` 官媒 ${state}`, ` State media ${state}`) : '',

@@ -80,7 +80,7 @@ export function bySide(story) {
 }
 
 // The outlets of a story, one each, in the order their headlines come.
-export const outletsOf = story => [...new Set(story.items.map(it => it[0]))];
+export const outletsOf = story => [...new Set((story.items || []).map(it => it[0]))];
 // How many of them are China's state media (on no side: counted apart).
 export const stateMedia = story => outletsOf(story).filter(o => outletOf(o)?.kind === 'state').length;
 // A story of a kind sides take (politics, the economy…), not one past them

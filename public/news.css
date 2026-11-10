@@ -434,7 +434,9 @@ h1, h2, h3, p { margin: 0; }
 .nw-chip .q-logo { border-radius: 50%; }
 
 /* ---- A story's sheet ---- */
-.nw-story { display: grid; gap: 12px; padding: 0 var(--q-margin, 16px) 24px; }
+/* (The kit's sheet already holds its content 16 px in: no more of our own
+   at the sides, Jay 11-10.) */
+.nw-story { display: grid; gap: 12px; padding: 0 0 24px; }
 /* The clip playing, in YouTube's player; the picture with a play mark before. */
 .nw-player { position: relative; aspect-ratio: 16 / 9; background: #000; }
 .nw-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -544,7 +546,7 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* ---- An outlet's sheet ---- */
-.nw-outlet { display: grid; gap: 16px; padding: 0 var(--q-margin, 16px) 24px; }
+.nw-outlet { display: grid; gap: 16px; padding: 0 0 24px; }
 .nw-outlet-head { display: flex; align-items: center; gap: 14px; }
 .nw-outlet-head span { display: grid; gap: 2px; min-width: 0; }
 .nw-outlet-head b { font: 600 22px/28px var(--q-font); }
