@@ -87,7 +87,7 @@ export function renderTop(box) {
   const whyOf = new Map(forYou.map(m => [m.story.id, m.why]));
   const mineStories = forYou.map(m => m.story);
   const parts = [
-    mineStories.length ? section(W('你關心的', 'For you'), [storyList(mineStories, s => open(s, mineStories), { why: s => whyOf.get(s.id) }), h('p', { class: 'nw-foot', text: W('依你在 Orbit 證券的持股、Orbit 運動追蹤的球隊。', 'From what you hold in Orbit Securities and follow in Orbit Sports.') })], { cls: 'nw-mine-sec' }) : null,
+    mineStories.length ? section(W('你關心的', 'For you'), [storyList(mineStories, s => open(s, mineStories), { why: s => whyOf.get(s.id) }), h('p', { class: 'nw-foot', text: W('依你在 Orbit 證券的持股、Orbit 運動追蹤的球隊。', 'From what you hold in Orbit Securities and follow in Orbit Sports.') })], { cls: 'nw-mine-sec', ai: true }) : null,
     world.length ? section(regionName('intl'), [storyList(world, s => open(s, intl)), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
     ...topics,
     one.length ? section(W('單邊', 'One side'), [h('p', { class: 'nw-lede', text: W('只有一邊的媒體在報的新聞。', 'Stories only one side’s outlets carry.') }), storyList(one, open), more(W('看全部單邊新聞', 'All one-sided stories'), 'side')]) : null,
