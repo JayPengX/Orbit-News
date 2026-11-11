@@ -18,13 +18,19 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 <p align="center">
   <img src="docs/screenshots/news-1.webp" width="30%" alt="Today's top stories, every side">
   <img src="docs/screenshots/news-2.webp" width="30%" alt="One story, each side's headlines">
-  <img src="docs/screenshots/news-3.webp" width="30%" alt="Taiwan's news, by importance">
+  <img src="docs/screenshots/news-3.webp" width="30%" alt="Today's five, picked for you">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.webp" width="30%" alt="World news, left to right">
-  <img src="docs/screenshots/news-5.webp" width="30%" alt="Stories only one side carries">
-  <img src="docs/screenshots/news-6.webp" width="30%" alt="Every outlet's place, and why">
+  <img src="docs/screenshots/news-4.webp" width="30%" alt="Taiwan's news, by importance">
+  <img src="docs/screenshots/news-5.webp" width="30%" alt="World news, left to right">
+  <img src="docs/screenshots/news-6.webp" width="30%" alt="Stories only one side carries">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/news-7.webp" width="30%" alt="Every outlet's place, and why">
+  <img src="docs/screenshots/news-8.webp" width="30%" alt="Tech news, every side">
+  <img src="docs/screenshots/news-9.webp" width="30%" alt="Politics, each side marked">
 </p>
 
 <details>
@@ -33,16 +39,24 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 <p align="center">
   <img src="docs/screenshots/news-1.zh.webp" width="30%" alt="今天的頭條，各家怎麼報">
   <img src="docs/screenshots/news-2.zh.webp" width="30%" alt="同一則新聞，每一邊的標題">
-  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="台灣新聞，依重要程度排">
+  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="今天五則，挑給你的">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="國際新聞，左中右一眼看">
-  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="只有一邊在報的新聞">
-  <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="每家媒體的立場與來源">
+  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="台灣新聞，依重要程度排">
+  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="國際新聞，左中右一眼看">
+  <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="只有一邊在報的新聞">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/news-7.zh.webp" width="30%" alt="每家媒體的立場與來源">
+  <img src="docs/screenshots/news-8.zh.webp" width="30%" alt="科技新聞，各方一起看">
+  <img src="docs/screenshots/news-9.zh.webp" width="30%" alt="政治新聞，標出立場">
 </p>
 
 </details>
+
+**Beyond the headlines.** 各方怎麼說: on big political and world stories, each side's angle in a line and the one difference that matters, written by AI from their own headlines only, never who's right. 今天五則: five stories past the headlines, picked for you each morning. 你關心的: stories about what you hold in Orbit Securities and follow in Orbit Sports lead, marked 持股 or 追蹤 (read on the phone, nothing sent). 看法案: the laws a Taiwan story names open in Orbit Law; on world stories, the words you're learning in Orbit Words are underlined (新聞學單字).
 
 **Where the places come from.** Taiwanese outlets by published research (Chiang & Shih 2013, TEDS; Chang & Fang 2023; Kao, APSR), newer web outlets by owner and stated stance (marked weaker). English outlets by AllSides Media Bias Ratings™ (CC BY-NC 4.0), and by Media Bias/Fact Check where AllSides has none; only China's state media stand apart. Each outlet's sheet in the app says why.
 
