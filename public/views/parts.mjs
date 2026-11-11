@@ -6,35 +6,51 @@ import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, t
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf } from '../lib/stories.mjs';
+import { sized } from '../lib/pics.mjs';
 
-// An outlet's picture, hotlinked (never kept). One that won't load gives way
-// to the next outlet's (`alts`: [[picture, outlet]], the builder's); gone,
-// with its card's has-pic, only when none load (Jay 11-11: an empty space
-// where 32 other outlets had one). `onBy(outlet)`: whose shows now ('' none).
-export const picture = (src, cls, { eager = false, alts = [], onBy = null } = {}) => {
+// An outlet's picture, hotlinked (never kept), asked at the size it's shown
+// (`size`: 's' a row's, 'l' a lead's; lib/pics.mjs `sized`), the address as
+// given should that one fail. One that won't load gives way to the next
+// outlet's (`alts`: [[picture, outlet]], the builder's); gone, with its
+// card's has-pic, only when none load (Jay 11-11: an empty space where 32
+// other outlets had one). `onBy(outlet)`: whose shows now ('' none). Its
+// place is held at its shape, filled grey, and the picture fades in once
+// it's there (one already loaded this visit is there at once: no fade).
+export const picture = (src, cls, { eager = false, alts = [], onBy = null, size = 's' } = {}) => {
   if (!src) return null;
-  const next = [...(alts || [])].filter(a => a?.[0] && a[0] !== src);
+  const queue = [];
+  const seen = new Set();
+  const add = (u, by) => u && !seen.has(u) && (seen.add(u), queue.push([u, by]));
+  for (const [u, by] of [[src, null], ...(alts || []).filter(a => a?.[0])]) add(sized(u, size), by), add(u, by);
   const box = h('span', { class: cls });
+  let by = null;
   const img = h('img', {
-    src,
+    src: queue.shift()[0],
     alt: '',
     loading: eager ? 'eager' : 'lazy',
+    fetchpriority: eager ? 'high' : null,
     decoding: 'async',
     referrerpolicy: 'no-referrer',
+    onload: () => box.classList.remove('nw-pic-wait'),
     onerror: () => {
-      const alt = next.shift();
-      if (alt) return void ((img.src = alt[0]), onBy?.(alt[1]));
+      const next = queue.shift();
+      if (next) {
+        img.src = next[0];
+        if (next[1] !== null && next[1] !== by) onBy?.((by = next[1]));
+        return;
+      }
       box.closest('.has-pic')?.classList.remove('has-pic');
       box.remove();
       onBy?.('');
     }
   });
+  if (!img.complete) box.classList.add('nw-pic-wait');
   box.append(img);
   return box;
 };
 // A story's picture with its others to fall back on.
 const storyPicture = (story, cls, opts = {}) => {
-  const [first, ...alts] = picturesOf(story);
+  const [first, ...alts] = picturesOf(story, { light: (opts.size || 's') === 's' });
   return picture(first?.[0], cls, { ...opts, alts });
 };
 // A clip's mark on a picture: a play button.
@@ -150,7 +166,7 @@ export function briefList(items, onOpen) {
 // headline and coverage on a wide page; a row with the picture beside it on
 // a narrow one (by the grid's own width, news.css).
 export function storyCard(story, onOpen, list = null) {
-  const pic = withClip(storyPicture(story, 'nw-card-pic'), story);
+  const pic = withClip(storyPicture(story, 'nw-card-pic', { size: globalThis.innerWidth >= 600 ? 'l' : 's' }), story);
   return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), titleSpan(story, 'nw-card-title'), coverage(story)])
@@ -162,7 +178,7 @@ export const storyCards = (stories, onOpen) => h('div', { class: 'nw-cards q-row
 // the outlet and its headline. `onPlay({ story, clip })`.
 export function clipCard(entry, onPlay) {
   const { story, clip } = entry;
-  const pic = picture(clip[4] || story.img, 'nw-clip-pic') || h('span', { class: 'nw-clip-pic' });
+  const pic = picture(clip[4] || story.img, 'nw-clip-pic', { size: 'l' }) || h('span', { class: 'nw-clip-pic' });
   pic.append(playMark());
   return h('button', { type: 'button', class: 'nw-clip', 'data-story': story.id, onclick: () => onPlay(entry) }, [
     pic,
@@ -176,8 +192,9 @@ export function clipCard(entry, onPlay) {
 export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
   // (The credit follows the picture that loads, gone with the last.)
   const creditOf = by => W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`);
-  const credit = story.img && story.imgBy ? h('small', { class: 'nw-credit', text: creditOf(story.imgBy) }) : null;
-  const pic = withClip(storyPicture(story, 'nw-lead-pic', { eager, onBy: by => (by ? credit && (credit.textContent = creditOf(by)) : credit?.remove()) }), story);
+  const firstBy = picturesOf(story)[0]?.[1];
+  const credit = firstBy ? h('small', { class: 'nw-credit', text: creditOf(firstBy) }) : null;
+  const pic = withClip(storyPicture(story, 'nw-lead-pic', { size: 'l', eager, onBy: by => (by ? credit && (credit.textContent = creditOf(by)) : credit?.remove()) }), story);
   const about = aboutLine(story, { when: true });
   return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,

@@ -277,6 +277,13 @@ h1, h2, h3, p { margin: 0; }
 .nw-thumb, .nw-card-pic, .nw-clip-pic { position: relative; display: block; overflow: hidden; background: var(--q-fill-3); }
 :is(.nw-thumb, .nw-card-pic, .nw-clip-pic, .nw-lead-pic) img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .nw-lead-pic { position: relative; overflow: hidden; }
+/* (Its place held grey at its shape; the picture fades in once it's there,
+   parts.mjs picture: nothing pops or moves.) */
+:is(.nw-thumb, .nw-card-pic, .nw-clip-pic, .nw-lead-pic) img { transition: opacity 0.28s ease-out; }
+.nw-pic-wait img { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.nw-thumb, .nw-card-pic, .nw-clip-pic, .nw-lead-pic) img { transition: none; }
+}
 .nw-play {
   position: absolute;
   left: 50%;
@@ -390,6 +397,10 @@ h1, h2, h3, p { margin: 0; }
 /* 影音: the outlets' clips in a row that scrolls sideways. */
 .nw-clips-sec .q-rail, .nw-story-clips .q-rail { --q-rail-w: 216px; }
 .nw-clip { display: grid; gap: 6px; align-content: start; padding: 0; border: 0; background: none; text-align: left; min-width: 0; }
+/* (Its width is its column's, never its picture's: without it, the row's
+   share-the-width columns measured every clip's picture at its own size,
+   five times the rest of the front page's layout on a phone.) */
+.nw-clip { contain: inline-size; }
 .nw-clip-pic { aspect-ratio: 16 / 9; border-radius: 14px; box-shadow: var(--nv-edge, none); }
 .nw-clip-src { display: flex; align-items: center; gap: 6px; color: var(--q-label-2); font: 500 13px/18px var(--q-font); min-width: 0; }
 .nw-clip-src > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

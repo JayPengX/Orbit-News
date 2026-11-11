@@ -78,8 +78,11 @@ const pass = passSync(q, {
   decode: decodeLog,
   encode: () => encodeLog(state.log),
   apply: theirs => {
+    const was = encodeLog(state.log);
     absorb(theirs);
     keepLocal();
+    // (Drawn again only when the Pass's copy changed the log: a whole front page each open for nothing, else.)
+    if (encodeLog(state.log) === was) return;
     stamp++;
     if (state.tab === 'outlets' || state.tab === 'top') quietRefresh();
   }
@@ -243,28 +246,30 @@ kitUI.pullToRefresh?.(() => load({ fresh: true }), { disabled: () => Boolean(rea
 async function boot() {
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
-  const kept = await orbitKit.peekPack?.(PAGE).catch(() => null);
+  const [kept, keptLines] = await Promise.all([PAGE, LINES].map(p => orbitKit.peekPack?.(p).catch(() => null)));
   if (kept?.data) state.page = cleanPage(kept.data);
+  // (The AI's titles kept with them, so the first draw is the whole one: the fresh ones redraw only if newer.)
+  if (keptLines?.data && linesBuilt === null) ((state.lines = cleanLines(keptLines.data)), (linesBuilt = keptLines.data.built ?? null));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
   if (mine) absorb(mine);
   const first = load();
   const show = () => {
-    if (!state.loaded) {
-      state.loaded = true;
-      openFromHash(true);
-    } else (stamp++, render());
+    state.loaded = true;
+    openFromHash(true);
   };
-  if (state.page) show();
-  else await first;
+  // (Drawn once: the kept stories at once, else the fresh ones when they
+  // land; the fresh ones over the kept draw themselves, load(), only if newer.)
+  if (!state.page) await first;
   show();
   kitUI.ready(Promise.resolve());
   const signed = await starting;
+  const logWas = encodeLog(state.log);
   await pass.first(signed, { local: Boolean(mine) });
   for (const item of signed?.inbox || []) absorb(decodeLog(item.payload) || {});
   keepLocal();
   pass.watch();
-  stamp++;
-  quietRefresh();
+  // (The Pass's reading log drawn only if it changed what the page shows.)
+  if (encodeLog(state.log) !== logWas) (stamp++, quietRefresh());
   await sync();
   for (const item of signed?.inbox || []) q.dropInbox(item.id).catch(() => {});
 }

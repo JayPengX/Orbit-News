@@ -52,7 +52,7 @@ Live: https://orbit.jaypengx.com/news/
   widens it.
 - **The phone** reads the page with the kit's `packJson` (the proxy's
   `/data/`, edge-cached 2 minutes), painting first from its own copy
-  (`peekPack`), and again every 5 minutes in view and on return; the past
+  (`peekPack`, the AI's titles with it: the front page is drawn once, again only when a newer build or a changed reading log comes), and again every 5 minutes in view and on return; the past
   only when asked (a list's end, an old story's link: `hooks.past`).
 
 ## Files
@@ -67,6 +67,7 @@ Live: https://orbit.jaypengx.com/news/
 - 各方怎麼說 (the family's AI, Jay 11-10; `views/story.mjs` `sidesSay`, `lib/sides.mjs`): on a story sides take, above 各邊怎麼下標, each side's angle in a line and the one difference that matters most, the AI's from their headlines only (Orbit-Core's `builders/ai.js` `newsSides` → `/data/news/sides.json`, read in `app.mjs` `loadSides`; a difference that only says the sides again is left out, the kit's `sidesRecap`; the day's top 8 Taiwan and 4 world stories on politics, cross-strait, world, defence and law).
 - `public/lib/lines.mjs`: 國際新聞中文標題 (the family's AI, Jay 11-10): Orbit-Core's builder (`builders/ai.js` `newsLines`, the AI door's `news-lines`) writes `news/lines.json` once a story from the outlets' own headlines: a world story's Chinese headline, a Taiwan story's English one (`cleanLines`, `titleOf`). No one line under a headline (Jay 11-10: it only said the headline again, AI spent for nothing). Read beside the page (`app.mjs` `loadLines`, `state.lines`); drawn by `parts.mjs` `shownTitle` and the story sheet's head (`story.mjs` `storyTitle`: the outlets' own title under the AI's, said to be the AI's).
 - `public/lib/reading.mjs`: 我的閱讀's log `{ v: 1, days: { day: { outlet: taps } } }`, merged by each day's larger count, 60 days kept; `balanceOf`, `leanOf`.
+- `public/lib/pics.mjs`: an outlet's picture at the size it's shown (`sized(src, 's' | 'l')`: a row's about 480 wide, a lead's or a sheet's about 960), asked of the outlet's own server by its address (a width in the query, a size in the path, its own resizer: 中天's `/_ipx/`), each rule checked live; any other is asked as given, and a smaller one that fails gives way to it. `heavy`: the few outlets with 250 KB to MB pictures and no smaller size (華視, 東森, Politico, CGTN, The Atlantic), tried after the other outlets' for a row's picture (`stories.mjs picturesOf` `light`); `notPicture`: a video stream left out. Pictures fade in on their grey, held place (`parts.mjs picture`, `.nw-pic-wait`).
 - `public/views/parts.mjs`: a story's coverage (`coverage`: the outlets' marks overlapping, `marks`, how many, the bar), a story row (what it's about and when over its headline, its picture beside it), a card (`storyCard`: a row on a phone, picture over words when wide, by its section's width), a clip card, the lead card, the lead stories' `carousel` (scroll-snap, a peek of the next, dots and ‹ ›; two at a time from 900 wide), the page's foot.
 - `public/views/lists.mjs`: 頭條 (a front page: the date, the carousel of Taiwan's top three and the world's top two, 要聞 cards, 影音 rail, the world's, each topic's), 台灣 / 國際 (topic text tabs, a swipe across the list to the topic beside: the kit's `daySwipe`, `swipeTabs`; the topic's lead in its picture; the past at the end), 單邊 (台灣 / 國際 text tabs and the same swipe, `sideRegions`; each end's count left out as a tile that filters, then the stories by kind, three each and the rest folded, `kindPart`); a topic's tab only with `TAB_MIN` stories, its stories tagged with it (`asTopic`); `play` (a YouTube clip in its story's sheet, a video page on its site). A story opens with the list it was in.
 - `public/views/story.mjs`: a story's sheet (`.q-sheet-wide`; its picture or its clip in YouTube's privacy-enhanced player, `player`, which listens for YouTube's refusal and then links to YouTube; the coverage card, `spectrum`: the bar, each side's count in a line, 官媒 apart, the side that left it out, the parties named; its other clips right under the story; `hooks.play`: a list's tap on a picture with a play mark opens it playing; 各邊怎麼下標, each side a card, `.q-sheet-cols`, `sideCard`: each outlet once, its other headlines folded, four outlets at first; on a world story, 台灣媒體怎麼報, `taiwanPart` (the builder's `tw`); on a Taiwan story the world's carry too, `worldLink`; 每天的報導, `growthOf`; the foot, `footOf`: ‹ 上一則 · n / N · 下一則 › to the stories beside, also a swipe on the sheet (`daySwipe`) and the arrow keys).
@@ -77,7 +78,7 @@ Live: https://orbit.jaypengx.com/news/
 ## Terms
 
 Headlines, links, the outlet's own summary (≤ 80 Chinese characters, 160
-English) and its picture (its feed's, or the one its page sets for sharing),
+English) and its picture (its feed's, or the one its page sets for sharing; asked at a smaller size from the outlet's own server where it makes one, `lib/pics.mjs`),
 each credited (`by`, `sumBy`, `imgBy`); every tap opens the outlet's site. An
 outlet's YouTube clip plays in YouTube's own player (youtube-nocookie.com),
 credited, with a link to it on YouTube; nothing of it is kept. AllSides'

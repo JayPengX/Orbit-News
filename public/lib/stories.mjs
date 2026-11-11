@@ -9,6 +9,7 @@
 // headline, url, at, video?]] }.
 import { sideOf, SIDES, outletOf } from '#kit/news-outlets.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
+import { heavy, notPicture } from './pics.mjs';
 
 export const REGIONS = ['tw', 'intl'];
 // The two ends of a region's line (the middle is c).
@@ -56,9 +57,14 @@ export const TAB_MIN = 3;
 // A story's pictures in the order a phone tries them: its own, then each
 // other outlet's (the builder's alts), each address once (Jay 11-11: one
 // outlet's picture that wouldn't load left an empty space).
-export const picturesOf = story => {
+// (A video's stream address left out. `light`, for a row's small picture:
+// the few outlets whose pictures run to hundreds of KB or megabytes with no
+// smaller size, lib/pics.mjs `heavy`, asked after the rest; a lead keeps the
+// builder's order, a press photo over a clip's still.)
+export const picturesOf = (story, { light = false } = {}) => {
   const seen = new Set();
-  return [story?.img && [story.img, story.imgBy || ''], ...(story?.alts || [])].filter(p => p?.[0] && !seen.has(p[0]) && seen.add(p[0]));
+  const all = [story?.img && [story.img, story.imgBy || ''], ...(story?.alts || [])].filter(p => p?.[0] && !notPicture(p[0]) && !seen.has(p[0]) && seen.add(p[0]));
+  return light ? [...all.filter(p => !heavy(p[0])), ...all.filter(p => heavy(p[0]))] : all;
 };
 
 // A story by its id, on the page or among the past's.

@@ -22,6 +22,7 @@ remove a feature on purpose, delete its line in the same commit.
 - The lead story with its picture, credited to its outlet — `public/views/parts.mjs`: `export function leadCard`, `圖：`
 - Every story's picture beside it in a list, a play mark when it has a clip — `public/views/parts.mjs`: `nw-thumb`, `export const playMark`
 - A picture that won't load gives way to another outlet's (the builder's `alts`), its credit following; the space gone only when none load (Jay 11-11) — `public/views/parts.mjs`, `public/lib/stories.mjs`: `const storyPicture`, `export const picturesOf`
+- Pictures quick and smooth (Jay 11-11): each asked at the size it's shown from the outlet's own server (19 outlets' smaller sizes, 中天's resizer), the few megabyte ones last in a row, each fading in on its held grey place — `public/lib/pics.mjs`, `public/views/parts.mjs`, `public/news.css`: `export function sized`, `export const heavy`, `nw-pic-wait`
 - What a story is about and how long it has run (政治 · 報導 3 天) — `public/views/parts.mjs`: `export function aboutLine`, `報導 ${d} 天`
 - When the stories were gathered, and that headlines and pictures are the outlets' own — `public/views/parts.mjs`: `export function builtLine`
 

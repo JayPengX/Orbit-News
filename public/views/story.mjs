@@ -10,6 +10,7 @@ import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf } from '../lib/stories.mjs';
+import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
@@ -170,15 +171,18 @@ function storyParts(story, { clip = '' } = {}) {
     ]);
   const media = h('figure', { class: 'nw-story-pic' });
   const playIn = c => media.replaceChildren(player(c), credit(c));
-  const still = story.img || yt[0]?.[4];
+  const pics = picturesOf(story);
+  const still = pics[0]?.[0] || yt[0]?.[4];
   if (clip && yt.some(c => c[1] === clip)) playIn(yt.find(c => c[1] === clip));
   else if (still) {
     // (One that won't load gives way to another outlet's, then the clip's
-    // own still; the credit follows it.)
-    const next = [...picturesOf(story), ...(yt[0]?.[4] ? [[yt[0][4], '']] : [])].filter(a => a[0] !== still);
-    let cap = yt.length ? credit(yt[0]) : story.imgBy ? credit(null) : null;
+    // own still; the credit follows it. Each asked at a sheet's size first,
+    // lib/pics.mjs, then as given.)
+    const next = [...pics, ...(yt[0]?.[4] ? [[yt[0][4], '']] : [])].flatMap(a => [[sized(a[0], 'l'), a[1]], a]).filter((a, i, all) => all.findIndex(b => b[0] === a[0]) === i);
+    next.shift();
+    let cap = yt.length ? credit(yt[0]) : pics[0]?.[1] ? credit(null, pics[0][1]) : null;
     const img = h('img', {
-      src: still,
+      src: sized(still, 'l'),
       alt: '',
       decoding: 'async',
       referrerpolicy: 'no-referrer',
