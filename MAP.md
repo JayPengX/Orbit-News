@@ -1,15 +1,29 @@
 # Orbit News: the map
 
-Taiwan's and the world's news (politics in the wide sense: tech, the economy,
-society; and, from Jay's 11-10 widening, life, health, science, culture and
-sport), each event gathered into one story with every outlet that carries it,
-counted by side: Taiwan's 偏綠 · 中間 · 偏藍, the English left · centre ·
-right. The spectrum is one feature, not a filter. Signs in with the Orbit Pass; 我的閱讀 syncs on
-it. In Orbit's own look (Orbit-Core DESIGN §11): `data-look="native"`,
-`look.css` after `news.css`. Started 2026-11-10 (Jay: "like Ground News but
-for Taiwan": the idea only; the look, names and words are Orbit's own).
-
+Taiwan's and the world's news, each event gathered into one story with every
+outlet that carries it, counted by side: Taiwan's 偏綠 · 中間 · 偏藍, the
+English left · centre · right. The spectrum is one feature, not a filter.
+Signs in with the Orbit Pass; 我的閱讀 syncs on it. Started 2026-11-10.
 Live: https://orbit.jaypengx.com/news/
+
+## Rules
+
+Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in Orbit-Core `docs/RULEBOOK.md`.
+
+- 11-10 Taiwan's and English news grouped into stories, each outlet's side shown (藍綠 and 統獨 for Taiwan, US left/right for English). "Like Ground News but for Taiwan" is the idea only, never its name, look or words (its "Blindspot" is our 單邊).
+- 11-10 An outlet's place comes from a published source (`kit/news-outlets.mjs` `BASIS`), or its owner's stated stance marked weaker; never our own reading of its stories. No outlet placed 白: stories name the parties instead. Every outlet has a place (AllSides, else Media Bias/Fact Check); only China's state media stand apart, as 官媒.
+- 11-10 Headlines, links, the outlet's short summary and feed picture only, each credited; every tap opens the outlet; never a whole article, never a picture or clip kept. No AI in the builder's grouping or placing.
+- 11-10 Cloudflare goes out from Orbit-Core: News's site is published by Orbit-Core's `news-site.yml` with Orbit-Core's token.
+- 11-10 A hub for any story outlets could take sides on (politics in the wide sense, tech, the economy, society); (08:08) life, health, science, culture and sport too (`TOPICS` `spectrum: false`: never one-sided, no bar, sport and culture ranked lighter). A story of no topic (a game of Pokémon) stays out; the topics are one table, so widening is a line.
+- 11-10 Stories rank by importance (outlets, how much they wrote, for how many days), not newness; a big story stays for weeks (`keepFor`), its page growing.
+- 11-10 Filler is left out (gossip, fortune, lottery, viral, clickbait, promos: `fillerOf`, `softOf`). Every story with a picture shows it; a picture that won't load falls back to the next outlet's (`alts`). An outlet's own YouTube clip plays in YouTube's player; never a channel's page read.
+- 11-10 (08:08) Swipe: 頭條's lead stories, 台灣 and 國際 from topic to topic, a story's sheet from story to story.
+- 11-10 (22:51) A world story shows how Taiwan's outlets put it (their bar and headlines, `tw`, joined by a word list `builders/news-words.js`, never AI); the big world outlets are in, each placed by AllSides. A site that refuses non-browsers is read through Bing News' feed of it (Google News refuses Cloudflare); 民視 through its YouTube channel.
+- 11-10 (22:53) A story's first topic is what most of its headlines name, a second only where 40% name it; in a topic's tab a story's tag is that topic; a tab needs 3 stories; each topic keeps its best 12 past the front's cap; a kind past the sides forms from 2 outlets.
+- 11-10 (22:57) YouTube Shorts are left out; a clip YouTube won't play here says so and opens YouTube; a channel is read only if its clips play elsewhere and aren't mostly Shorts.
+- 11-10 (22:58) A story's sheet keeps ‹ 上一則 · n / N · 下一則 › at its foot; each outlet once a side (its other headlines folded), four a side at first; 單邊 by 台灣 / 國際, each side's count a tap filter, its kinds as sections; one company's monthly report is never another's story.
+- 11-10 No one-line AI summary under a headline (it only said the headline again). 11-11 News isn't passive: a search heads 頭條.
+- The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
 
@@ -55,26 +69,18 @@ Live: https://orbit.jaypengx.com/news/
   (`peekPack`, the AI's titles with it: the front page is drawn once, again only when a newer build or a changed reading log comes), and again every 5 minutes in view and on return; the past
   only when asked (a list's end, an old story's link: `hooks.past`).
 
-## Files
+## Files (`public/`)
 
-- `public/app.mjs`: starts the app, reads the stories (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`).
-- `public/shell.mjs`: state, words, outlets' names and marks, `outletLink` (a headline that opens the outlet and counts a read), `openOut` (a page opened by code: the kit's `openLink`, so iOS's quick view or the Safari app, as the person chose on the Pass sheet's 連結; a plain link follows that by itself).
-- `public/lib/stories.mjs`: the page as read (`cleanPage`), a story's bar (`barOf`), headlines by side (`bySide`), China's state media (`stateMedia`), whether sides take it (`sidesTaken`), one-sided groups (`oneSided`, by kind `blindAll`, `byKind`, `blindCounts`), topics (`onTopic`, `topicsIn`), clips (`clipsOf`), `daysOf`, `agoOf`.
-- `public/lib/mine.mjs`: 你關心的 (the family's links, Jay 11-10): what Orbit Securities holds and Orbit Sports follows on this phone (kit `family.mjs` `stock.holds`, `sports.follows`; names only, nothing sent) as name patterns (`interestsOf`, by the kit's `news-outlets.mjs` `namesRe`, as Securities' 持股新聞: Chinese names as written, English whole words, a Taiwan code alone); `mineOf` finds the stories any outlet's headline names, two at most for each, Taiwan's first. 頭條 shows them first (`lists.mjs`), each row's kicker saying 持股 台積電 or 追蹤 湖人 (`parts.mjs storyRow` `why`).
-- `public/lib/brief.mjs`: 今天五則 (the AI plan's 每日五則, code only, under the Orbit AI mark): five stories past 頭條's leads and 要聞, by the day's order lifted by what the person opens (kit `feedback.mjs` as `news`, keys `t:<topic>` and `r:<region>`; `openStory` notes each open, the brief's rows as shown; kept on the Pass by `keep`) and by 你關心的 (×2); two a topic, two of the world's. Ready from 7:00 Taiwan time and kept all day on the phone (`orbit-news.brief.v1`: `{ day, ids }`, `dayBrief`); drawn by `parts.mjs briefList` (numbered, one headline each), first on 頭條 (`lists.mjs briefNow`); 你關心的 below leaves out what it shows.
-- `public/lib/learn.mjs`: 新聞學單字 (the family's links, Jay 11-10): the words being learned in Orbit Words on this phone (kit `family.mjs` `vocab.learning`, with their forms; nothing sent) as one pattern (`learnSet`); a world story's sheet (`views/story.mjs`) underlines them in its English title, summary and headlines (`learnParts`) and lists them under the headlines as 學單字 chips (`wordsIn`), each opening its card in Words (`hooks.word`: the session's `go('vocab', 'word=…')`).
-- 看法案 (the family's links, Jay 11-10; `views/story.mjs` `lawPart`): a Taiwan story's sheet lists the laws its headlines name as 提到的法律, from Orbit-Core's `builders/news-laws.js` (`/data/news/laws.json`, read with the stories in `app.mjs` `loadLaws`; code only, against Orbit Law's bills of the term), each opening in Law (`hooks.law`): its bill `#item=<term>-<law>` when a headline speaks of changing it, else the law `#law=<pcode>`.
-- 各方怎麼說 (the family's AI, Jay 11-10; `views/story.mjs` `sidesSay`, `lib/sides.mjs`): on a story sides take, above 各邊怎麼下標, each side's angle in a line and the one difference that matters most, the AI's from their headlines only (Orbit-Core's `builders/ai.js` `newsSides` → `/data/news/sides.json`, read in `app.mjs` `loadSides`; a difference that only says the sides again is left out, the kit's `sidesRecap`; the day's top 8 Taiwan and 4 world stories on politics, cross-strait, world, defence and law).
-- `public/lib/lines.mjs`: 國際新聞中文標題 (the family's AI, Jay 11-10): Orbit-Core's builder (`builders/ai.js` `newsLines`, the AI door's `news-lines`) writes `news/lines.json` once a story from the outlets' own headlines: a world story's Chinese headline, a Taiwan story's English one (`cleanLines`, `titleOf`). No one line under a headline (Jay 11-10: it only said the headline again, AI spent for nothing). Read beside the page (`app.mjs` `loadLines`, `state.lines`); drawn by `parts.mjs` `shownTitle` and the story sheet's head (`story.mjs` `storyTitle`: the outlets' own title under the AI's, said to be the AI's).
-- `public/lib/reading.mjs`: 我的閱讀's log `{ v: 1, days: { day: { outlet: taps } } }`, merged by each day's larger count, 60 days kept; `balanceOf`, `leanOf`.
-- `public/lib/search.mjs`, `public/views/search.mjs`: 搜尋 (Jay 11-11: News was passive): one field atop 頭條 (`withSearch`, kept in place as the front page is drawn again under it, so the keyboard stays); typing turns the front page into what's found, on the phone as each letter is typed (`findStories`: the 3 days' page and the past, read the first time anything is searched; every word must be found; the headline and the AI's other-language title count most, then the summary, then every outlet's own headline, then outlets' names, topics and parties; importance and freshness settle ties; text folded alike, `fold`: full width, case, 臺/台). Each row's found words marked (`marked`, `storyRow` `mark`), and the outlet's headline that's why it was found under it (`note`); outlets named as chips (`findOutlets`, opening their sheet); none: `empty`. Recent searches on the phone (`orbit-news.finds.v1`, `keepFind`) as chips when the field is focused and empty; `#q=<words>` opens a search.
-- `public/lib/pics.mjs`: an outlet's picture at the size it's shown (`sized(src, 's' | 'l')`: a row's about 480 wide, a lead's or a sheet's about 960), asked of the outlet's own server by its address (a width in the query, a size in the path, its own resizer: 中天's `/_ipx/`), each rule checked live; any other is asked as given, and a smaller one that fails gives way to it. `heavy`: the few outlets with 250 KB to MB pictures and no smaller size (華視, 東森, Politico, CGTN, The Atlantic), tried after the other outlets' for a row's picture (`stories.mjs picturesOf` `light`); `notPicture`: a video stream left out. Pictures fade in on their grey, held place (`parts.mjs picture`, `.nw-pic-wait`).
-- `public/views/parts.mjs`: a story's coverage (`coverage`: the outlets' marks overlapping, `marks`, how many, the bar), a story row (what it's about and when over its headline, its picture beside it), a card (`storyCard`: a row on a phone, picture over words when wide, by its section's width), a clip card, the lead card, the lead stories' `carousel` (scroll-snap, a peek of the next, dots and ‹ ›; two at a time from 900 wide), the page's foot.
-- `public/views/lists.mjs`: 頭條 (a front page: the date, the carousel of Taiwan's top three and the world's top two, 要聞 cards, 影音 rail, the world's, each topic's), 台灣 / 國際 (topic text tabs, a swipe across the list to the topic beside: the kit's `daySwipe`, `swipeTabs`; the topic's lead in its picture; the past at the end), 單邊 (台灣 / 國際 text tabs and the same swipe, `sideRegions`; each end's count left out as a tile that filters, then the stories by kind, three each and the rest folded, `kindPart`); a topic's tab only with `TAB_MIN` stories, its stories tagged with it (`asTopic`); `play` (a YouTube clip in its story's sheet, a video page on its site). A story opens with the list it was in.
-- `public/views/story.mjs`: a story's sheet (`.q-sheet-wide`; its picture or its clip in YouTube's privacy-enhanced player, `player`, which listens for YouTube's refusal and then links to YouTube; the coverage card, `spectrum`: the bar, each side's count in a line, 官媒 apart, the side that left it out, the parties named; its other clips right under the story; `hooks.play`: a list's tap on a picture with a play mark opens it playing; 各邊怎麼下標, each side a card, `.q-sheet-cols`, `sideCard`: each outlet once, its other headlines folded, four outlets at first; on a world story, 台灣媒體怎麼報, `taiwanPart` (the builder's `tw`); on a Taiwan story the world's carry too, `worldLink`; 每天的報導, `growthOf`; the foot, `footOf`: ‹ 上一則 · n / N · 下一則 › to the stories beside, also a swipe on the sheet (`daySwipe`) and the arrow keys).
-- `public/views/outlets.mjs`: 媒體 and an outlet's sheet.
-- `public/news.css`, `public/look.css`: the sides' colours (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`; never the app's violet), rows, cards.
-- `public/sw.js`: the kit's service worker. Outlets' pictures are never kept (no `sw-images.js`): they're theirs, hotlinked.
+| File | What |
+| --- | --- |
+| `app.mjs`, `shell.mjs` | Start, reading the page (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`); state, outlets' names and marks, `outletLink`, `openOut` (the kit's `openLink`) |
+| `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, one-sided groups, topics, clips |
+| `lib/mine.mjs`, `brief.mjs`, `learn.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`); 新聞學單字 (Words' `vocab.learning`) |
+| `lib/lines.mjs`, `sides.mjs` | The AI made once by Orbit-Core `builders/ai.js`: world stories' Chinese titles and Taiwan's English ones (`news/lines.json`); 各方怎麼說 (`news/sides.json`) |
+| `lib/search.mjs`, `views/search.mjs` | 搜尋, on the phone as each letter is typed (`findStories`, `fold`), recent searches |
+| `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log; an outlet's picture at the size shown (`sized`, `heavy`) |
+| `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際, 單邊; a story's sheet (player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, the foot); 媒體 |
+| `news.css`, `look.css`, `sw.js` | The look; the kit's service worker (no `sw-images.js`: outlets' pictures are theirs, hotlinked) |
 
 ## Terms
 
@@ -91,4 +97,8 @@ ratings are credited where shown (CC BY-NC 4.0: no money is made here).
 `public/` with Orbit-Core `deploy/cf-site.mjs` when this repo has a
 `CLOUDFLARE_API_TOKEN`; until then Orbit-Core's `news-site.yml` publishes it
 with Orbit-Core's token: the news build (`newsSite`) starts it once for each
-new commit here, within 10 minutes of a push; by hand too. Push with `sh ../Orbit-Core/tools/push.sh`.
+new commit here, within 10 minutes of a push; by hand too.
+
+## Run and test
+
+`npm test`. With today's stories: `ORBIT_DATA=<folder with news/index.json> node ../Orbit-Core/tools/preview.mjs news --width 375`, or `--live` once the builder has run (in Orbit-Core `node builders/run.js news` writes nothing locally).
