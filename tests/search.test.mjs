@@ -60,3 +60,12 @@ test('recent searches: newest first, each once, eight at most', () => {
   assert.deepEqual(keepFind(['a'], '  '), ['a']);
   assert.equal(keepFind(Array.from({ length: 8 }, (_, i) => `x${i}`), 'new').length, 8);
 });
+
+test('問 Orbit’s question (#ask=) as a search: the asking taken off', async () => {
+  const { askQuery } = await import('../public/lib/search.mjs');
+  assert.equal(askQuery('颱風的新聞'), '颱風');
+  assert.equal(askQuery('台積電最新消息'), '台積電');
+  assert.equal(askQuery('今天有什麼新聞'), '');
+  assert.equal(askQuery('latest news about Trump'), 'trump');
+  assert.equal(askQuery(undefined), '');
+});

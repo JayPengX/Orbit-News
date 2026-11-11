@@ -24,6 +24,12 @@ export const fold = s =>
 // The query's words; Chinese typed with no spaces is one word (found as written).
 export const wordsOf = q => [...new Set(fold(q).split(' ').filter(Boolean))];
 
+// 問 Orbit's question (the Pass sheet's box, kit ask-orbit.mjs: #ask=<words>)
+// as a search: the asking taken off (「颱風的新聞」 颱風); '' when nothing's
+// left (「今天有什麼新聞」: 頭條 as it is).
+const ASK_FILL = /今天|今日|最新|最近|現在|有什麼|有沒有|有關|關於|相關|請問|的|新聞|頭條|報導|消息|嗎|呢|\b(?:what'?s|any|latest|today'?s?|news|headlines?|about|on|the|in)\b/gi;
+export const askQuery = text => wordsOf(String(text || '').replace(ASK_FILL, ' ')).join(' ');
+
 // One story's text by weight, folded once.
 const FIELDS = { title: 6, sum: 3, heads: 2, names: 2 };
 function indexOf(story, { lines, outletName, topicName }) {

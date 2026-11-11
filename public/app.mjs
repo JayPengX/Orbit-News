@@ -28,6 +28,7 @@ import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory } from './views/story.mjs';
 import { searchFor } from './views/search.mjs';
+import { askQuery } from './lib/search.mjs';
 import { testPage, testFlags } from './lib/testing.mjs';
 
 document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
@@ -280,6 +281,19 @@ if (!gated) boot();
 
 // The address: a tab (#intl), a story (#s=<id>) over its tab, or a search (#q=<words>).
 function openFromHash(start = false) {
+  // 問 Orbit's question (the Pass sheet, kit ask-orbit.mjs: #ask=<words>): 頭條 searched for it.
+  // (The address read first: the tab shown writes its own over it.)
+  if (/(?:^#|&)ask=/.test(location.hash)) {
+    const hash = location.hash;
+    showTab('top');
+    import('#kit/ask-orbit.mjs')
+      .then(m => {
+        const q = askQuery(m.takeAsk?.({ hash, pathname: location.pathname, search: location.search }));
+        if (q) searchFor(q);
+      })
+      .catch(() => {});
+    return;
+  }
   const hash = decodeURIComponent(location.hash.slice(1));
   const story = /^s=(\w+)$/.exec(hash)?.[1];
   // (#q=<words>: 頭條 on that search.)
