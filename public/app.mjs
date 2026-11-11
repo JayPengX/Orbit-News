@@ -27,6 +27,7 @@ import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory } from './views/story.mjs';
+import { searchFor } from './views/search.mjs';
 
 document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
 const $ = id => document.getElementById(id);
@@ -275,12 +276,15 @@ async function boot() {
 }
 if (!gated) boot();
 
-// The address: a tab (#intl), or a story (#s=<id>) over its tab.
+// The address: a tab (#intl), a story (#s=<id>) over its tab, or a search (#q=<words>).
 function openFromHash(start = false) {
   const hash = decodeURIComponent(location.hash.slice(1));
   const story = /^s=(\w+)$/.exec(hash)?.[1];
-  const tab = TABS.includes(hash) ? hash : start ? 'top' : null;
+  // (#q=<words>: 頭條 on that search.)
+  const find = /^q=(.+)$/s.exec(hash)?.[1];
+  const tab = TABS.includes(hash) ? hash : find ? 'top' : start ? 'top' : null;
   if (tab) showTab(tab);
+  if (find) searchFor(find);
   if (story) openStory(story);
 }
 window.addEventListener('hashchange', () => state.loaded && openFromHash());

@@ -14,6 +14,7 @@ import { mineOf } from '../lib/mine.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
+import { withSearch } from './search.mjs';
 
 // A story opened, with the list it was in (its sheet swipes through it).
 const open = (story, list) => openStory(story.id, { list });
@@ -102,7 +103,8 @@ export function renderTop(box) {
     one.length ? section(W('單邊', 'One side'), [h('p', { class: 'nw-lede', text: W('只有一邊的媒體在報的新聞。', 'Stories only one side’s outlets carry.') }), storyList(one, open), more(W('看全部單邊新聞', 'All one-sided stories'), 'side')]) : null,
     section(W('我的閱讀', 'Your reading'), [readingLine(mine), more(W('看各家媒體的位置', 'Where each outlet stands'), 'outlets')])
   ];
-  box.replaceChildren(hero, h('div', { class: 'q-flow nw-flow' }, parts.filter(Boolean)), builtLine(state.page));
+  // (Under 搜尋's field, kept in place: views/search.mjs.)
+  withSearch(box, [hero, h('div', { class: 'q-flow nw-flow' }, parts.filter(Boolean)), builtLine(state.page)]);
   kitUI.flowColumns?.(box);
 }
 

@@ -132,12 +132,17 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // coverage; its picture beside it, a play mark on it when it has a clip.
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
 // `why(story)`: what of the person's it's about (你關心的: 持股 台積電, 追蹤 湖人), before the kicker.
-export function storyRow(story, onOpen, { side = true, list = null, why = null } = {}) {
+export function storyRow(story, onOpen, { side = true, list = null, why = null, mark = null, note = null } = {}) {
   const pic = withClip(storyPicture(story, 'nw-thumb'), story);
   const mine = why?.(story);
   const kicker = h('small', { class: 'nw-kicker' }, [mine ? mineTag(mine) : null, aboutLine(story, { days: false, when: true })]);
+  // (`mark(text)`: the title's found words marked, a search's; `note(story)`: a line under it, why it was found.)
+  const title = titleSpan(story, 'nw-row-title');
+  const pieces = mark ? mark(title.textContent) : null;
+  // (In one inline run: a clamped title's own children each take a line.)
+  if (pieces) title.replaceChildren(h('span', {}, pieces));
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
-    h('span', { class: 'nw-row-main' }, [kicker, titleSpan(story, 'nw-row-title'), coverage(story, { side })]),
+    h('span', { class: 'nw-row-main' }, [kicker, title, note?.(story) || null, coverage(story, { side })]),
     pic
   ]);
 }

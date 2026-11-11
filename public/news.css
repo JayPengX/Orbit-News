@@ -204,6 +204,23 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---- 頭條's lead stories: one at a time, swiped sideways, the next one
    peeking at the edge; two at a time on a wide page ---- */
+/* 搜尋: the field atop 頭條, recent searches under it, what's found in place of the front page. */
+.nw-search { display: grid; gap: 8px; margin: 4px 0 12px; max-width: 640px; min-width: 0; }
+.nw-search > .q-search { min-width: 0; }
+.nw-search input { min-width: 0; }
+.nw-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.nw-recent[hidden], .nw-results[hidden], .nw-front-page[hidden] { display: none; }
+.nw-recent-head { color: var(--q-label-2); font: var(--q-t-footnote); margin-right: 2px; }
+.nw-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 16px; min-width: 0; }
+.nw-found-n { color: var(--q-label-2); font: var(--q-t-footnote); margin: 0 4px; }
+.nw-found-outlets { display: flex; flex-wrap: wrap; gap: 8px; }
+.nw-outlet-chip { display: inline-flex; align-items: center; gap: 6px; }
+.nw-outlet-chip .q-logo { border-radius: 50%; }
+.nw-found-mark { background: color-mix(in srgb, var(--q-accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.nw-hit { display: flex; align-items: flex-start; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); min-width: 0; }
+.nw-hit > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nw-hit .q-logo { flex: none; margin-top: 2px; border-radius: 50%; }
+.nw-front-page { display: contents; }
 .nw-date { color: var(--q-label-2); font: 500 15px/20px var(--q-font); margin: 2px 0 -4px; }
 .nw-hero { display: grid; gap: 10px; container: nw-hero / inline-size; }
 .nw-hero-track {
