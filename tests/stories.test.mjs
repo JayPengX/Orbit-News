@@ -90,13 +90,12 @@ test('topics, clips, how long a story ran, and the past', () => {
 });
 
 test('單邊 by kind: each one-sided story once, under its first kind; each side’s count', async () => {
-  const { byKind, blindAll, blindCounts, oneSided } = await import('../public/lib/stories.mjs');
+  const { byKind, blindAll, oneSided } = await import('../public/lib/stories.mjs');
   const st = (id, region, blind, topics, n = 3) => ({ id, region, blind, topics, n, at: 0, items: [] });
   const page = { tw: [st('a', 'tw', 'b', ['pol', 'cs'], 5), st('b', 'tw', 'g', ['eco']), st('c', 'tw', '', ['pol'])], intl: [st('d', 'intl', 'r', ['cs', 'world'], 4)] };
   const all = blindAll(page);
   assert.deepEqual(all.map(s => s.id), ['a', 'd', 'b']);
   assert.deepEqual(byKind(all, ['pol', 'cs', 'eco']).map(([t, l]) => [t, l.map(s => s.id)]), [['pol', ['a']], ['cs', ['d']], ['eco', ['b']]]);
-  assert.deepEqual(blindCounts(all), [{ region: 'tw', ends: [{ side: 'g', n: 1 }, { side: 'b', n: 1 }] }, { region: 'intl', ends: [{ side: 'l', n: 0 }, { side: 'r', n: 1 }] }]);
   assert.deepEqual(oneSided(page, 'cs').map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'b', ['a']], ['intl', 'r', ['d']]]);
 });
 
@@ -121,4 +120,22 @@ test('a picture that won’t load gives way to the other outlets’ (Jay 11-11: 
     ['https://i.ytimg.com/vi/AAAAAAAAAAA/hqdefault.jpg', 'cnn']
   ]);
   assert.deepEqual(picturesOf({ id: 'y', items: [] }), []);
+});
+
+test('測試工具: no switch, the same page; each switch a copy', async () => {
+  const { testPage } = await import('../public/lib/testing.mjs');
+  const page = { built: 1, tw: [{ id: 'a', title: 'x', items: [['ltn', 'h', 'https://a'], ['udn', 'h', 'https://b']], clips: [['ltn', 'abcdefghijk', 'https://c']] }], intl: [] };
+  delete globalThis.ORBIT_TEST;
+  assert.equal(testPage(page), page);
+  try {
+    globalThis.ORBIT_TEST = { flags: { oneSided: true, badClip: true } };
+    const g = testPage(page);
+    assert.ok(['g', 'b'].includes(g.tw[0].blind));
+    assert.equal(g.tw[0].clips[0][1], 'xxxxxxxxxxx');
+    assert.equal(page.tw[0].blind, undefined, 'the page read untouched');
+    globalThis.ORBIT_TEST = { flags: { newsEmpty: true } };
+    assert.deepEqual(testPage(page).tw, []);
+  } finally {
+    delete globalThis.ORBIT_TEST;
+  }
 });

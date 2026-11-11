@@ -78,7 +78,9 @@ let shown = null;
 export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   const story = storyById(state.page, id, state.past);
   // (An older story, from a link: the past read first.)
-  if (!story) return void (!state.past && hooks.past().then(() => storyById(state.page, id, state.past) && openStory(id, { clip, list, via })));
+  // (Gone from both, or the older ones unreadable: said, never a tap that does nothing.)
+  const gone = () => kitUI.toast?.(state.pastFailed ? W('暫時讀不到這則新聞，稍後再試。', 'Can’t get this story right now. Try again shortly.') : W('這則新聞已經不在了。', 'This story is no longer available.'), { ms: 2400 });
+  if (!story) return void (state.past ? gone() : hooks.past().then(() => (storyById(state.page, id, state.past) ? openStory(id, { clip, list, via }) : gone())));
   // (What's opened teaches 今天五則: from it, or from anywhere else.)
   state.fb?.picked?.('news', itemOf(story), Date.now(), { from: via === 'brief' ? 'list' : 'elsewhere' });
   shown?.close?.();
@@ -88,7 +90,11 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   const body = h('div', { class: 'nw-story' });
   // (The way to the stories beside it stays at the sheet's foot: ‹ 上一則 3 / 20 下一則 ›.)
   const foot = order.length > 1 ? footOf(order, d => step(d)) : null;
-  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: story.title, onClose: () => (shown = null) });
+  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: story.title, onClose: () => {
+      shown = null;
+      // (The link's #s= let go: the same link opens it again.)
+      if (/^#s=/.test(location.hash)) history.replaceState(history.state, '', `#${state.tab}`);
+    } });
   shown = sh;
   const draw = (i, opts = {}) => {
     at = i;

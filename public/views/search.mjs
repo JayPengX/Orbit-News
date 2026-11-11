@@ -67,7 +67,8 @@ function drawResults() {
   // (The older stories kept: read once, the first time anything is searched.)
   if (!state.past && !pastAsked) {
     pastAsked = true;
-    hooks.past()?.then?.(() => query.trim() && drawResults());
+    // (A failed read asked again at the next search, never in a loop.)
+    hooks.past()?.then?.(() => (state.past ? query.trim() && drawResults() : (pastAsked = false)));
   }
   const found = findStories([state.page, state.past], q, { lines: state.lines, outletName, topicName, cache });
   const outlets = findOutlets(OUTLETS, q);

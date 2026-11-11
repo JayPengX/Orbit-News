@@ -148,9 +148,6 @@ export function byKind(stories, order) {
   }
   return [...m].filter(([, list]) => list.length);
 }
-// How many each side left out, a region at a time: [{ region, ends: [{ side, n }] }].
-export const blindCounts = stories =>
-  REGIONS.map(region => ({ region, ends: ENDS[region].map(side => ({ side, n: stories.filter(s => s.region === region && s.blind === side).length })) })).filter(r => r.ends.some(e => e.n));
 
 // The stories one outlet is in, newest first.
 export function storiesWith(page, outlet) {

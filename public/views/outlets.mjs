@@ -41,7 +41,8 @@ function mine(region) {
   const { lean } = leanOf(b);
   if (!b.total && !b.none) return null;
   const say =
-    lean === null ? W(`${b.total} 則，再多一些才看得出偏向`, `${b.total} so far; a few more and the lean shows`)
+    !b.total ? W(`${b.none} 則，都是中國官媒`, `${b.none}, all from China’s state media`)
+    : lean === null ? W(`${b.total} 則，再多一些才看得出偏向`, `${b.total} so far; a few more and the lean shows`)
     : lean ? W(`多半是${sideFull(lean)}的媒體`, `Mostly ${sideFull(lean).toLowerCase()} outlets`)
     : W('各邊都有', 'From every side');
   return h('div', { class: 'nw-mine' }, [

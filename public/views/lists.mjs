@@ -40,7 +40,7 @@ function notYet(box) {
   box.replaceChildren(
     state.failed
       ? empty({ icon: 'list', title: W('讀不到新聞', 'Couldn’t get the news'), body: W('連上網路後再試一次。', 'Try again once you’re online.'), action: { label: W('再試一次', 'Try again'), onTap: () => hooks.reload() } })
-      : kitUI.waiting(h('div', { class: 'nw-wait' }, [h('div', { class: 'nw-lead' }, [h('span', { class: 'nw-lead-pic' }), h('span', { class: 'nw-lead-body' }, [h('span', { class: 'nw-lead-title', text: '今天的頭條新聞標題，兩行左右的長度' })])]), storyList([], open)]))
+      : kitUI.waiting(h('div', { class: 'nw-wait' }, [h('div', { class: 'nw-lead' }, [h('span', { class: 'nw-lead-pic' }), h('span', { class: 'nw-lead-body' }, [h('span', { class: 'nw-lead-title', text: W('今天的頭條新聞標題，兩行左右的長度', 'Today’s top headline, about two lines long') })])]), storyList([], open)]))
   );
   return true;
 }
@@ -69,7 +69,7 @@ export function renderTop(box) {
   const brief = briefNow(forYou, seen);
   for (const x of brief) seen.add(x.story.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
-  const world = (tw.length ? intl : []).filter(s => !seen.has(s.id)).slice(0, 5);
+  const world = intl.filter(s => !seen.has(s.id)).slice(0, 5);
   // Each topic's most important not shown above, three at a time (國際's
   // own section above stands for the world: one 國際 on the page).
   const topics = topicOrder()

@@ -80,6 +80,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | `lib/search.mjs`, `views/search.mjs` | 搜尋, on the phone as each letter is typed (`findStories`, `fold`), recent searches |
 | `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log; an outlet's picture at the size shown (`sized`, `heavy`) |
 | `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際, 單邊; a story's sheet (player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, the foot); 媒體 |
+| `lib/testing.mjs` | The 測試工具's News switches (kit `testtools.mjs`, unlocked on the Pass): `newsEmpty`, `newsFail`, `oneSided`, `badClip`; applied in `app.mjs load` to what's drawn only |
 | `news.css`, `look.css`, `sw.js` | The look; the kit's service worker (no `sw-images.js`: outlets' pictures are theirs, hotlinked) |
 
 ## Terms

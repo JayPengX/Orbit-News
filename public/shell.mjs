@@ -78,8 +78,3 @@ export function outletLink(item, children, cls = '') {
   return h('a', { class: cls, href: url, target: '_blank', rel: 'noopener', onclick: () => hooks.read(o) }, children);
 }
 
-// How many columns a page has room for (the kit's screenFit marks).
-export function columnsHere() {
-  const fit = orbitKit.screenFit?.();
-  return fit?.w3 ? 3 : fit?.wide ? 2 : 1;
-}

@@ -28,6 +28,7 @@ import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory } from './views/story.mjs';
 import { searchFor } from './views/search.mjs';
+import { testPage, testFlags } from './lib/testing.mjs';
 
 document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
 const $ = id => document.getElementById(id);
@@ -178,9 +179,10 @@ function load({ fresh = false } = {}) {
   loadInterests();
   loadLaws(fresh);
   loadSides(fresh);
-  reading = packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+  // (The 測試工具's newsFail: the read fails as a real one would.)
+  reading = (testFlags().newsFail ? Promise.reject(new Error('test: news failing')) : packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 }))
     .then(raw => {
-      const page = cleanPage(raw);
+      const page = testPage(cleanPage(raw));
       const changed = page.built !== state.page?.built;
       state.page = page;
       state.failed = false;
@@ -248,7 +250,7 @@ async function boot() {
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
   const [kept, keptLines] = await Promise.all([PAGE, LINES].map(p => orbitKit.peekPack?.(p).catch(() => null)));
-  if (kept?.data) state.page = cleanPage(kept.data);
+  if (kept?.data && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
   // (The AI's titles kept with them, so the first draw is the whole one: the fresh ones redraw only if newer.)
   if (keptLines?.data && linesBuilt === null) ((state.lines = cleanLines(keptLines.data)), (linesBuilt = keptLines.data.built ?? null));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
