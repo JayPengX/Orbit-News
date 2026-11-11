@@ -13,6 +13,7 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf } 
 import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
+import { itemOf } from '../lib/brief.mjs';
 
 // 新聞學單字: on a world story, the words being learned in Orbit Words
 // underlined in its English lines (lib/learn.mjs; the notebook's, nothing
@@ -73,10 +74,12 @@ export function player(clip) {
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
-export function openStory(id, { clip = '', list = null } = {}) {
+export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   const story = storyById(state.page, id, state.past);
   // (An older story, from a link: the past read first.)
-  if (!story) return void (!state.past && hooks.past().then(() => storyById(state.page, id, state.past) && openStory(id, { clip, list })));
+  if (!story) return void (!state.past && hooks.past().then(() => storyById(state.page, id, state.past) && openStory(id, { clip, list, via })));
+  // (What's opened teaches 今天五則: from it, or from anywhere else.)
+  state.fb?.picked?.('news', itemOf(story), Date.now(), { from: via === 'brief' ? 'list' : 'elsewhere' });
   shown?.close?.();
   const from = (list?.length ? list : state.page?.[story.region] || []).filter(Boolean);
   const order = from.some(s => s.id === id) ? from : [story];

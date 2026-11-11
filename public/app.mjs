@@ -47,6 +47,14 @@ const PAGE = 'news/index.json';
 const PAST = 'news/past.json';
 
 const q = orbitSession('news', { lang });
+// 今天五則 learns from what's opened and passed over (the kit's feedback.mjs, the
+// family's one engine, kept on the Pass; loaded on the side: an older kit picks without it).
+import('#kit/feedback.mjs')
+  .then(m => {
+    m.keep?.(q, 'news');
+    state.fb = m;
+  })
+  .catch(() => {});
 
 // ---- The reading log ----------------------------------------------------------------
 

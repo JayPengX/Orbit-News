@@ -40,6 +40,8 @@ export const state = {
   // 各方怎麼說: how each side framed a story, by id (news/sides.json, lib/sides.mjs), empty until read.
   sides: new Map(),
   log: emptyLog(),
+  // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then or on an older kit).
+  fb: null,
   loaded: false
 };
 

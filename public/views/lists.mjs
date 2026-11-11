@@ -11,7 +11,8 @@ import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } 
 import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { mineOf } from '../lib/mine.mjs';
-import { storyList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
+import { dayBrief, itemOf } from '../lib/brief.mjs';
+import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
 
 // A story opened, with the list it was in (its sheet swipes through it).
@@ -61,6 +62,11 @@ export function renderTop(box) {
   const seen = new Set(leads.map(s => s.id));
   const top = tw.filter(s => !seen.has(s.id)).slice(0, 6);
   for (const s of top) seen.add(s.id);
+  // 你關心的 and 今天五則 (past the top: five more, picked for this person,
+  // kept all day from 7:00; lib/brief.mjs), each story once on the page.
+  const forYou = mineOf(state.page, state.interests, 5);
+  const brief = briefNow(forYou, seen);
+  for (const x of brief) seen.add(x.story.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
   const world = (tw.length ? intl : []).filter(s => !seen.has(s.id)).slice(0, 5);
   // Each topic's most important not shown above, three at a time (國際's
@@ -83,10 +89,13 @@ export function renderTop(box) {
   ]);
   // 你關心的: stories about what you hold in Securities and follow in Sports
   // (the family's notebook on this phone, lib/mine.mjs), wherever they sit above.
-  const forYou = mineOf(state.page, state.interests, 5);
   const whyOf = new Map(forYou.map(m => [m.story.id, m.why]));
-  const mineStories = forYou.map(m => m.story);
+  const inBrief = new Set(brief.map(x => x.story.id));
+  const mineStories = forYou.map(m => m.story).filter(s => !inBrief.has(s.id));
   const parts = [
+    brief.length
+      ? section(W('今天五則', 'Today’s five'), [briefList(brief, (s, list) => openStory(s.id, { list, via: 'brief' })), h('p', { class: 'nw-foot', text: W('頭條之外再五則，你常點開的主題排前面，每天早上 7 點換。', 'Five past the headlines, the topics you open first; new each morning at 7.') })], { cls: 'nw-brief-sec', ai: true })
+      : null,
     mineStories.length ? section(W('你關心的', 'For you'), [storyList(mineStories, s => open(s, mineStories), { why: s => whyOf.get(s.id) }), h('p', { class: 'nw-foot', text: W('依你在 Orbit 證券的持股、Orbit 運動追蹤的球隊。', 'From what you hold in Orbit Securities and follow in Orbit Sports.') })], { cls: 'nw-mine-sec', ai: true }) : null,
     world.length ? section(regionName('intl'), [storyList(world, s => open(s, intl)), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
     ...topics,
@@ -95,6 +104,26 @@ export function renderTop(box) {
   ];
   box.replaceChildren(hero, h('div', { class: 'q-flow nw-flow' }, parts.filter(Boolean)), builtLine(state.page));
   kitUI.flowColumns?.(box);
+}
+
+// 今天五則, the day's: the five kept since the first look after 7:00 (on
+// this phone), each noted as shown so what's passed over teaches the picks.
+const BRIEF_KEY = 'orbit-news.brief.v1';
+function briefNow(mine, skip) {
+  let kept = null;
+  try {
+    kept = JSON.parse(localStorage.getItem(BRIEF_KEY) || 'null');
+  } catch {}
+  const fb = state.fb;
+  const b = dayBrief(state.page, kept, Date.now(), { skip, mine, lift: fb?.lifter ? fb.lifter('news') : undefined });
+  if (!b) return [];
+  if (kept?.day !== b.day || String(kept.ids) !== String(b.ids)) {
+    try {
+      localStorage.setItem(BRIEF_KEY, JSON.stringify({ day: b.day, ids: b.ids }));
+    } catch {}
+  }
+  fb?.shown?.('news', b.list.map(x => itemOf(x.story)));
+  return b.list;
 }
 
 // 我的閱讀 in a line: your bar and what it says, or how it starts.

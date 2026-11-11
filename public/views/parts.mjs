@@ -119,13 +119,32 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 export function storyRow(story, onOpen, { side = true, list = null, why = null } = {}) {
   const pic = withClip(storyPicture(story, 'nw-thumb'), story);
   const mine = why?.(story);
-  const kicker = h('small', { class: 'nw-kicker' }, [mine ? h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: `${mine.kind === 'hold' ? W('持股', 'Held') : W('追蹤', 'Following')} ${mine.label}` }) : null, aboutLine(story, { days: false, when: true })]);
+  const kicker = h('small', { class: 'nw-kicker' }, [mine ? mineTag(mine) : null, aboutLine(story, { days: false, when: true })]);
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     h('span', { class: 'nw-row-main' }, [kicker, titleSpan(story, 'nw-row-title'), coverage(story, { side })]),
     pic
   ]);
 }
 export const storyList = (stories, onOpen, opts = {}) => h('div', { class: 'nw-list' }, stories.map(s => storyRow(s, onOpen, { ...opts, list: stories })));
+
+// 今天五則: five lines, numbered, each what it's about (or what of the
+// person's: 持股 台積電) over its headline; no pictures, the brief reads at a glance.
+export const mineTag = mine => h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: `${mine.kind === 'hold' ? W('持股', 'Held') : W('追蹤', 'Following')} ${mine.label}` });
+export function briefList(items, onOpen) {
+  const list = items.map(x => x.story);
+  return h(
+    'ol',
+    { class: 'nw-brief' },
+    items.map(({ story, why }, i) =>
+      h('li', {}, [
+        h('button', { type: 'button', class: 'nw-brief-row', 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
+          h('span', { class: 'nw-brief-n', 'aria-hidden': 'true', text: String(i + 1) }),
+          h('span', { class: 'nw-brief-main' }, [h('small', { class: 'nw-kicker' }, [why ? mineTag(why) : null, aboutLine(story, { days: false })]), titleSpan(story, 'nw-brief-title')])
+        ])
+      ])
+    )
+  );
+}
 
 // A story as a card (the front page's 要聞): its picture over its topic,
 // headline and coverage on a wide page; a row with the picture beside it on
