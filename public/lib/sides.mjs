@@ -2,6 +2,8 @@
 // a story from their own headlines only (Orbit-Core's builders/ai.js
 // newsSides → news/sides.json). Read whole and checked here: a side the
 // story's own coverage doesn't have is dropped, two sides at least.
+import * as kitNews from '#kit/news-outlets.mjs';
+
 const SIDE_KEYS = { tw: ['g', 'c', 'b'], intl: ['l', 'c', 'r'] };
 const txt = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
 
@@ -18,7 +20,9 @@ export function cleanSides(raw) {
     }
     if (Object.keys(sides).length < 2) continue;
     const zh = txt(s.diff?.zh, 100), en = txt(s.diff?.en, 240);
-    out.set(id, { sides, diff: zh && en ? { zh, en } : null });
+    // (A difference that only says each side's line again is left out: Jay 11-10, the kit's sidesRecap.)
+    const recap = kitNews.sidesRecap?.(zh, Object.values(sides).map(x => x.zh));
+    out.set(id, { sides, diff: zh && en && !recap ? { zh, en } : null });
   }
   return out;
 }

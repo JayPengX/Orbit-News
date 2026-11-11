@@ -12,3 +12,10 @@ test('各方怎麼說: read whole and checked, shown in the bar’s order, only 
   assert.equal(sidesOf({ region: 'tw', sides: { g: 2 } }, m.get('a')), null, 'a side gone from its coverage is dropped');
   assert.equal(cleanSides(null).size, 0);
 });
+
+test('a difference that says each side again is left out (Jay 11-10)', async () => {
+  const { cleanSides } = await import('../public/lib/sides.mjs');
+  const said = cleanSides({ sides: { a: { sides: { g: { zh: '引外交部稱「假消息」', en: 'x' }, b: { zh: '談經貿', en: 'y' }, c: { zh: '用「逼」「限一周」', en: 'z' } }, diff: { zh: '偏綠引官方說法，偏藍談經貿利益，中間用「逼」強調施壓。', en: 'recap' } }, b: { sides: { g: { zh: '甲', en: 'a' }, b: { zh: '乙', en: 'b' } }, diff: { zh: '只有偏藍提到 3 億補助', en: 'Only blue names the 300m subsidy' } } } });
+  assert.equal(said.get('a').diff, null);
+  assert.equal(said.get('b').diff.zh, '只有偏藍提到 3 億補助');
+});
