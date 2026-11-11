@@ -35,7 +35,8 @@ Live: https://orbit.jaypengx.com/news/
   newest headline); its state in R2 `private/news/items.json.gz`. No AI. A
   story: `{ id, title, by, sum, sumBy, img, imgBy, at, first, n, m, days,
   sides, blind, parties, topics, imp, clips: [[outlet, youtubeId or '', url,
-  title, picture]], items: [[outlet, headline, url, at, video?]] }`;
+  title, picture]], items: [[outlet, headline, url, at, video?]], alts:
+  [[picture, outlet]] (other outlets', tried in turn when img won't load) }`;
   `blind` is the side that left it out (3 outlets or more, 2 hours or more,
   all on one side; only a topic sides take).
 - **The outlets** (Orbit-Core `kit/news-outlets.mjs`, one table for the

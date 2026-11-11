@@ -2,7 +2,7 @@
 // the way in, each story's bar, its headlines by side, the one-sided ones.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanPage, barOf, bySide, oneSided, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf } from '../public/lib/stories.mjs';
+import { cleanPage, barOf, bySide, oneSided, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf, picturesOf } from '../public/lib/stories.mjs';
 
 const T = Date.parse('2026-11-10T03:00:00Z');
 const H = 3_600_000;
@@ -100,3 +100,25 @@ test('單邊 by kind: each one-sided story once, under its first kind; each side
   assert.deepEqual(oneSided(page, 'cs').map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'b', ['a']], ['intl', 'r', ['d']]]);
 });
 
+
+test('a picture that won’t load gives way to the other outlets’ (Jay 11-11: 圖：日本時報 over an empty space, 32 outlets more)', () => {
+  const raw = {
+    intl: [
+      {
+        id: 'x',
+        title: 'US, Russia and Ukraine start talks in Abu Dhabi',
+        img: 'https://www.japantimes.co.jp/a.jpg',
+        imgBy: 'japantimes',
+        alts: [['https://nypost.com/b.jpg', 'nypost'], ['javascript:alert(1)', 'cnn'], ['https://x.test/c.jpg', 'nobody'], ['https://www.japantimes.co.jp/a.jpg', 'japantimes'], ['https://i.ytimg.com/vi/AAAAAAAAAAA/hqdefault.jpg', 'cnn']],
+        items: [['japantimes', 'U.S. calls for new Europe security', 'https://www.japantimes.co.jp/news/x', 1]]
+      }
+    ]
+  };
+  const s = cleanPage(raw).intl[0];
+  assert.deepEqual(picturesOf(s), [
+    ['https://www.japantimes.co.jp/a.jpg', 'japantimes'],
+    ['https://nypost.com/b.jpg', 'nypost'],
+    ['https://i.ytimg.com/vi/AAAAAAAAAAA/hqdefault.jpg', 'cnn']
+  ]);
+  assert.deepEqual(picturesOf({ id: 'y', items: [] }), []);
+});

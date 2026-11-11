@@ -20,6 +20,7 @@ remove a feature on purpose, delete its line in the same commit.
 - A one-sided story says which side left it out — `public/views/parts.mjs`: `story.blind`, `沒報`
 - The lead story with its picture, credited to its outlet — `public/views/parts.mjs`: `export function leadCard`, `圖：`
 - Every story's picture beside it in a list, a play mark when it has a clip — `public/views/parts.mjs`: `nw-thumb`, `export const playMark`
+- A picture that won't load gives way to another outlet's (the builder's `alts`), its credit following; the space gone only when none load (Jay 11-11) — `public/views/parts.mjs`, `public/lib/stories.mjs`: `const storyPicture`, `export const picturesOf`
 - What a story is about and how long it has run (政治 · 報導 3 天) — `public/views/parts.mjs`: `export function aboutLine`, `報導 ${d} 天`
 - When the stories were gathered, and that headlines and pictures are the outlets' own — `public/views/parts.mjs`: `export function builtLine`
 

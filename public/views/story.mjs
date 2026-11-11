@@ -9,7 +9,7 @@ import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
-import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf } from '../lib/stories.mjs';
+import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf } from '../lib/stories.mjs';
 import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
@@ -160,9 +160,9 @@ function storyParts(story, { clip = '' } = {}) {
   // picture with a play mark, and a tap plays it there.
   const yt = (story.clips || []).filter(c => c[1]);
   // (Credited; a clip also opens on YouTube, should its player refuse here.)
-  const credit = c =>
+  const credit = (c, by = story.imgBy) =>
     h('figcaption', {}, [
-      c ? W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`) : W(`圖：${outletName(story.imgBy)}`, `Photo: ${outletName(story.imgBy)}`),
+      c ? W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`) : W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`),
       c ? h('a', { href: `https://www.youtube.com/watch?v=${c[1]}`, target: '_blank', rel: 'noopener', text: W('在 YouTube 看', 'Watch on YouTube') }) : null
     ]);
   const media = h('figure', { class: 'nw-story-pic' });
@@ -170,11 +170,23 @@ function storyParts(story, { clip = '' } = {}) {
   const still = story.img || yt[0]?.[4];
   if (clip && yt.some(c => c[1] === clip)) playIn(yt.find(c => c[1] === clip));
   else if (still) {
-    const img = h('img', { src: still, alt: '', decoding: 'async', referrerpolicy: 'no-referrer', onerror: e => (yt.length ? e.target.remove() : media.remove()) });
-    media.append(
-      yt.length ? h('button', { type: 'button', class: 'nw-story-play', 'aria-label': W('播放影片', 'Play the clip'), onclick: () => playIn(yt[0]) }, [img, playMark()]) : img,
-      yt.length ? credit(yt[0]) : story.imgBy ? credit(null) : ''
-    );
+    // (One that won't load gives way to another outlet's, then the clip's
+    // own still; the credit follows it.)
+    const next = [...picturesOf(story), ...(yt[0]?.[4] ? [[yt[0][4], '']] : [])].filter(a => a[0] !== still);
+    let cap = yt.length ? credit(yt[0]) : story.imgBy ? credit(null) : null;
+    const img = h('img', {
+      src: still,
+      alt: '',
+      decoding: 'async',
+      referrerpolicy: 'no-referrer',
+      onerror: () => {
+        const alt = next.shift();
+        if (!alt) return void (yt.length ? img.remove() : media.remove());
+        img.src = alt[0];
+        if (!yt.length && cap && alt[1]) cap.replaceWith((cap = credit(null, alt[1])));
+      }
+    });
+    media.append(yt.length ? h('button', { type: 'button', class: 'nw-story-play', 'aria-label': W('播放影片', 'Play the clip'), onclick: () => playIn(yt[0]) }, [img, playMark()]) : img, cap || '');
   }
   const pic = media.childNodes.length ? media : null;
   // The other clips (and outlets' own video pages): a row of their own.

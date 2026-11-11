@@ -5,11 +5,38 @@ import { h, tag } from '#kit/ui.mjs';
 import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
-import { barOf, daysOf, outletsOf, sidesTaken, stateMedia } from '../lib/stories.mjs';
+import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf } from '../lib/stories.mjs';
 
-// An outlet's picture, hotlinked (never kept), gone if it can't be had.
-export const picture = (src, cls, { eager = false } = {}) =>
-  src ? h('span', { class: cls }, [h('img', { src, alt: '', loading: eager ? 'eager' : 'lazy', decoding: 'async', referrerpolicy: 'no-referrer', onerror: e => e.target.parentElement?.remove() })]) : null;
+// An outlet's picture, hotlinked (never kept). One that won't load gives way
+// to the next outlet's (`alts`: [[picture, outlet]], the builder's); gone,
+// with its card's has-pic, only when none load (Jay 11-11: an empty space
+// where 32 other outlets had one). `onBy(outlet)`: whose shows now ('' none).
+export const picture = (src, cls, { eager = false, alts = [], onBy = null } = {}) => {
+  if (!src) return null;
+  const next = [...(alts || [])].filter(a => a?.[0] && a[0] !== src);
+  const box = h('span', { class: cls });
+  const img = h('img', {
+    src,
+    alt: '',
+    loading: eager ? 'eager' : 'lazy',
+    decoding: 'async',
+    referrerpolicy: 'no-referrer',
+    onerror: () => {
+      const alt = next.shift();
+      if (alt) return void ((img.src = alt[0]), onBy?.(alt[1]));
+      box.closest('.has-pic')?.classList.remove('has-pic');
+      box.remove();
+      onBy?.('');
+    }
+  });
+  box.append(img);
+  return box;
+};
+// A story's picture with its others to fall back on.
+const storyPicture = (story, cls, opts = {}) => {
+  const [first, ...alts] = picturesOf(story);
+  return picture(first?.[0], cls, { ...opts, alts });
+};
 // A clip's mark on a picture: a play button.
 const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 export const playMark = () => {
@@ -90,7 +117,7 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
 // `why(story)`: what of the person's it's about (你關心的: 持股 台積電, 追蹤 湖人), before the kicker.
 export function storyRow(story, onOpen, { side = true, list = null, why = null } = {}) {
-  const pic = withClip(picture(story.img, 'nw-thumb'), story);
+  const pic = withClip(storyPicture(story, 'nw-thumb'), story);
   const mine = why?.(story);
   const kicker = h('small', { class: 'nw-kicker' }, [mine ? h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: `${mine.kind === 'hold' ? W('持股', 'Held') : W('追蹤', 'Following')} ${mine.label}` }) : null, aboutLine(story, { days: false, when: true })]);
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
@@ -104,7 +131,7 @@ export const storyList = (stories, onOpen, opts = {}) => h('div', { class: 'nw-l
 // headline and coverage on a wide page; a row with the picture beside it on
 // a narrow one (by the grid's own width, news.css).
 export function storyCard(story, onOpen, list = null) {
-  const pic = withClip(picture(story.img, 'nw-card-pic'), story);
+  const pic = withClip(storyPicture(story, 'nw-card-pic'), story);
   return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), titleSpan(story, 'nw-card-title'), coverage(story)])
@@ -128,7 +155,10 @@ export function clipCard(entry, onPlay) {
 // A lead story: its picture (the outlet's own, credited), what it's about,
 // the headline at a title's size, the outlet's summary, its coverage.
 export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
-  const pic = withClip(picture(story.img, 'nw-lead-pic', { eager }), story);
+  // (The credit follows the picture that loads, gone with the last.)
+  const creditOf = by => W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`);
+  const credit = story.img && story.imgBy ? h('small', { class: 'nw-credit', text: creditOf(story.imgBy) }) : null;
+  const pic = withClip(storyPicture(story, 'nw-lead-pic', { eager, onBy: by => (by ? credit && (credit.textContent = creditOf(by)) : credit?.remove()) }), story);
   const about = aboutLine(story, { when: true });
   return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
@@ -139,7 +169,7 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),
       sidesTaken(story) ? h('span', { class: 'nw-lead-bar' }, [bar(story, { big: true }), counts(story, { full: true })]) : null,
       coverage(story, { bar: false }),
-      story.img && story.imgBy ? h('small', { class: 'nw-credit', text: W(`圖：${outletName(story.imgBy)}`, `Photo: ${outletName(story.imgBy)}`) }) : null
+      credit
     ])
   ]);
 }

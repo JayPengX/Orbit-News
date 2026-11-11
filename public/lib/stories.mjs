@@ -2,7 +2,8 @@
 // news/index.json: { built, tw: [story], intl: [story] }, the stories heard
 // of in the last 3 days, most important first; news/past.json the same for
 // older ones kept, by importance), read for the screens. A story: { id,
-// title, by, sum, sumBy, img, imgBy, at, first, n (outlets), m (headlines),
+// title, by, sum, sumBy, img, imgBy, alts (others: [[picture, outlet]]), at,
+// first, n (outlets), m (headlines),
 // days: [['MM-DD', headlines]], sides, blind, parties, topics, imp, clips:
 // [[outlet, youtubeId or '', url, title, picture]], items: [[outlet,
 // headline, url, at, video?]] }.
@@ -28,6 +29,8 @@ export function cleanPage(x) {
           days: Array.isArray(s.days) ? s.days.filter(d => Array.isArray(d) && typeof d[0] === 'string') : [],
           clips: (Array.isArray(s.clips) ? s.clips : []).filter(c => Array.isArray(c) && outletOf(c[0]) && /^(?:[\w-]{11})?$/.test(c[1] ?? 'x') && web(c[2])),
           items: s.items.filter(it => Array.isArray(it) && outletOf(it[0]) && web(it[2])),
+          // (Other outlets' pictures, should its own not load.)
+          alts: (Array.isArray(s.alts) ? s.alts : []).filter(p => Array.isArray(p) && /^https:\/\//.test(p[0] || '') && outletOf(p[1])),
           // (Taiwan's outlets on a world story: their own count and headlines.)
           tw: twOf(s.tw)
         });
@@ -50,6 +53,13 @@ function twOf(t) {
 export const asTopic = (story, topic) => (!topic || topic === 'all' || topic === 'video' || story.topics?.[0] === topic ? story : { ...story, topics: [topic, ...(story.topics || []).filter(t => t !== topic)] });
 // A topic's tab needs this many stories; fewer, it isn't offered.
 export const TAB_MIN = 3;
+// A story's pictures in the order a phone tries them: its own, then each
+// other outlet's (the builder's alts), each address once (Jay 11-11: one
+// outlet's picture that wouldn't load left an empty space).
+export const picturesOf = story => {
+  const seen = new Set();
+  return [story?.img && [story.img, story.imgBy || ''], ...(story?.alts || [])].filter(p => p?.[0] && !seen.has(p[0]) && seen.add(p[0]));
+};
 
 // A story by its id, on the page or among the past's.
 export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
