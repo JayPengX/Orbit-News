@@ -9,9 +9,9 @@ import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
 import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive } from '../lib/stories.mjs';
-import { balanceOf, leanOf, followKey } from '../lib/reading.mjs';
-import { followFinds, yourStories, missedOf } from '../lib/follows.mjs';
-import { followPill, openFollows } from './follows.mjs';
+import { balanceOf, leanOf, followKey, followsOf } from '../lib/reading.mjs';
+import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
+import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
@@ -66,30 +66,38 @@ const leadsOf = (tw, intl, live = []) => {
 // Today, as a front page dates itself: 11月10日 星期二.
 const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
 
-export function renderTop(box) {
-  if (notYet(box)) return;
-  // 你關心的 first (Jay 11-13: like Sports' 我的比賽 heading 首頁): what this
-  // person follows here and in the family (lib/follows.mjs), each story once
-  // on the page: the front's lead stories are those past it.
-  const found = yourStories(state.page, {
+// What's followed on the page (lib/follows.mjs followedOf), kept in state
+// for every list's tag: News' follows and the family's.
+export function followedNow() {
+  const outlets = followsOf(state.log).filter(f => f.kind === 'o').map(f => f.id);
+  state.followed = followedOf(state.page, {
     finds: followFinds(state.log, state.page, { lines: state.lines, outletName, topicName }),
     interests: state.interests,
+    outlets,
     log: state.log,
     live: s => isLive(s, state.page.built)
   });
-  // (One saga once, as on the rest of the page.)
-  const sagas = new Set(oneASaga(found.map(x => x.story), [], zhOf).map(s => s.id));
-  const yours = found.filter(x => sagas.has(x.story.id));
-  const mineIds = new Set(yours.map(x => x.story.id));
-  const tw = state.page.tw.filter(s => !mineIds.has(s.id));
-  const intl = state.page.intl.filter(s => !mineIds.has(s.id));
-  const leads = leadsOf(tw, intl, liveOf(state.page).filter(s => !mineIds.has(s.id)));
-  const seen = new Set([...mineIds, ...leads.map(s => s.id)]);
+  return state.followed;
+}
+
+export function renderTop(box) {
+  if (notYet(box)) return;
+  // What's followed rises through the whole front (Jay 11-13: "more
+  // integrated rather than just an independent section"): each list in its
+  // order with followed stories lifted (lib/follows.mjs lifted), tagged
+  // with what of theirs it's about; the outlets followed lead each story's
+  // marks. What's followed, in a line under the date.
+  const followed = followedNow();
+  const theirs = [...followed].filter(([, f]) => f.why).map(([id, f]) => ({ story: byId(id), why: f.why })).filter(x => x.story);
+  const tw = lifted(state.page.tw, followed);
+  const intl = lifted(state.page.intl, followed);
+  const leads = leadsOf(tw, intl, liveOf(state.page));
+  const seen = new Set(leads.map(s => s.id));
   const top = oneASaga(tw.filter(s => !seen.has(s.id)), leads, zhOf).slice(0, 6);
   for (const s of top) seen.add(s.id);
   // 今天五則 (past the top: five more, picked for this person, kept all day
   // from 7:00; lib/brief.mjs), each story once on the page.
-  const brief = briefNow(yours, seen);
+  const brief = briefNow(theirs, seen);
   for (const x of brief) seen.add(x.story.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
   const world = oneASaga(intl.filter(s => !seen.has(s.id)), [...leads, ...top], zhOf).slice(0, 5);
@@ -109,13 +117,9 @@ export function renderTop(box) {
   for (const s of one) seen.add(s.id);
   // 你可能錯過: what the side they mostly read leaves out (lib/follows.mjs missedOf).
   const missed = missedOf(state.page, state.log, today(), { skip: seen });
-  const whyOf = new Map(yours.map(m => [m.story.id, m.why]));
-  const yoursList = yours.map(m => m.story);
   const hero = h('div', { class: 'nw-front' }, [
     h('p', { class: 'nw-date', text: dateLine() }),
-    yours.length || state.interests.length || followsAny()
-      ? section(W('你關心的', 'For you'), [yours.length ? storyList(yoursList, s => open(s, yoursList), { why: s => whyOf.get(s.id) }) : h('p', { class: 'nw-lede', text: W('這三天沒有你追蹤的新聞。', 'Nothing you follow in the last three days.') })], { cls: 'nw-mine-sec', ai: true, shd: true, more: W('追蹤', 'Following'), onMore: openFollows })
-      : null,
+    followLine(),
     leads.length ? carousel(leads, open) : null,
     top.length ? section(W('要聞', 'Top stories'), [storyCards(top, open)], { cls: 'nw-top-sec' }) : null,
     clips.length ? section(W('影音', 'Video'), [kitUI.rail(clips.map(c => clipCard(c, play))), h('p', { class: 'nw-foot', text: W('各家媒體自己的影片，在 YouTube 的播放器裡播。', 'Each outlet’s own clips, played in YouTube’s player.') })], { cls: 'nw-clips-sec' }) : null
@@ -154,8 +158,19 @@ function briefNow(mine, skip) {
   return b.list;
 }
 
-// Anything followed in News (the family's own come in as state.interests).
-const followsAny = () => Object.values(state.log?.follow || {}).some(t => t > 0);
+// What's followed, in a line under the date (the family's too): a tap
+// opens 我的追蹤. Nothing followed, nothing shown: each topic, outlet and
+// search has its own follow button.
+const byId = id => state.page.tw.find(s => s.id === id) || state.page.intl.find(s => s.id === id);
+function followLine() {
+  const names = [...followsOf(state.log).map(followName), ...(state.interests || []).map(i => i.label)];
+  if (!names.length) return null;
+  return h('button', { type: 'button', class: 'nw-follow-line', onclick: openFollows }, [
+    h('span', { class: 'nw-follow-line-k', text: W('追蹤', 'Following') }),
+    h('span', { class: 'nw-follow-line-v', text: names.join(W('、', ', ')) }),
+    h('span', { class: 'nw-follow-line-go', 'aria-hidden': 'true', text: '›' })
+  ]);
+}
 
 // 你可能錯過: two stories the side they mostly read leaves out or barely carries.
 function missedPart(m) {
@@ -182,7 +197,8 @@ export function readingLine(b) {
 // the older stories kept.
 export function renderRegion(box, region) {
   if (notYet(box)) return;
-  const stories = state.page[region];
+  // (Most important first, what's followed risen and tagged, as on 頭條.)
+  const stories = lifted(state.page[region], followedNow());
   const tabs = tabsOf(region);
   const topic = tabs.includes(state.topic[region]) ? state.topic[region] : 'all';
   const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
@@ -205,7 +221,7 @@ export function renderRegion(box, region) {
   // (Its first story with a picture leads; the rest in their order.)
   const lead = shown.find(s => s.img) && shown.indexOf(shown.find(s => s.img)) < 3 ? shown.find(s => s.img) : null;
   const rest = shown.filter(s => s !== lead);
-  // (A topic's tab: follow it, its stories then head 頭條's 你關心的.)
+  // (A topic's tab: follow it, its stories then rise through 頭條.)
   const follow = topic !== 'all' && topic !== 'video' ? h('div', { class: 'nw-topic-follow' }, [followPill(followKey('t', topic), { label: W(`追蹤${name(topic)}`, `Follow ${name(topic)}`) })]) : null;
   const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`), less: null, onToggle: () => ((state.shown[region] += 20), hooks.render()) }) : null;
   box.replaceChildren(

@@ -87,7 +87,7 @@ function drawResults() {
       h('div', { class: 'nw-found-outlets' }, outlets.map(id => h('button', { type: 'button', class: 'q-chip nw-outlet-chip', onclick: () => (keep(q), openOutlet(id)) }, [outletMark(id, 18), h('span', { text: outletName(id) })])))
     );
   if (list.length) {
-    // (What was searched, followed at a tap: its stories then head 頭條's 你關心的.)
+    // (What was searched, followed at a tap: its stories then rise through 頭條.)
     const key = wordsKey(q);
     parts.push(h('div', { class: 'nw-found-head' }, [h('p', { class: 'nw-found-n', text: W(`找到 ${list.length} 則新聞`, `${list.length} ${list.length === 1 ? 'story' : 'stories'}`) }), key ? followPill(key, { label: W(`追蹤「${q}」`, `Follow “${q}”`) }) : null]));
     parts.push(h('div', { class: 'nw-list' }, list.slice(0, shown).map(s => storyRow(s, open, { list, mark: markedNodes, note }))));

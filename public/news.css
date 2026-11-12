@@ -657,6 +657,14 @@ h1, h2, h3, p { margin: 0; }
 
 /* 你關心的: what of yours a story is about (持股 台積電, 追蹤 湖人), before its kicker. */
 .nw-mine-tag { color: var(--q-accent); font-weight: 600; margin-inline-end: 6px; }
+/* A follow's tag: a star before its name (what you follow, on any list). */
+.nw-mine-follow::before { content: '★'; font-size: 0.85em; margin-inline-end: 2px; }
+/* What's followed, in a line under 頭條's date: a tap opens 我的追蹤. */
+.nw-follow-line { display: flex; align-items: baseline; gap: 6px; width: 100%; min-width: 0; margin: 2px 0 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; color: var(--q-label-2); text-align: start; cursor: pointer; }
+.nw-follow-line-k { flex: none; color: var(--q-accent); font-weight: 600; }
+.nw-follow-line-k::before { content: '★'; font-size: 0.85em; margin-inline-end: 2px; }
+.nw-follow-line-v { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.nw-follow-line-go { flex: none; color: var(--q-label-3); }
 
 /* 新聞學單字: the words being learned in Orbit Words, underlined in a world
    story's English lines, then listed under its headlines (views/story.mjs). */

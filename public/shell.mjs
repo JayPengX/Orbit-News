@@ -45,6 +45,8 @@ export const state = {
   briefs: new Map(),
   // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.
   log: emptyLog(),
+  // What's followed on the page: id → { why, lift } (lib/follows.mjs followedOf), made each 頭條, 台灣 or 國際 draw.
+  followed: new Map(),
   // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then or on an older kit).
   fb: null,
   loaded: false

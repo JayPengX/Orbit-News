@@ -313,7 +313,7 @@ function pointsOf(story) {
 }
 
 // 追蹤: the story's topic and the parties its headlines name, each a follow
-// (their stories then head 頭條's 你關心的).
+// (their stories then rise through 頭條, tagged).
 function followRow(story) {
   const t = story.topics?.[0];
   const pills = [
@@ -389,13 +389,13 @@ function byWhen(md) {
 function oddsPart(story) {
   const ms = state.markets?.get?.(story.id);
   if (!ms?.length) return null;
-  const row = (r, kind) => {
-    // (A long English name by its last name alone, never cut: the long-name rule.)
-    const fit = n => (n.length > 16 && n.includes(' ') ? n.split(' ').pop() : n);
-    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (en ? fit(r.en) : r.zh || fit(r.en)) : '';
+  // (A long person's name by its last name alone, never cut: the long-name rule; anything else as written.)
+  const fit = n => (n.length > 16 && /^\p{Lu}[\p{L}'-]+(?: \p{Lu}[\p{L}'.-]+)+$/u.test(n) ? n.split(' ').pop() : n);
+  const row = (r, kind, zh) => {
+    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (zh ? r.zh : fit(r.en)) : '';
     const mv = move(r.d);
     return h('div', { class: `nw-odds-row${name ? '' : ' one'}` }, [
-      name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !(en || r.zh) ? 'en' : null, text: name }) : null,
+      name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !zh ? 'en' : null, text: name }) : null,
       h('span', { class: 'nw-odds-bar', 'aria-hidden': 'true' }, [h('i', { style: { width: `${Math.max(1, Math.round(r.p * 100))}%` } })]),
       h('b', { class: 'nw-odds-p', text: pct(r.p) }),
       h('small', { class: 'nw-odds-move', 'aria-label': mv ? W(`一天${r.d > 0 ? '上升' : '下降'} ${mv.slice(1)} 個百分點`, `${r.d > 0 ? 'Up' : 'Down'} ${mv.slice(1)} points in a day`) : null, text: mv })
@@ -409,7 +409,7 @@ function oddsPart(story) {
       ms.map(m =>
         h('div', { class: 'nw-odds-card' }, [
           h('p', { class: 'nw-odds-q', lang: en ? 'en' : 'zh-Hant', text: en ? m.en : m.zh }),
-          h('div', { class: 'nw-odds-rows' }, m.rows.map(r => row(r, m.kind))),
+          h('div', { class: 'nw-odds-rows' }, m.rows.map(r => row(r, m.kind, !en && m.rows.every(x => x.zh)))),
           h('a', { class: 'nw-odds-src', href: sourceUrl(m), target: '_blank', rel: 'noopener', onclick: e => (e.preventDefault(), openOut(sourceUrl(m))) }, [W('Polymarket 交易者估的機率', 'Chances as Polymarket traders price them'), h('span', { 'aria-hidden': 'true', text: ' ›' })])
         ])
       )

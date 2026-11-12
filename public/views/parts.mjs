@@ -2,7 +2,7 @@
 // many, and the bar of each side's count), its row, its card, the lead
 // stories' carousel, and the line under a list.
 import { h, tag } from '#kit/ui.mjs';
-import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName, readMark } from '../shell.mjs';
+import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName, readMark, isFollowing } from '../shell.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
@@ -91,6 +91,8 @@ const kickerOf = (story, about, lead = null) => {
 const whenShown = story => !isLive(story, state.page?.built) && readMark(story) !== 'new';
 // A row or card read already (dimmed; Jay 11-13: "record what the user read"); one with news since isn't.
 const readCls = story => (readMark(story) === 'read' ? ' nw-read' : '');
+// What of theirs a story is about (追蹤 黃仁勳, 持股 台積電), on any list it's in (state.followed, lib/follows.mjs).
+const followedWhy = story => state.followed?.get?.(story.id)?.why || null;
 
 // What a story is about and how long it has run: 政治 · 報導 3 天; `when`
 // adds how long ago it was last heard of.
@@ -124,8 +126,10 @@ export function counts(story, { full = false } = {}) {
   ]);
 }
 // The outlets carrying it: the first few marks, overlapping.
+// (An outlet followed first: Jay 11-13, yours where it covers the story.)
 export function marks(story, most = 4) {
-  const ids = outletsOf(story).slice(0, most);
+  const all = outletsOf(story);
+  const ids = [...all.filter(id => isFollowing(`o:${id}`)), ...all.filter(id => !isFollowing(`o:${id}`))].slice(0, most);
   return h('span', { class: 'nw-marks', 'aria-hidden': 'true' }, ids.map(id => outletMark(id, 18)));
 }
 // A story's coverage in a line: the marks, how many outlets, the bar (only
@@ -146,10 +150,10 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // One story in a list: what it's about and when, its headline, its
 // coverage; its picture beside it, a play mark on it when it has a clip.
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
-// `why(story)`: what of the person's it's about (你關心的: 持股 台積電, 追蹤 湖人), before the kicker.
+// `why(story)`: what of the person's it's about (持股 台積電, 追蹤 湖人), before the kicker; else what's followed (state.followed).
 export function storyRow(story, onOpen, { side = true, list = null, why = null, mark = null, note = null } = {}) {
   const pic = withClip(storyPicture(story, 'nw-thumb'), story);
-  const mine = why?.(story);
+  const mine = why ? why(story) : followedWhy(story);
   // (What of theirs it's about stands for its topic: one line at 320, Jay's 11-12 rule.)
   const kicker = kickerOf(story, aboutLine(story, { days: false, when: whenShown(story), topic: !mine }), mine ? mineTag(mine) : null);
   // (`mark(text)`: the title's found words marked, a search's; `note(story)`: a line under it, why it was found.)
@@ -166,7 +170,7 @@ export const storyList = (stories, onOpen, opts = {}) => h('div', { class: 'nw-l
 
 // 今天五則: five lines, numbered, each what it's about (or what of the
 // person's: 持股 台積電) over its headline; no pictures, the brief reads at a glance.
-// (A follow by its name alone: the section already says it's theirs, and the kicker stays one line at 320.)
+// (A follow by its name alone, in the follow's colour: the kicker stays one line at 320.)
 export const mineTag = mine => h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: mine.kind === 'hold' ? `${W('持股', 'Held')} ${mine.label}` : mine.label });
 export function briefList(items, onOpen) {
   const list = items.map(x => x.story);
@@ -188,10 +192,11 @@ export function briefList(items, onOpen) {
 // headline and coverage on a wide page; a row with the picture beside it on
 // a narrow one (by the grid's own width, news.css).
 export function storyCard(story, onOpen, list = null) {
+  const mine = followedWhy(story);
   const pic = withClip(storyPicture(story, 'nw-card-pic', { size: globalThis.innerWidth >= 600 ? 'l' : 's' }), story);
   return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}${readCls(story)}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
-    h('span', { class: 'nw-card-body' }, [kickerOf(story, aboutLine(story, { when: whenShown(story) })), titleSpan(story, 'nw-card-title'), coverage(story)])
+    h('span', { class: 'nw-card-body' }, [kickerOf(story, aboutLine(story, { days: !mine, when: whenShown(story), topic: !mine }), mine ? mineTag(mine) : null), titleSpan(story, 'nw-card-title'), coverage(story)])
   ]);
 }
 export const storyCards = (stories, onOpen) => h('div', { class: 'nw-cards q-rows-full' }, stories.map(s => storyCard(s, onOpen, stories)));
@@ -217,11 +222,12 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
   const firstBy = picturesOf(story)[0]?.[1];
   const credit = firstBy ? h('small', { class: 'nw-credit', text: creditOf(firstBy) }) : null;
   const pic = withClip(storyPicture(story, 'nw-lead-pic', { size: 'l', eager, onBy: by => (by ? credit && (credit.textContent = creditOf(by)) : credit?.remove()) }), story);
-  const about = aboutLine(story, { when: whenShown(story) });
+  const mine = followedWhy(story);
+  const about = aboutLine(story, { days: !mine, when: whenShown(story), topic: !mine });
   return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}${readCls(story)}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-lead-body' }, [
-      kickerOf(story, about),
+      kickerOf(story, about, mine ? mineTag(mine) : null),
       titleSpan(story, 'nw-lead-title'),
       story.sum ? h('span', { class: 'nw-lead-sum', text: story.sum }) : null,
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),

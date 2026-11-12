@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyLog, markRead, readState, setFollow, followsOf, following, mergeLogs, decodeLog, encodeLog, trimLog, addRead } from '../public/lib/reading.mjs';
-import { followFinds, yourStories, missedOf } from '../public/lib/follows.mjs';
+import { followFinds, yourStories, missedOf, followedOf, lifted } from '../public/lib/follows.mjs';
 import { relatedOf, timelineOf } from '../public/lib/stories.mjs';
 import { cleanBriefs } from '../public/lib/briefs.mjs';
 
@@ -115,4 +115,25 @@ test('重點整理 as read: two to four points, each in both languages', () => {
   assert.deepEqual([...b.keys()], ['a']);
   assert.equal(b.get('a').points.length, 2);
   assert.equal(cleanBriefs(null).size, 0);
+});
+
+test('what you follow rises through each list, tagged; a big story your outlet is on a little, untagged; one read stays put', () => {
+  const tw = Array.from({ length: 10 }, (_, i) => story(`s${i}`, `新聞${i}`, { items: [it('cna', `新聞${i}`), it('udn', `新聞${i}`)] }));
+  tw[9] = story('s9', '黃仁勳卸任輝達執行長', { items: [it('cna', '黃仁勳卸任'), it('udn', '黃仁勳卸任輝達')] });
+  tw[6] = story('s6', '颱風', { topics: ['soc'], items: [it('ltn', '颱風'), it('cna', '颱風')] });
+  tw[8] = story('s8', '地震', { topics: ['soc'], items: [it('cna', '地震')] });
+  const page = { tw, intl: [] };
+  const log = emptyLog();
+  setFollow(log, 'w:黃仁勳', true, T);
+  setFollow(log, 'o:ltn', true, T);
+  markRead(log, tw[8], T);
+  const finds = [{ label: '黃仁勳', kind: 'follow', key: 'w:黃仁勳', has: s => s.id === 's9' }];
+  const f = followedOf(page, { finds, outlets: ['ltn'], log, now: T });
+  assert.deepEqual(f.get('s9'), { why: { label: '黃仁勳', kind: 'follow' }, lift: 3 });
+  assert.deepEqual(f.get('s6'), { why: null, lift: 1.5 });
+  assert.equal(f.has('s8'), false);
+  const order = lifted(tw, f).map(s => s.id);
+  assert.equal(order.indexOf('s9'), 3, '10th, followed: 4th');
+  assert.equal(order.indexOf('s6'), 5, 'your outlet on it: 7th to 6th');
+  assert.deepEqual(lifted(tw, new Map()), tw);
 });

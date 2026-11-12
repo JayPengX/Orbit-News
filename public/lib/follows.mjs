@@ -62,6 +62,42 @@ export function yourStories(page, { finds = [], interests = [], log = null, now 
   return out;
 }
 
+// 頭條 with what you follow in it (Jay 11-13: "more integrated rather than
+// just an independent section"): every story on the page about something
+// followed → id: { why, lift }. `why` (what of theirs it's about, the
+// kicker's tag) by the most specific follow, as yourStories; `lift` how far
+// it rises in any list (its place over the lift: 9th becomes 3rd). A
+// followed outlet's stories rise untagged (its mark first in the story's
+// marks), on a big story only a little (it's on most of them). Read stories keep their tag and their place. `outlets`: the ids
+// of the outlets followed.
+const LIFT = { follow: 3, hold: 3, topic: 2, outlet: 2 };
+export const CARRIES = 1.5;
+export function followedOf(page, { finds = [], interests = [], outlets = [], log = null, now = Date.now(), live = () => false } = {}) {
+  const out = new Map();
+  if (!page) return out;
+  const all = [...finds, ...interests.map(i => ({ ...i, has: s => i.re.test(textOf(s)) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
+  if (!all.length && !outlets.length) return out;
+  for (const s of REGIONS.flatMap(r => page[r] || [])) {
+    const hit = all.find(i => i.has(s));
+    const carried = !hit && outlets.length && (s.items || []).some(it => outlets.includes(it[0]));
+    if (!hit && !carried) continue;
+    const read = readState(log, s, { now, live: live(s) }) === 'read';
+    // (An outlet's stories untagged: its mark leads the story's marks instead, and a tag on most of the page says nothing.)
+    const why = hit && hit.kind !== 'outlet' ? { label: hit.label, kind: hit.kind === 'topic' ? 'follow' : hit.kind } : null;
+    out.set(s.id, { why, lift: read ? 1 : hit ? LIFT[hit.kind] || 3 : CARRIES });
+  }
+  return out;
+}
+
+// A list in its order with what's followed risen (followedOf's lift; a tie, the followed first).
+export function lifted(list, followed) {
+  if (!followed?.size) return list;
+  return list
+    .map((s, i) => [s, followed.get(s.id)?.lift || 1, i])
+    .sort((a, b) => a[2] / a[1] - b[2] / b[1] || b[1] - a[1])
+    .map(([s]) => s);
+}
+
 // 你可能錯過: when most of what the person opened in 30 days came from one
 // end (偏綠 or 偏藍; abroad left or right: leanOf), the stories they'd likely
 // miss: those their end left out (`blind`), then those the other end
