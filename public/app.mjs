@@ -181,6 +181,8 @@ function load({ fresh = false } = {}) {
   loadLaws(fresh);
   loadSides(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
+  const button = document.getElementById('refresh');
+  if (button) button.disabled = true;
   reading = (testFlags().newsFail ? Promise.reject(new Error('test: news failing')) : packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 }))
     .then(raw => {
       const page = testPage(cleanPage(raw));
@@ -193,7 +195,10 @@ function load({ fresh = false } = {}) {
       state.failed = !state.page;
       if (!state.page) (stamp++, quietRefresh());
     })
-    .finally(() => (reading = null));
+    .finally(() => {
+      reading = null;
+      if (button) button.disabled = false;
+    });
   return reading;
 }
 // The older stories kept, read only when asked (a list's end, an old link).
@@ -244,8 +249,9 @@ document.addEventListener('close', () => setTimeout(quietRefresh), true);
 window.__fxStarted = true;
 const gated = installGate('news', lang);
 watchUpdates({ current: VERSION, key: 'orbitNews', cachePrefix: 'orbit-news-' });
-topActions(q);
-kitUI.pullToRefresh?.(() => load({ fresh: true }), { disabled: () => Boolean(reading) || !state.loaded });
+// A pull down on a phone, the refresh button on a computer (the kit's; it
+// spins while a read runs, and runs when the connection comes back).
+topActions(q, { refresh: () => load({ fresh: true }) });
 
 async function boot() {
   const starting = q.start();

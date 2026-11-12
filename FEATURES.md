@@ -8,7 +8,7 @@ remove a feature on purpose, delete its line in the same commit.
 
 - Stories read from the builder's page, painted at once from the phone's copy — `public/app.mjs`: `packJson(PAGE`, `peekPack`, `cleanPage`
 - A new build looked for every 5 minutes and on coming back — `public/app.mjs`: `5 * 60_000`, `visibilitychange`
-- Pull to refresh — `public/app.mjs`: `pullToRefresh`
+- Pull to refresh on a phone, the kit's refresh button on a computer (spinning while a read runs; run again when the connection comes back) — `public/app.mjs`: `topActions(q, { refresh:`, `button.disabled = true`
 - A story's bar: each side's outlets as lengths, the counts in words — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function bar`, `export function counts`, `export function barOf`
 - A story's coverage on its row: the outlets' marks, how many, the bar only for a kind sides take (the spectrum one feature) — `public/views/parts.mjs`, `public/lib/stories.mjs`: `export function coverage`, `export function marks`, `export const sidesTaken`
 - 你關心的: on 頭條, the stories about the stocks you hold in Orbit Securities and the teams and players you follow in Orbit Sports, marked 持股 or 追蹤 (`lib/mine.mjs`, `views/lists.mjs`; read from the phone's family notebook, nothing sent).
