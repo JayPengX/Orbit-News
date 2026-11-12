@@ -23,6 +23,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-10 (22:57) YouTube Shorts are left out; a clip YouTube won't play here says so and opens YouTube; a channel is read only if its clips play elsewhere and aren't mostly Shorts.
 - 11-10 (22:58) A story's sheet keeps ‹ 上一則 · n / N · 下一則 › at its foot; each outlet once a side (its other headlines folded), four a side at first; 單邊 by 台灣 / 國際, each side's count a tap filter, its kinds as sections; one company's monthly report is never another's story.
 - 11-10 No one-line AI summary under a headline (it only said the headline again). 11-11 News isn't passive: a search heads 頭條.
+- 11-12 The videos inside the articles count (Jay: "get the video embedded in a news web page … Taiwanese news site is the weak spot"): a story's clip may come from its outlets' own pages, only the article's own (never the box beside every article, never a Short); one on the outlet's own player opens on its site.
 - 11-12 預測市場 (Jay: "link news to prediction market … if 黃仁勳 will still be CEO … or polls of election"): a story's open question as Polymarket's traders price it, beside the story; read-only, the source credited, never a way to trade. Code finds each pair and the AI confirms it (a wrong match is worse than none); the chances are Polymarket's. No market on a Taiwan vote from ten days before it until the polls close (選罷法 §53's quiet days for polls).
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
@@ -42,9 +43,14 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   story of no topic (the kit's `TOPICS`: a game of Pokémon) isn't shown.
   Ranked by importance (outlets, headlines 4 an outlet, days, a kind's
   `weight`: culture 0.8, sport 0.6), fading by half in 36 hours. Each build reads 12 of the top stories'
-  pages once (`pageOf`): the outlet's picture (og:image) where the feed gave
-  none, and its own YouTube clip (a VideoObject's embedUrl or the article's
-  embed; one on every page of an outlet is its channel's, dropped). Writes
+  pages once (`pageOf`) for the outlet's picture (og:image) where the feed
+  gave none, and 12 more of Taiwan's outlets' (`CLIPS_AT`: 公視, 華視, 中天,
+  東森, 中央社, 聯合, TVBS, 三立, ETtoday, 中時…) for a story with fewer than 2
+  clips: the video in the article, a YouTube clip (VideoObject, og:video, the
+  article's player, late-loaded too) or else the outlet's own player (三立's,
+  中天's, 聯合影音's: a clip with id '', opened on its site). A clip on a page of
+  another story is the box beside every article, dropped; each new YouTube id
+  is asked once whether it's a Short (`shortOf`). Writes
   `news/index.json` (stories heard of in 3 days, 180 Taiwan's, 140 the
   world's) and `news/past.json` (older ones by importance, each outlet's
   newest headline); its state in R2 `private/news/items.json.gz`. No AI. A
