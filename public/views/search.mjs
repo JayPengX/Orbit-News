@@ -68,7 +68,8 @@ function drawResults() {
   if (!state.past && !pastAsked) {
     pastAsked = true;
     // (A failed read asked again at the next search, never in a loop.)
-    hooks.past()?.then?.(() => (state.past ? query.trim() && drawResults() : (pastAsked = false)));
+    // (Failed, the search says it looked at the last days alone.)
+    hooks.past()?.then?.(() => (state.past ? query.trim() && drawResults() : (query.trim() && drawResults(), (pastAsked = false))));
   }
   const found = findStories([state.page, state.past], q, { lines: state.lines, outletName, topicName, cache });
   const outlets = findOutlets(OUTLETS, q);
@@ -93,9 +94,11 @@ function drawResults() {
       empty({
         icon: 'search',
         title: W(`找不到「${q}」`, `Nothing for “${q}”`),
-        body: wordsOf(q).length > 1 ? W('每個字都要找到，少打一兩個字試試。', 'Every word has to match: try fewer words.') : W('這三天和留下的新聞裡沒有，換個說法試試。', 'Not in the last days’ stories or those kept: try other words.')
+        body: !state.past && state.pastFailed ? W('這幾天的新聞裡沒有。', 'Not in the last few days’ stories.') : wordsOf(q).length > 1 ? W('每個字都要找到，少打一兩個字試試。', 'Every word has to match: try fewer words.') : W('這三天和留下的新聞裡沒有，換個說法試試。', 'Not in the last days’ stories or those kept: try other words.')
       })
     );
+  // (The older stories couldn't be read: said, never left to look like nothing was there, 11-12.)
+  if (!state.past && state.pastFailed) parts.push(h('p', { class: 'nw-found-n nw-past-miss', text: W('更早的新聞這次讀不到，只找了這幾天的。', 'Older stories couldn’t be read: only the last few days searched.') }));
   results.replaceChildren(...parts);
 }
 
