@@ -88,6 +88,12 @@ h1, h2, h3, p { margin: 0; }
 .nw-live-tag { display: inline-flex; align-items: center; gap: 5px; color: var(--q-live, var(--q-red)); font-weight: 600; margin-inline-end: 6px; }
 .nw-live-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: q-pulse 1.6s infinite; }
 @media (prefers-reduced-motion: reduce) { .nw-live-tag::before { animation: none; } }
+/* 新進展: a story read before with big news since (the app's colour: it's what's new). */
+.nw-new-tag { display: inline-flex; align-items: center; gap: 5px; color: var(--q-accent); font-weight: 600; margin-inline-end: 6px; }
+.nw-new-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+/* A story read already: its headline quieter, its picture a little faded. */
+.nw-read :is(.nw-row-title, .nw-card-title, .nw-lead-title, .nw-brief-title) { color: var(--q-label-2, var(--q-text-2)); font-weight: 500; }
+.nw-read :is(.nw-thumb, .nw-card-pic) img { opacity: 0.6; }
 /* A story's coverage: the outlets' marks overlapping, how many, the bar. */
 .nw-cover { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .nw-cover .q-tag { margin-left: auto; flex: none; }
@@ -763,3 +769,56 @@ h1, h2, h3, p { margin: 0; }
 @media (hover: hover) {
   .nw-brief-row:hover { background: var(--q-fill-4); }
 }
+
+/* 你關心的 and 我的追蹤 (Jay 11-13: follows like Sports'): the follow pill is
+   the kit's .q-follow (drawn here only for a phone on an older kit). */
+.nw-topic-follow { display: flex; justify-content: flex-end; margin: 0 0 4px; }
+.nw-topic-follow .q-follow, .nw-follow-pills .q-follow, .nw-found-head .q-follow { min-height: 30px; padding: 0 12px; font-size: 13px; }
+.nw-follow-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.nw-found-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.nw-found-head .q-follow { max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.nw-outlet-head > .q-follow { margin-left: auto; }
+.nw-follows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.nw-follow-sec { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.nw-follow-sec .nw-story-h { padding-top: 0; }
+.nw-follow-row { display: flex; align-items: center; gap: 12px; }
+.nw-follow-ico { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 8px; background: var(--q-fill-3); color: var(--q-label-2); }
+.nw-follow-ico svg { width: 16px; height: 16px; }
+.nw-follow-x { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; margin-left: auto; border: 0; border-radius: 50%; background: transparent; color: var(--q-label-3); cursor: pointer; }
+.nw-follow-x svg { width: 16px; height: 16px; }
+.nw-follow-topics { display: flex; flex-wrap: wrap; gap: 8px; }
+.nw-follow-family { cursor: default; }
+.nw-missed { display: grid; gap: 4px; margin-top: 8px; }
+.nw-missed .nw-story-h { font: 600 15px/20px var(--q-font); color: var(--q-label-2); padding: 0 2px; }
+
+/* 重點整理: our few points (the AI's), then the way to the whole report on the outlet's site. */
+.nw-points { display: grid; gap: 10px; }
+.nw-points .nw-story-h { display: flex; align-items: center; gap: 6px; }
+.nw-points .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
+.nw-points-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px 14px 34px;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-points-list li { font: 400 16px/23px var(--q-font); text-wrap: pretty; padding-left: 2px; }
+.nw-points-list li::marker { color: var(--q-label-3); }
+.nw-full-row { display: flex; }
+.nw-full { display: inline-flex; align-items: center; justify-self: start; min-height: 36px; padding: 0 16px; border-radius: 999px; background: var(--q-fill-3); color: var(--q-label); font: 600 15px/20px var(--q-font); text-decoration: none; white-space: nowrap; }
+.nw-full b { color: var(--q-label-3); font-weight: 400; }
+
+/* 來龍去脈: a line a turn down a rail, each the outlet's report. */
+.nw-timeline { display: grid; gap: 10px; }
+.nw-turns { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.nw-turn { position: relative; display: grid; gap: 3px; padding: 0 0 14px 20px; }
+.nw-turn::before { content: ''; position: absolute; left: 4px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--q-label-3); }
+.nw-turn:last-child::before { background: var(--q-accent); }
+.nw-turn:not(:last-child)::after { content: ''; position: absolute; left: 7.5px; top: 16px; bottom: 0; width: 1px; background: var(--q-separator, var(--q-fill-2)); }
+.nw-turn-when { color: var(--q-label-2); font: var(--q-t-footnote); }
+.nw-turn-head { display: flex; align-items: flex-start; gap: 8px; color: inherit; text-decoration: none; font: 500 16px/22px var(--q-font); text-wrap: pretty; }
+.nw-turn-head .q-logo { margin-top: 2px; flex: none; }
+
+.nw-related { display: grid; gap: 4px; }

@@ -9,9 +9,11 @@ import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
-import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf } from '../lib/stories.mjs';
+import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, relatedOf, timelineOf } from '../lib/stories.mjs';
+import { followKey } from '../lib/reading.mjs';
+import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, storyList } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
 import { pct, move, sourceUrl } from '../lib/markets.mjs';
@@ -100,6 +102,8 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   const draw = (i, opts = {}) => {
     at = i;
     const s = order[i];
+    // (Read: its row quieter once the sheet closes; big news since, 新進展.)
+    hooks.opened(s);
     body.replaceChildren(...storyParts(s, opts));
     sh.el.setAttribute('aria-label', s.title);
     foot?.paint(i);
@@ -220,8 +224,10 @@ function storyParts(story, { clip = '' } = {}) {
     h('div', { class: 'nw-story-text' }, [
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
       ...storyTitle(story, lang),
-      story.sum ? h('p', { class: 'nw-sum', lang }, [...marked(story.sum, story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
-      h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })])
+      // (Our 重點整理 below says it fuller: the outlet's own summary then left to its site.)
+      story.sum && !state.briefs?.has?.(story.id) ? h('p', { class: 'nw-sum', lang }, [...marked(story.sum, story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
+      h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })]),
+      followRow(story)
     ])
   ]);
   // (Its other clips right under it: watching is part of the story.)
@@ -229,6 +235,7 @@ function storyParts(story, { clip = '' } = {}) {
   // outlets on a world story, and how it grew a day at a time.
   return [
     head,
+    pointsOf(story),
     clipRow,
     spectrum(story),
     sidesSay(story),
@@ -241,7 +248,9 @@ function storyParts(story, { clip = '' } = {}) {
     lawPart(story),
     taiwanPart(story),
     worldLink(story),
+    timeline(story),
     growthOf(story),
+    relatedPart(story),
     h('p', { class: 'nw-foot', text: W('標題、摘要和圖片屬於各家媒體；點標題到原網站看全文。', 'Headlines, summaries and pictures are each outlet’s own; tap one to read it on its site.') })
   ].filter(Boolean); // (replaceChildren would write a missing part as "null")
 }
@@ -283,6 +292,64 @@ function worldLink(story) {
     h('span', { lang: 'en', text: w.title }),
     h('b', { 'aria-hidden': 'true', text: '›' })
   ]);
+}
+
+// 重點整理 (Jay 11-13: reading kept in the app): the story's few points in
+// our own words (the AI's, from the outlets' headlines and feed summaries:
+// lib/briefs.mjs), and the way to the whole report on the outlet's own site
+// (iOS's quick view in the app, closed back to the story; the Safari app
+// when the person chose it on the Pass). Never an article copied here.
+function pointsOf(story) {
+  const b = state.briefs?.get?.(story.id);
+  const lead = story.items.find(it => it[0] === story.by) || story.items[0];
+  const full = lead ? outletLink(lead, [h('span', { text: W(`到${outletName(lead[0])}看全文`, `Read it on ${outletName(lead[0])}`) }), h('b', { 'aria-hidden': 'true', text: ' ›' })], 'nw-full') : null;
+  if (!b) return full ? h('div', { class: 'nw-full-row' }, [full]) : null;
+  const lang = en ? 'en' : 'zh-Hant';
+  return h('section', { class: 'nw-points' }, [
+    h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
+    h('ul', { class: 'nw-points-list' }, b.points.map(p => h('li', { lang, text: en ? p.en : p.zh }))),
+    full
+  ]);
+}
+
+// 追蹤: the story's topic and the parties its headlines name, each a follow
+// (their stories then head 頭條's 你關心的).
+function followRow(story) {
+  const t = story.topics?.[0];
+  const pills = [
+    t && topicName(t, story.region) ? followPill(followKey('t', t), { label: W(`追蹤${topicName(t, story.region)}`, `Follow ${topicName(t, story.region)}`) }) : null,
+    ...(story.parties || []).filter(p => PARTY_WORDS[p]).map(p => followPill(wordsKey(PARTY_WORDS[p][0]), { label: W(`追蹤${PARTY_WORDS[p][0]}`, `Follow the ${PARTY_WORDS[p][1]}`) }))
+  ].filter(Boolean);
+  return pills.length ? h('div', { class: 'nw-follow-pills' }, pills) : null;
+}
+
+// 來龍去脈: how the story went, a line a turn (its first report, then each
+// day's or few hours' headline that added the most; lib/stories.mjs
+// timelineOf), each opening the outlet's report.
+function timeline(story) {
+  const turns = timelineOf(story);
+  if (turns.length < 2) return null;
+  const when = at => {
+    const d = new Date(at);
+    const day = d.toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'numeric', day: 'numeric' });
+    const hm = d.toLocaleTimeString(en ? 'en-GB' : 'zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${day} ${hm}`;
+  };
+  return h('section', { class: 'nw-timeline' }, [
+    h('h3', { class: 'nw-story-h', text: W('來龍去脈', 'How it unfolded') }),
+    h('ol', { class: 'nw-turns' }, turns.map(t => h('li', { class: 'nw-turn' }, [
+      h('small', { class: 'nw-turn-when' }, [h('span', { class: 'num', text: when(t.at) }), t.n > 1 ? h('span', { text: W(` · ${t.n} 則`, ` · ${t.n}`) }) : null]),
+      outletLink([t.outlet, t.title, t.url], [outletMark(t.outlet, 18), h('span', { lang: story.region === 'intl' ? 'en' : 'zh-Hant', text: t.title })], 'nw-turn-head')
+    ])))
+  ]);
+}
+
+// 相關新聞: the stories nearest this one (lib/stories.mjs relatedOf), each
+// opening in this sheet's place.
+function relatedPart(story) {
+  const near = relatedOf(story, [state.page, state.past]).map(x => x.story);
+  if (!near.length) return null;
+  return h('section', { class: 'nw-related' }, [h('h3', { class: 'nw-story-h', text: W('相關新聞', 'Related stories') }), storyList(near, s => openStory(s.id, { list: near }))]);
 }
 
 // 各方怎麼說: each side's angle in a line, the one difference that matters

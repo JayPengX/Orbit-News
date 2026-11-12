@@ -207,3 +207,97 @@ export function agoOf(at, now, en = false) {
   const d = Math.round(h / 24);
   return en ? `${d} day${d === 1 ? '' : 's'} ago` : `${d} 天前`;
 }
+
+// ---- 相關新聞 and 來龍去脈 (Jay 11-13: "make it more in app") ----
+
+// A line's terms: Chinese as two-character pieces, English as words of four
+// letters or more (the commonest left out).
+const EN_STOP = new Set('says told amid near more less back down take takes calls call make makes made plan plans wants want that this with from have been will what when where which their they them than then into over after about says said more most just also amid could would should report reports news live update updates video watch here year years week first last over'.split(' '));
+export function termsOf(text) {
+  const out = new Set();
+  const s = String(text || '');
+  for (const run of s.match(/[一-鿿]{2,}/g) || []) for (let i = 0; i + 2 <= run.length; i++) out.add(run.slice(i, i + 2));
+  for (const w of s.toLowerCase().match(/[a-z][a-z'-]{3,}/g) || []) if (!EN_STOP.has(w)) out.add(w.replace(/'s$/, ''));
+  return out;
+}
+// A story's terms: its headline and its outlets' first few.
+const storyTerms = s => termsOf([s.title, ...(s.items || []).slice(0, 8).map(it => it[1])].join(' '));
+
+// The stories most like this one (shared rare terms, its own region's; a
+// Taiwan story's world story and the other way round a little nearer), `most`
+// at most, the nearest first: [{ story, link }] (`link`: the builder joined
+// them). `pages`: the page and the past (either may be null).
+export function relatedOf(story, pages, { most = 4, min = 0.2 } = {}) {
+  if (!story) return [];
+  const all = [];
+  const seen = new Set([story.id]);
+  for (const p of pages) for (const r of REGIONS) for (const s of p?.[r] || []) if (!seen.has(s.id)) (seen.add(s.id), all.push(s));
+  // (How rare each term is among all the stories: 台灣 or 表示 tell little.)
+  const terms = new Map(all.map(s => [s, storyTerms(s)]));
+  const mine = storyTerms(story);
+  const df = new Map();
+  for (const t of mine) df.set(t, 0);
+  for (const set of terms.values()) for (const t of set) if (df.has(t)) df.set(t, df.get(t) + 1);
+  const idf = t => Math.log((all.length + 1) / ((df.get(t) || 0) + 1));
+  const norm = set => Math.sqrt([...set].reduce((a, t) => a + (df.has(t) ? idf(t) ** 2 : 1), 0)) || 1;
+  const mineNorm = norm(mine);
+  const out = [];
+  for (const s of all) {
+    const set = terms.get(s);
+    let dot = 0;
+    for (const t of set) if (mine.has(t)) dot += idf(t) ** 2;
+    // (Only a direct join: many Taiwan stories hang loosely on one world story.)
+    const link = s.id === story.world || s.world === story.id;
+    if (!link && s.region !== story.region) continue;
+    const score = dot / (mineNorm * norm(set)) + (link ? 0.1 : 0);
+    if (score >= min) out.push({ story: s, link: Boolean(link), score });
+  }
+  return out.sort((a, b) => b.score - a.score || (b.story.imp || 0) - (a.story.imp || 0)).slice(0, most);
+}
+
+// 來龍去脈: how a story went, a line a turn: its first report, then each
+// later day's (or, on a story of one day, each few hours') headline that
+// the most outlets' say alike and that adds the most past what came before,
+// with how many headlines that turn had. `most` lines at most (the first and
+// the latest always). → [{ at, outlet, title, url, n }], [] when it never moved on.
+const TW_MS = 8 * 3_600_000;
+export function timelineOf(story, { most = 6 } = {}) {
+  // (A time at Taiwan's midnight on the dot is a feed that gave only the day.)
+  const items = (story?.items || []).filter(it => it[3] > 0 && (it[3] + TW_MS) % 86_400_000).slice().sort((a, b) => a[3] - b[3]);
+  if (items.length < 3) return [];
+  const span = items.at(-1)[3] - items[0][3];
+  if (span < 6 * 3_600_000) return [];
+  // (A day a turn past a day and a half; else three hours.)
+  const size = span > 36 * 3_600_000 ? 86_400_000 : 3 * 3_600_000;
+  const turns = new Map();
+  for (const it of items) {
+    const k = Math.floor((it[3] + TW_MS) / size);
+    if (!turns.has(k)) turns.set(k, []);
+    turns.get(k).push(it);
+  }
+  if (turns.size < 2) return [];
+  const said = new Set();
+  const out = [];
+  let first = true;
+  for (const group of turns.values()) {
+    const sets = group.map(it => termsOf(it[1]));
+    let best = 0;
+    let bestScore = -Infinity;
+    group.forEach((it, i) => {
+      if (first) return;
+      // (Said alike by the turn's others, new past what's been said.)
+      const alike = sets.reduce((a, s, j) => (j === i ? a : a + [...sets[i]].filter(t => s.has(t)).length / (sets[i].size || 1)), 0);
+      const fresh = [...sets[i]].filter(t => !said.has(t)).length / (sets[i].size || 1);
+      const score = alike / Math.max(1, group.length - 1) + fresh;
+      if (score > bestScore) (bestScore = score), (best = i);
+    });
+    const it = group[best];
+    for (const t of sets[best]) said.add(t);
+    out.push({ at: it[3], outlet: it[0], title: it[1], url: it[2], n: group.length });
+    first = false;
+  }
+  if (out.length <= most) return out;
+  // (Too many turns: the first, the latest, and the busiest between.)
+  const mid = out.slice(1, -1).sort((a, b) => b.n - a.n).slice(0, most - 2);
+  return [out[0], ...out.slice(1, -1).filter(x => mid.includes(x)), out.at(-1)];
+}

@@ -12,6 +12,8 @@ import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { storiesWith } from '../lib/stories.mjs';
 import { bar, storyList, counts } from './parts.mjs';
 import { openStory } from './story.mjs';
+import { followPill, openFollows, followName } from './follows.mjs';
+import { followKey, followsOf } from '../lib/reading.mjs';
 
 // Each line's places, end to end, with the side colour each stands on.
 const TW_PLACES = [-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'g' : v > 0 ? 'b' : 'c', label: placeWord('tw', v, lang), of: o => o.region === 'tw' && o.tw === v }));
@@ -56,10 +58,15 @@ function mine(region) {
 export function renderOutlets(box) {
   const tw = mine('tw');
   const intl = mine('intl');
+  // 我的追蹤: what's followed in a line, the sheet a tap away.
+  const follows = followsOf(state.log);
+  const names = [...follows.map(followName), ...(state.interests || []).map(i => i.label)];
+  const followRow = list([cell({ icon: kitUI.icons?.star || null, title: W('我的追蹤', 'Following'), sub: names.length ? names.slice(0, 6).join(W('、', ', ')) : W('人物、主題、媒體', 'People, topics, outlets'), chevron: true, onClick: openFollows })]);
   const reading = section(W('我的閱讀', 'Your reading'), [
     tw || intl
       ? h('div', { class: 'q-focus nw-mine-card' }, [h('p', { class: 'nw-mine-lede', text: W('近 30 天你點開的新聞，依媒體的位置', 'What you opened in 30 days, by where each outlet stands') }), tw, intl])
-      : empty({ icon: 'chart', title: W('還沒點開過新聞', 'Nothing opened yet'), body: W('點開任何一則標題，這裡就算出你讀的多半是哪一邊的媒體。只記哪一家、哪一天。', 'Open any headline and this shows which side’s outlets you mostly read. Only the outlet and the day are kept.') })
+      : empty({ icon: 'chart', title: W('還沒點開過新聞', 'Nothing opened yet'), body: W('點開任何一則標題，這裡就算出你讀的多半是哪一邊的媒體。只存在你的 Orbit Pass。', 'Open any headline and this shows which side’s outlets you mostly read. Kept only on your Orbit Pass.') }),
+    followRow
   ]);
   const parts = [
     reading,
@@ -89,7 +96,7 @@ export function openOutlet(id) {
   for (const c of why) if (c.tagName === 'A') Object.assign(c, { target: '_blank', rel: 'noopener' });
   const stories = state.page ? storiesWith(state.page, id) : [];
   const body = h('div', { class: 'nw-outlet' }, [
-    h('div', { class: 'nw-outlet-head' }, [outletMark(id, 56), h('span', {}, [h('b', { text: outletName(id) }), h('small', { text: en ? o.owner.en : o.owner.zh })])]),
+    h('div', { class: 'nw-outlet-head' }, [outletMark(id, 56), h('span', {}, [h('b', { text: outletName(id) }), h('small', { text: en ? o.owner.en : o.owner.zh })]), followPill(followKey('o', id))]),
     list(places, { head: W('位置', 'Place') }),
     list(why, { head: W('依據', 'Why'), foot: o.weak ? W('沒有研究評過這家，依擁有者和公開立場判斷，依據較弱。', 'No study has rated it: placed by owner and stated stance, weaker evidence.') : '' }),
     // (The count the rows shown: 自由時報's said 「最近的 183 則」 over twelve, 11-12.)

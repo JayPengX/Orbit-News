@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { interestsOf, mineOf } from '../public/lib/mine.mjs';
+import { interestsOf } from '../public/lib/mine.mjs';
+import { yourStories } from '../public/lib/follows.mjs';
+
+// (你關心的 now heads 頭條 with News' own follows too: lib/follows.mjs yourStories.)
+const mineOf = (page, interests, most = 5) => yourStories(page, { interests, most });
 
 const holds = [{ code: '2330', symbol: '2330.TW', name: '台積電', en: 'TSMC', market: 'tw' }, { code: 'AAPL', symbol: 'AAPL', name: 'Apple', en: 'Apple', market: '' }];
 const follows = [
@@ -8,7 +12,8 @@ const follows = [
   { league: 'eng.1', id: '359', name: 'Arsenal', zh: '兵工廠', short: '兵工廠' },
   { league: 'mlb', id: '1', name: 'Shohei Ohtani', athlete: true }
 ];
-const story = (id, title, items = []) => ({ id, title, items: items.map(t => ['cna', t, 'https://x']) });
+let imp = 100;
+const story = (id, title, items = []) => ({ id, title, imp: imp--, items: items.map(t => ['cna', t, 'https://x']) });
 
 test('what you hold and follow, each by its names; short words never', () => {
   const all = interestsOf(holds, follows);

@@ -7,8 +7,8 @@ import * as orbitKit from '#kit/orbit.mjs';
 import { h, logoTile } from '#kit/ui.mjs';
 import { outletOf, outletIcon, sideName, sideWord } from '#kit/news-outlets.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
-import { emptyLog } from './lib/reading.mjs';
-import { agoOf } from './lib/stories.mjs';
+import { emptyLog, readState, following } from './lib/reading.mjs';
+import { agoOf, isLive } from './lib/stories.mjs';
 
 export { lang, W };
 export const en = lang === 'en';
@@ -41,6 +41,9 @@ export const state = {
   sides: new Map(),
   // 預測市場: Polymarket's markets on a story's question, by id (news/markets.json, lib/markets.mjs), empty until read.
   markets: new Map(),
+  // 重點整理: a story's points in our words, by id (news/briefs.json, Orbit-Core builders/ai.js newsBriefs), empty until read.
+  briefs: new Map(),
+  // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.
   log: emptyLog(),
   // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then or on an older kit).
   fb: null,
@@ -50,7 +53,13 @@ export const state = {
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
 // reads the older stories (a promise); word(w) opens a word's card in Orbit Words; law(hash) a law or bill in Orbit Law.
-export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, law() {}, past: async () => {} };
+// follow(key, on) follows or lets go (lib/reading.mjs keys); opened(story) marks a story read.
+export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, law() {}, follow() {}, opened() {}, past: async () => {} };
+
+// A story as far as this person has read it: '' not opened, 'read', or 'new'
+// (a big development since they read it: lib/reading.mjs readState).
+export const readMark = story => readState(state.log, story, { live: isLive(story, state.page?.built) });
+export const isFollowing = key => following(state.log, key);
 
 // A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
 export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');

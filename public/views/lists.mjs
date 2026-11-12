@@ -7,10 +7,11 @@
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
-import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } from '../shell.mjs';
-import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
-import { balanceOf, leanOf } from '../lib/reading.mjs';
-import { mineOf } from '../lib/mine.mjs';
+import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
+import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive } from '../lib/stories.mjs';
+import { balanceOf, leanOf, followKey } from '../lib/reading.mjs';
+import { followFinds, yourStories, missedOf } from '../lib/follows.mjs';
+import { followPill, openFollows } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
 import { openStory } from './story.mjs';
@@ -67,50 +68,66 @@ const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { m
 
 export function renderTop(box) {
   if (notYet(box)) return;
-  const { tw, intl } = state.page;
-  const leads = leadsOf(tw, intl, liveOf(state.page));
-  const seen = new Set(leads.map(s => s.id));
+  // 你關心的 first (Jay 11-13: like Sports' 我的比賽 heading 首頁): what this
+  // person follows here and in the family (lib/follows.mjs), each story once
+  // on the page: the front's lead stories are those past it.
+  const found = yourStories(state.page, {
+    finds: followFinds(state.log, state.page, { lines: state.lines, outletName, topicName }),
+    interests: state.interests,
+    log: state.log,
+    live: s => isLive(s, state.page.built)
+  });
+  // (One saga once, as on the rest of the page.)
+  const sagas = new Set(oneASaga(found.map(x => x.story), [], zhOf).map(s => s.id));
+  const yours = found.filter(x => sagas.has(x.story.id));
+  const mineIds = new Set(yours.map(x => x.story.id));
+  const tw = state.page.tw.filter(s => !mineIds.has(s.id));
+  const intl = state.page.intl.filter(s => !mineIds.has(s.id));
+  const leads = leadsOf(tw, intl, liveOf(state.page).filter(s => !mineIds.has(s.id)));
+  const seen = new Set([...mineIds, ...leads.map(s => s.id)]);
   const top = oneASaga(tw.filter(s => !seen.has(s.id)), leads, zhOf).slice(0, 6);
   for (const s of top) seen.add(s.id);
-  // 你關心的 and 今天五則 (past the top: five more, picked for this person,
-  // kept all day from 7:00; lib/brief.mjs), each story once on the page.
-  const forYou = mineOf(state.page, state.interests, 5);
-  const brief = briefNow(forYou, seen);
+  // 今天五則 (past the top: five more, picked for this person, kept all day
+  // from 7:00; lib/brief.mjs), each story once on the page.
+  const brief = briefNow(yours, seen);
   for (const x of brief) seen.add(x.story.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
   const world = oneASaga(intl.filter(s => !seen.has(s.id)), [...leads, ...top], zhOf).slice(0, 5);
   // Each topic's most important not shown above, three at a time (國際's
   // own section above stands for the world: one 國際 on the page).
-  const topics = topicOrder()
+  const topicLists = topicOrder()
     .filter(t => !(t === 'world' && world.length))
     .map(t => [t, tw.filter(s => s.topics?.[0] === t && !seen.has(s.id))])
-    .filter(([, list]) => list.length >= 2)
-    .map(([t, list]) =>
+    .filter(([, list]) => list.length >= 2);
+  const topics = topicLists.map(([t, list]) =>
       section(topicName(t, 'tw'), [storyList(list.slice(0, 3), s => open(s, list)), more(W(`更多${topicName(t, 'tw')}新聞`, `More ${topicName(t, 'tw').toLowerCase()}`), go('tw', t))], { cls: 'nw-topic-sec' })
     );
   const sides = oneSided(state.page);
   const one = sides.flatMap(g => g.stories).sort((a, b) => b.n - a.n).slice(0, 3);
   const mine = balanceOf(state.log, 'tw', today());
+  for (const [, list] of topicLists) for (const s of list.slice(0, 3)) seen.add(s.id);
+  for (const s of one) seen.add(s.id);
+  // 你可能錯過: what the side they mostly read leaves out (lib/follows.mjs missedOf).
+  const missed = missedOf(state.page, state.log, today(), { skip: seen });
+  const whyOf = new Map(yours.map(m => [m.story.id, m.why]));
+  const yoursList = yours.map(m => m.story);
   const hero = h('div', { class: 'nw-front' }, [
     h('p', { class: 'nw-date', text: dateLine() }),
+    yours.length || state.interests.length || followsAny()
+      ? section(W('你關心的', 'For you'), [yours.length ? storyList(yoursList, s => open(s, yoursList), { why: s => whyOf.get(s.id) }) : h('p', { class: 'nw-lede', text: W('這三天沒有你追蹤的新聞。', 'Nothing you follow in the last three days.') })], { cls: 'nw-mine-sec', ai: true, shd: true, more: W('追蹤', 'Following'), onMore: openFollows })
+      : null,
     leads.length ? carousel(leads, open) : null,
     top.length ? section(W('要聞', 'Top stories'), [storyCards(top, open)], { cls: 'nw-top-sec' }) : null,
     clips.length ? section(W('影音', 'Video'), [kitUI.rail(clips.map(c => clipCard(c, play))), h('p', { class: 'nw-foot', text: W('各家媒體自己的影片，在 YouTube 的播放器裡播。', 'Each outlet’s own clips, played in YouTube’s player.') })], { cls: 'nw-clips-sec' }) : null
   ]);
-  // 你關心的: stories about what you hold in Securities and follow in Sports
-  // (the family's notebook on this phone, lib/mine.mjs), wherever they sit above.
-  const whyOf = new Map(forYou.map(m => [m.story.id, m.why]));
-  const inBrief = new Set(brief.map(x => x.story.id));
-  const mineStories = forYou.map(m => m.story).filter(s => !inBrief.has(s.id));
   const parts = [
     brief.length
       ? section(W('今天五則', 'Today’s five'), [briefList(brief, (s, list) => openStory(s.id, { list, via: 'brief' })), h('p', { class: 'nw-foot', text: W('頭條之外再五則，你常點開的主題排前面，每天早上 7 點換。', 'Five past the headlines, the topics you open first; new each morning at 7.') })], { cls: 'nw-brief-sec', ai: true })
       : null,
-    mineStories.length ? section(W('你關心的', 'For you'), [storyList(mineStories, s => open(s, mineStories), { why: s => whyOf.get(s.id) }), h('p', { class: 'nw-foot', text: W('依你在 Orbit 證券的持股、Orbit 運動追蹤的球隊。', 'From what you hold in Orbit Securities and follow in Orbit Sports.') })], { cls: 'nw-mine-sec', ai: true }) : null,
     world.length ? section(regionName('intl'), [storyList(world, s => open(s, intl)), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
     ...topics,
     one.length ? section(W('單邊', 'One side'), [h('p', { class: 'nw-lede', text: W('只有一邊的媒體在報的新聞。', 'Stories only one side’s outlets carry.') }), storyList(one, open), more(W('看全部單邊新聞', 'All one-sided stories'), 'side')]) : null,
-    section(W('我的閱讀', 'Your reading'), [readingLine(mine), more(W('看各家媒體的位置', 'Where each outlet stands'), 'outlets')])
+    section(W('我的閱讀', 'Your reading'), [readingLine(mine), missed ? missedPart(missed) : null, more(W('看各家媒體的位置', 'Where each outlet stands'), 'outlets')])
   ];
   // (Under 搜尋's field, kept in place: views/search.mjs.)
   withSearch(box, [hero, h('div', { class: 'q-flow nw-flow' }, parts.filter(Boolean)), builtLine(state.page)]);
@@ -135,6 +152,14 @@ function briefNow(mine, skip) {
   }
   fb?.shown?.('news', b.list.map(x => itemOf(x.story)));
   return b.list;
+}
+
+// Anything followed in News (the family's own come in as state.interests).
+const followsAny = () => Object.values(state.log?.follow || {}).some(t => t > 0);
+
+// 你可能錯過: two stories the side they mostly read leaves out or barely carries.
+function missedPart(m) {
+  return h('div', { class: 'nw-missed' }, [h('h3', { class: 'nw-story-h', text: W('你可能錯過', 'You may have missed') }), storyList(m.stories, s => open(s, m.stories))]);
 }
 
 // 我的閱讀 in a line: your bar and what it says, or how it starts.
@@ -180,10 +205,13 @@ export function renderRegion(box, region) {
   // (Its first story with a picture leads; the rest in their order.)
   const lead = shown.find(s => s.img) && shown.indexOf(shown.find(s => s.img)) < 3 ? shown.find(s => s.img) : null;
   const rest = shown.filter(s => s !== lead);
+  // (A topic's tab: follow it, its stories then head 頭條's 你關心的.)
+  const follow = topic !== 'all' && topic !== 'video' ? h('div', { class: 'nw-topic-follow' }, [followPill(followKey('t', topic), { label: W(`追蹤${name(topic)}`, `Follow ${name(topic)}`) })]) : null;
   const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`), less: null, onToggle: () => ((state.shown[region] += 20), hooks.render()) }) : null;
   box.replaceChildren(
     chips,
     h('div', { class: 'nw-region' }, [
+      follow,
       lead ? h('div', { class: 'nw-region-lead' }, [leadCard(lead, open, { list: all })]) : null,
       all.length ? storyListIn(rest, all) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') }),
       pager,

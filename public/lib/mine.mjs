@@ -26,22 +26,4 @@ export function interestsOf(holds = [], follows = []) {
   return out;
 }
 
-const textOf = story => (kitNews.storyText ? kitNews.storyText(story) : [story.title, story.zh].filter(Boolean).join('\n'));
-
-// The stories about them, most important first (Taiwan's, then the world's,
-// each in the page's order), each with what it's about: [{ story, why }].
-// Two at most for any one of them, so one busy stock doesn't fill it.
-export function mineOf(page, interests, most = 6, each = 2) {
-  if (!page || !interests?.length) return [];
-  const out = [];
-  const count = new Map();
-  for (const story of [...(page.tw || []), ...(page.intl || [])]) {
-    const text = textOf(story);
-    const hit = interests.find(i => (count.get(i) || 0) < each && i.re.test(text));
-    if (!hit) continue;
-    count.set(hit, (count.get(hit) || 0) + 1);
-    out.push({ story, why: hit });
-    if (out.length >= most) break;
-  }
-  return out;
-}
+export const textOf = story => (kitNews.storyText ? kitNews.storyText(story) : [story.title, story.zh].filter(Boolean).join('\n'));

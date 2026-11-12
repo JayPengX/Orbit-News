@@ -3,7 +3,7 @@
 Taiwan's and the world's news, each event gathered into one story with every
 outlet that carries it, counted by side: Taiwan's 偏綠 · 中間 · 偏藍, the
 English left · centre · right. The spectrum is one feature, not a filter.
-Signs in with the Orbit Pass; 我的閱讀 syncs on it. Started 2026-11-10.
+Signs in with the Orbit Pass; 我的閱讀, the read marks and the follows sync on it. Started 2026-11-10.
 Live: https://orbit.jaypengx.com/news/
 
 ## Rules
@@ -27,6 +27,8 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-13 A story's picture is an outlet's photo, never a video's thumbnail while any outlet gave one (Jay: "don't use thumbnail with text"; a channel's frame carries its words burned in): Orbit-Core `THUMB_PIC`.
 - 11-12 The videos inside the articles count (Jay: "get the video embedded in a news web page … Taiwanese news site is the weak spot"): a story's clip may come from its outlets' own pages, only the article's own (never the box beside every article, never a Short); one on the outlet's own player opens on its site.
 - 11-12 預測市場 (Jay: "link news to prediction market … if 黃仁勳 will still be CEO … or polls of election"): a story's open question as Polymarket's traders price it, beside the story; read-only, the source credited, never a way to trade. Code finds each pair and the AI confirms it (a wrong match is worse than none); the chances are Polymarket's. No market on a Taiwan vote from ten days before it until the polls close (選罷法 §53's quiet days for polls).
+- 11-13 Personal like Sports (Jay: "we never really consider orbit news as a reader … kind of like sports's design idea"): what you follow (people and any words, topics, outlets, and the family's holdings and teams) heads 頭條 as 你關心的; a story read is dimmed, and marked 新進展 when it has big news since; 我的閱讀 nudges toward what your usual side leaves out (你可能錯過). All of it on the phone and the person's own Pass, never sent elsewhere.
+- 11-13 Reading kept in the app (Jay: "just make it more in app"): a story's sheet carries our own 重點整理 (the AI's, from the outlets' headlines and feed summaries only), each side's headlines, its clips, 來龍去脈 and 相關新聞; the whole report opens on the outlet's own site (iOS's quick view, closed back to the story). Never an article's text copied: outlets mark them 禁止轉載.
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
@@ -95,8 +97,10 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | `lib/markets.mjs` | 預測市場: Polymarket's chances on a story's question (Orbit-Core `builders/news-markets.js` → `news/markets.json`, every 30 minutes; nothing shown past 3 hours old), drawn in the sheet's `oddsPart` |
 | `lib/lines.mjs`, `sides.mjs` | The AI made once by Orbit-Core `builders/ai.js`: world stories' Chinese titles and Taiwan's English ones (`news/lines.json`); 各方怎麼說 (`news/sides.json`) |
 | `lib/search.mjs`, `views/search.mjs` | 搜尋, on the phone as each letter is typed (`findStories`, `fold`), recent searches |
-| `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log; an outlet's picture at the size shown (`sized`, `heavy`) |
-| `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際, 單邊; a story's sheet (player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, the foot); 媒體 |
+| `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log, the read marks (`markRead`, `readState`) and the follows (`setFollow`, keys `w:` words, `t:` topic, `o:` outlet), the Pass payload `{ v: 1, days, read, follow }`; an outlet's picture at the size shown (`sized`, `heavy`) |
+| `lib/follows.mjs`, `views/follows.mjs` | 你關心的 (`followFinds`, `yourStories`: News' follows and the family's, `lib/mine.mjs`), 你可能錯過 (`missedOf`); 我的追蹤's sheet (`openFollows`) and the follow pill (kit `followButton`) |
+| `lib/briefs.mjs` | 重點整理: our points on the top stories (Orbit-Core `builders/ai.js` `newsBriefs` → `news/briefs.json`) |
+| `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際, 單邊; a story's sheet (重點整理 and 看全文, player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, 來龍去脈 and 相關新聞 from `lib/stories.mjs` `timelineOf`, `relatedOf`, the foot); 媒體 |
 | `lib/testing.mjs` | The 測試工具's News switches (kit `testtools.mjs`, unlocked on the Pass): `newsEmpty`, `newsFail`, `oneSided`, `badClip`; applied in `app.mjs load` to what's drawn only |
 | `news.css`, `look.css`, `sw.js` | The look; the kit's service worker (no `sw-images.js`: outlets' pictures are theirs, hotlinked) |
 

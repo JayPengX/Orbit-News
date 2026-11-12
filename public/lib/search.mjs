@@ -49,8 +49,11 @@ function indexOf(story, { lines, outletName, topicName }) {
 // is the outlet's headline [outlet, headline] that has the words when the
 // headline shown doesn't (to say why it was found). `pages`: the page and
 // the past (either may be null). `ctx`: { lines, outletName, topicName }
-// (the names in the page's language), `now`.
-export function findStories(pages, q, ctx = {}, { most = 200 } = {}) {
+// (the names in the page's language), `now`. `strong`: a word counts only
+// in the headline, the summary or two outlets' headlines (a followed name,
+// lib/follows.mjs: never one outlet's passing mention, an outlet's or a
+// topic's name).
+export function findStories(pages, q, ctx = {}, { most = 200, strong = false } = {}) {
   const words = wordsOf(q);
   if (!words.length) return [];
   const now = ctx.now ?? Date.now();
@@ -72,7 +75,7 @@ export function findStories(pages, q, ctx = {}, { most = 200 } = {}) {
         for (const w of words) {
           const inTitle = ix.title.includes(w);
           const heads = ix.heads.filter(t => t.includes(w)).length;
-          const best = inTitle ? FIELDS.title : ix.sum.includes(w) ? FIELDS.sum : heads ? FIELDS.heads : ix.names.includes(w) ? FIELDS.names : 0;
+          const best = inTitle ? FIELDS.title : ix.sum.includes(w) ? FIELDS.sum : heads >= (strong ? 2 : 1) ? FIELDS.heads : !strong && ix.names.includes(w) ? FIELDS.names : 0;
           if (!best) {
             ok = false;
             break;
