@@ -92,7 +92,8 @@ export function openOutlet(id) {
     h('div', { class: 'nw-outlet-head' }, [outletMark(id, 56), h('span', {}, [h('b', { text: outletName(id) }), h('small', { text: en ? o.owner.en : o.owner.zh })])]),
     list(places, { head: W('位置', 'Place') }),
     list(why, { head: W('依據', 'Why'), foot: o.weak ? W('沒有研究評過這家，依擁有者和公開立場判斷，依據較弱。', 'No study has rated it: placed by owner and stated stance, weaker evidence.') : '' }),
-    stories.length ? section(W(`最近的 ${stories.length} 則`, `${stories.length} recent stories`), [storyList(stories.slice(0, 12), s => openStory(s.id, { list: stories }))], { shd: true }) : null
+    // (The count the rows shown: 自由時報's said 「最近的 183 則」 over twelve, 11-12.)
+    stories.length ? section(W(`最近的 ${Math.min(12, stories.length)} 則`, `${Math.min(12, stories.length)} recent stories`), [storyList(stories.slice(0, 12), s => openStory(s.id, { list: stories }))], { shd: true }) : null
   ]);
   sheet({ title: outletName(id), cls: 'nw-outlet-sheet', body: [body] });
 }
