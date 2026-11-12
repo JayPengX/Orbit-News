@@ -37,7 +37,15 @@ export function briefOf(page, { skip = new Set(), lift = () => 1, mine = [], mos
   const out = [];
   const topics = new Map();
   const regions = new Map();
+  // (One piece of news once: a world story carries the Taiwan stories it was
+  // joined to (its `tw` headlines), and the five had Nvidia's board twice,
+  // as Taiwan's story and the world's, 11-12. A story sharing a headline
+  // with one already in is its twin.)
+  const said = new Set();
+  const linksOf = story => [...(story.items || []), ...(story.tw?.items || [])].map(it => it?.[2]).filter(Boolean);
   for (const { story } of pool) {
+    const links = linksOf(story);
+    if (links.some(u => said.has(u))) continue;
     const t = story.topics?.[0] || '';
     const r = story.region || '';
     if (t && (topics.get(t) || 0) >= perTopic) continue;
@@ -45,6 +53,7 @@ export function briefOf(page, { skip = new Set(), lift = () => 1, mine = [], mos
     topics.set(t, (topics.get(t) || 0) + 1);
     regions.set(r, (regions.get(r) || 0) + 1);
     out.push({ story, why: whyOf.get(story.id) || null });
+    for (const u of links) said.add(u);
     if (out.length >= most) break;
   }
   return out;

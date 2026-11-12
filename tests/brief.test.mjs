@@ -44,3 +44,12 @@ test('ready at 7, kept all day, a story gone filled in', () => {
   // (Another day: picked again.)
   assert.notEqual(dayBrief(page, kept, AT8 + 86_400_000).day, first.day);
 });
+
+test('one piece of news once: a world story and the Taiwan story joined to it', () => {
+  const tw = { ...story('nv-tw', 'tw', 'tech'), items: [['cna', '輝達董事會擬撤換黃仁勳', 'https://cna.example/1', 1]] };
+  const world = { ...story('nv-w', 'intl', 'tech'), items: [['wsj', 'Nvidia board weighs ousting Huang', 'https://wsj.example/1', 1]], tw: { n: 1, items: [['cna', '輝達董事會擬撤換黃仁勳', 'https://cna.example/1', 1]] } };
+  const out = briefOf({ tw: [tw, ...page.tw], intl: [world, ...page.intl] }).map(x => x.story.id);
+  assert.ok(out.includes('nv-tw'));
+  assert.ok(!out.includes('nv-w'));
+  assert.equal(out.length, 5);
+});
