@@ -50,7 +50,11 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   article's player, late-loaded too) or else the outlet's own player (三立's,
   中天's, 聯合影音's: a clip with id '', opened on its site). A clip on a page of
   another story is the box beside every article, dropped; each new YouTube id
-  is asked once whether it's a Short (`shortOf`). Writes
+  is asked once whether it's a Short (`shortOf`). A story shows up to 6
+  clips (`CLIPS_SHOWN`): those that play here first (its articles' own, then
+  the channels' matched by `matchClips`: near the story's middle, or a little
+  less near and near one headline too, `CLIP_LOOSE`), each outlet once before
+  twice, then the outlets' own video pages to fill. Writes
   `news/index.json` (stories heard of in 3 days, 180 Taiwan's, 140 the
   world's) and `news/past.json` (older ones by importance, each outlet's
   newest headline); its state in R2 `private/news/items.json.gz`. No AI. A
