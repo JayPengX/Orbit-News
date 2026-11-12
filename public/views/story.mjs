@@ -14,6 +14,7 @@ import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
+import { pct, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
 
 // 新聞學單字: on a world story, the words being learned in Orbit Words
@@ -231,6 +232,7 @@ function storyParts(story, { clip = '' } = {}) {
     clipRow,
     spectrum(story),
     sidesSay(story),
+    oddsPart(story),
     h('section', { class: 'nw-sides-sec' }, [
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
@@ -290,15 +292,59 @@ function sidesSay(story) {
   const said = sidesTaken(story) && sidesOf(story, state.sides?.get?.(story.id));
   if (!said) return null;
   const pick = x => (en ? x.en : x.zh);
-  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'AI' });
-  mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
   return h('section', { class: 'nw-say' }, [
-    h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), mark]),
+    h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), aiMark()]),
     h('div', { class: 'nw-say-card' }, [
       said.diff ? h('p', { class: 'nw-say-diff', lang: en ? 'en' : 'zh-Hant', text: pick(said.diff) }) : null,
       h('div', { class: 'nw-say-rows' }, said.rows.map(r => h('div', { class: 'nw-say-row' }, [h('span', { class: 'nw-say-who' }, [h('i', { class: `nw-dot nw-s-${r.side}`, 'aria-hidden': 'true' }), h('b', { text: sideFull(r.side) })]), h('p', { lang: en ? 'en' : 'zh-Hant', text: pick(r) })]))),
       h('small', { class: 'nw-ai-note', text: W('AI 只依各邊的標題整理角度，不評斷誰對；標題在下面。', 'Written by AI from each side’s headlines only, never who’s right; the headlines are below.') })
     ].filter(Boolean))
+  ]);
+}
+
+// The Orbit AI mark beside a part the AI had a hand in (the family's, never a sparkle).
+function aiMark() {
+  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'Orbit AI' });
+  mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
+  return mark;
+}
+
+// 預測市場: the question the story raises as Polymarket's traders price it
+// (lib/markets.mjs; the pair confirmed by the AI, the chances Polymarket's):
+// one chance, the chances by deadline, or a race's leaders, each a bar with
+// its day's move; the source a tap away. Two markets at most.
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function byWhen(md) {
+  const [a, b, c] = md.split('/').map(Number);
+  const [y, m, d] = c ? [a, b, c] : [0, a, b];
+  return W(`${y ? `${y}/` : ''}${m}/${d} 前`, `By ${MONTHS_EN[m - 1]} ${d}${y ? `, ${y}` : ''}`);
+}
+function oddsPart(story) {
+  const ms = state.markets?.get?.(story.id);
+  if (!ms?.length) return null;
+  const row = (r, kind) => {
+    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (en ? r.en : r.zh || r.en) : '';
+    const mv = move(r.d);
+    return h('div', { class: `nw-odds-row${name ? '' : ' one'}` }, [
+      name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !(en || r.zh) ? 'en' : null, text: name }) : null,
+      h('span', { class: 'nw-odds-bar', 'aria-hidden': 'true' }, [h('i', { style: { width: `${Math.max(1, Math.round(r.p * 100))}%` } })]),
+      h('b', { class: 'nw-odds-p', text: pct(r.p) }),
+      h('small', { class: 'nw-odds-move', 'aria-label': mv ? W(`一天${r.d > 0 ? '上升' : '下降'} ${mv.slice(1)} 個百分點`, `${r.d > 0 ? 'Up' : 'Down'} ${mv.slice(1)} points in a day`) : null, text: mv })
+    ].filter(Boolean));
+  };
+  return h('section', { class: 'nw-odds' }, [
+    h('h3', { class: 'nw-story-h' }, [W('預測市場', 'Market odds'), aiMark()]),
+    h(
+      'div',
+      { class: 'nw-odds-cards' },
+      ms.map(m =>
+        h('div', { class: 'nw-odds-card' }, [
+          h('p', { class: 'nw-odds-q', lang: en ? 'en' : 'zh-Hant', text: en ? m.en : m.zh }),
+          h('div', { class: 'nw-odds-rows' }, m.rows.map(r => row(r, m.kind))),
+          h('a', { class: 'nw-odds-src', href: sourceUrl(m), target: '_blank', rel: 'noopener', onclick: e => (e.preventDefault(), openOut(sourceUrl(m))) }, [W('Polymarket 交易者估的機率', 'Chances as Polymarket traders price them'), h('span', { 'aria-hidden': 'true', text: ' ›' })])
+        ])
+      )
+    )
   ]);
 }
 

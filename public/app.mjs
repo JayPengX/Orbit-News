@@ -21,6 +21,7 @@ import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
 import { cleanSides } from './lib/sides.mjs';
+import { cleanMarkets } from './lib/markets.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead } from './lib/reading.mjs';
@@ -159,6 +160,20 @@ function loadSides(fresh) {
     })
     .catch(() => {});
 }
+// 預測市場: Polymarket's markets beside the stories they're about (Orbit-Core's builders/news-markets.js), read with the stories.
+const MARKETS = 'news/markets.json';
+let marketsBuilt = null;
+function loadMarkets(fresh) {
+  return packJson(MARKETS, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      if (raw?.built === marketsBuilt) return;
+      marketsBuilt = raw?.built ?? null;
+      state.markets = cleanMarkets(raw);
+      stamp++;
+      quietRefresh();
+    })
+    .catch(() => {});
+}
 // (你關心的: the family's notebook, read again with each load; a holding or team gone, its stories go.)
 function loadInterests() {
   return import('#kit/family.mjs')
@@ -180,6 +195,7 @@ function load({ fresh = false } = {}) {
   loadInterests();
   loadLaws(fresh);
   loadSides(fresh);
+  loadMarkets(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');
   if (button) button.disabled = true;

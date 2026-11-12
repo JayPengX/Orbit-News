@@ -85,7 +85,9 @@ export function aboutLine(story, { days = true, when = false } = {}) {
   const topic = story.topics?.[0] ? topicName(story.topics[0], story.region) : '';
   const d = daysOf(story);
   const run = days && d > 1 ? W(`報導 ${d} 天`, `${d} days`) : '';
-  return [topic, run, when ? ago(story.at) : ''].filter(Boolean).join(' · ');
+  // (預測市場: a story with a market's chances in its sheet says so.)
+  const odds = state.markets?.has?.(story.id) ? W('預測市場', 'Market odds') : '';
+  return [topic, run, odds, when ? ago(story.at) : ''].filter(Boolean).join(' · ');
 }
 
 // The bar: a segment for each side that carries the story, as long as its

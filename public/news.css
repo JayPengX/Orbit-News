@@ -653,7 +653,7 @@ h1, h2, h3, p { margin: 0; }
    the difference that matters most on top; side by side on a wide sheet. */
 .nw-say { display: grid; gap: 10px; }
 .nw-say .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-say .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-accent, var(--q-label-3)); }
+.nw-say .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
 .nw-say-card {
   display: grid;
   gap: 12px;
@@ -670,6 +670,35 @@ h1, h2, h3, p { margin: 0; }
 .nw-say-row p { font: var(--q-t-subhead); text-wrap: pretty; }
 @container q-sheet (min-width: 620px) {
   .nw-say-rows { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 16px; }
+}
+
+/* 預測市場: the story's question as Polymarket prices it, a bar a chance,
+   two cards side by side on a wide sheet. */
+.nw-odds { display: grid; gap: 10px; }
+.nw-odds .nw-story-h { display: flex; align-items: center; gap: 6px; }
+.nw-odds .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
+.nw-odds-cards { display: grid; gap: 12px; }
+.nw-odds-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-odds-q { font: 600 17px/24px var(--q-font); text-wrap: pretty; }
+.nw-odds-rows { display: grid; grid-template-columns: fit-content(45%) minmax(0, 1fr) auto auto; align-items: center; align-content: start; gap: 8px 10px; font: var(--q-t-subhead); }
+.nw-odds-row { display: contents; }
+.nw-odds-row.one .nw-odds-bar { grid-column: 1 / 3; }
+.nw-odds-name { overflow: hidden; white-space: nowrap; color: var(--q-label-2); }
+.nw-odds-bar { display: block; height: 8px; border-radius: 4px; background: var(--q-fill-2); overflow: hidden; }
+.nw-odds-bar i { display: block; height: 100%; border-radius: 4px; background: var(--q-accent); }
+.nw-odds-p { text-align: end; font-weight: 600; font-variant-numeric: tabular-nums; }
+.nw-odds-move { min-width: 2.2em; color: var(--q-label-2); font: var(--q-t-caption); font-variant-numeric: tabular-nums; }
+.nw-odds-src { justify-self: start; color: var(--q-label-2); font: var(--q-t-footnote); text-decoration: none; }
+@container q-sheet (min-width: 620px) {
+  .nw-odds-cards { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 16px; }
 }
 
 /* ---- 今天五則: five numbered lines in one card ---- */
