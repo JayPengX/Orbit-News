@@ -76,6 +76,39 @@ export const isLive = (story, built, now = Date.now()) => Boolean(story?.live > 
 export const liveOf = (page, now = Date.now()) =>
   REGIONS.flatMap(r => (page?.[r] || []).filter(s => isLive(s, page.built, now))).sort((a, b) => b.live - a.live);
 
+// One story told twice (Jay 11-12: 黃仁勳's resignation was a Taiwan story, its
+// world story and the board's earlier Taiwan story, side by side on 頭條): a
+// Taiwan story on a world story (its `world`), or two Taiwan stories on the same
+// one, and their headlines share a name (three Chinese characters running: 黃仁勳).
+// (The builder's join to a world story is loose, so the shared words decide.)
+// `zhOf(story)`: a world story's Chinese title (the AI's), '' when none.
+const grams = t => {
+  const out = new Set();
+  for (const run of String(t || '').match(/[\u4e00-\u9fff]{3,}/g) || []) for (let i = 0; i + 3 <= run.length; i++) out.add(run.slice(i, i + 3));
+  return out;
+};
+export function sameSaga(a, b, zhOf = () => '') {
+  if (!a || !b || a.id === b.id) return Boolean(a && b);
+  const tw = a.region === 'tw' ? a : b;
+  const other = tw === a ? b : a;
+  const linked = tw.region === 'tw' && tw.world && (other.region === 'intl' ? tw.world === other.id : other.world === tw.world);
+  if (!linked) return false;
+  const mine = grams(tw.title);
+  const theirs = other.region === 'intl' ? zhOf(other) : other.title;
+  return [...grams(theirs)].some(g => mine.has(g));
+}
+// The stories, each saga once (the first of it kept), past those already `shown`.
+export function oneASaga(stories, shown = [], zhOf) {
+  const kept = [...shown];
+  const out = [];
+  for (const s of stories) {
+    if (!s || kept.some(k => sameSaga(s, k, zhOf))) continue;
+    kept.push(s);
+    out.push(s);
+  }
+  return out;
+}
+
 // A story by its id, on the page or among the past's.
 export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
 

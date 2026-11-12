@@ -151,3 +151,20 @@ test('快訊: a story the builder marks live is breaking while the page is fresh
   const page = { built: T, tw: [{ id: 'x', at: T }, { id: 'y', at: T, live: 7 }], intl: [{ id: 'z', at: T, live: 20 }] };
   assert.deepEqual(liveOf(page, T).map(s => s.id), ['z', 'y']);
 });
+
+test('one saga once: a Taiwan story on a world story, or two on the same one, sharing a name, are one; the loose join alone is not', async () => {
+  const { sameSaga, oneASaga } = await import('../public/lib/stories.mjs');
+  const world = { id: 'w', region: 'intl', title: 'Nvidia CEO Jensen Huang to step down' };
+  const quit = { id: 'a', region: 'tw', world: 'w', title: '黃仁勳辭輝達執行長 財務長克瑞斯任臨時CEO' };
+  const board = { id: 'b', region: 'tw', world: 'w', title: '傳輝達董事會擬撤換黃仁勳 婚外情疑雲事件簿一覽' };
+  const leave = { id: 'c', region: 'tw', world: 'w', title: '跟蔣萬安同天請假！沈伯洋宣布12日起請假衝刺' };
+  const zhOf = s => (s.id === 'w' ? '黃仁勳陷醜聞 輝達董事會評估其去留' : '');
+  assert.equal(sameSaga(quit, board), true);
+  assert.equal(sameSaga(quit, world, zhOf), true);
+  assert.equal(sameSaga(world, quit, zhOf), true);
+  assert.equal(sameSaga(quit, world), false, 'no Chinese title for the world story: kept apart');
+  assert.equal(sameSaga(quit, leave), false, 'joined to the same world story, nothing shared');
+  assert.equal(sameSaga({ ...board, world: '' }, quit), false);
+  assert.deepEqual(oneASaga([quit, world, board, leave, null], [], zhOf).map(s => s.id), ['a', 'c']);
+  assert.deepEqual(oneASaga([board, leave], [quit], zhOf).map(s => s.id), ['c']);
+});

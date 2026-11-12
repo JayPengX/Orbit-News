@@ -8,7 +8,7 @@ import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } from '../shell.mjs';
-import { liveOf, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
+import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { mineOf } from '../lib/mine.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
@@ -52,12 +52,15 @@ const more = (words, to) => {
 };
 
 // The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
-// (快訊 first, two at most: what's breaking now leads, then the day's usual five.)
+// (快訊 first, two at most, a Taiwan story before its world one: what's
+// breaking now leads, then the day's usual five; each saga once.)
+const zhOf = s => state.lines?.get?.(s.id)?.zh || '';
 const leadsOf = (tw, intl, live = []) => {
-  const first = live.slice(0, 2);
-  const ids = new Set(first.map(s => s.id));
-  const [t, i] = [tw, intl].map(list => list.filter(s => !ids.has(s.id)));
-  return [...first, ...[t[0], t[1], i[0], t[2], i[1]].filter(Boolean)].slice(0, 5);
+  const first = oneASaga([...live].sort((a, b) => (a.region === 'tw' ? 0 : 1) - (b.region === 'tw' ? 0 : 1)), [], zhOf).slice(0, 2);
+  // (The usual five: Taiwan's two, the world's, Taiwan's, the world's; then on in turn should a saga be skipped.)
+  const rest = [tw[0], tw[1], intl[0], tw[2], intl[1]];
+  for (let i = 3, j = 2; i < tw.length || j < intl.length; i++, j++) rest.push(tw[i], intl[j]);
+  return [...first, ...oneASaga(rest, first, zhOf)].slice(0, 5);
 };
 // Today, as a front page dates itself: 11月10日 星期二.
 const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
@@ -67,7 +70,7 @@ export function renderTop(box) {
   const { tw, intl } = state.page;
   const leads = leadsOf(tw, intl, liveOf(state.page));
   const seen = new Set(leads.map(s => s.id));
-  const top = tw.filter(s => !seen.has(s.id)).slice(0, 6);
+  const top = oneASaga(tw.filter(s => !seen.has(s.id)), leads, zhOf).slice(0, 6);
   for (const s of top) seen.add(s.id);
   // 你關心的 and 今天五則 (past the top: five more, picked for this person,
   // kept all day from 7:00; lib/brief.mjs), each story once on the page.
@@ -75,7 +78,7 @@ export function renderTop(box) {
   const brief = briefNow(forYou, seen);
   for (const x of brief) seen.add(x.story.id);
   const clips = clipsOf([...tw.slice(0, 40), ...intl.slice(0, 20)], 12);
-  const world = intl.filter(s => !seen.has(s.id)).slice(0, 5);
+  const world = oneASaga(intl.filter(s => !seen.has(s.id)), [...leads, ...top], zhOf).slice(0, 5);
   // Each topic's most important not shown above, three at a time (國際's
   // own section above stands for the world: one 國際 on the page).
   const topics = topicOrder()
