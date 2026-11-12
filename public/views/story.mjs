@@ -323,7 +323,9 @@ function oddsPart(story) {
   const ms = state.markets?.get?.(story.id);
   if (!ms?.length) return null;
   const row = (r, kind) => {
-    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (en ? r.en : r.zh || r.en) : '';
+    // (A long English name by its last name alone, never cut: the long-name rule.)
+    const fit = n => (n.length > 16 && n.includes(' ') ? n.split(' ').pop() : n);
+    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (en ? fit(r.en) : r.zh || fit(r.en)) : '';
     const mv = move(r.d);
     return h('div', { class: `nw-odds-row${name ? '' : ' one'}` }, [
       name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !(en || r.zh) ? 'en' : null, text: name }) : null,
