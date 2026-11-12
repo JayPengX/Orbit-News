@@ -5,7 +5,7 @@ import { h, tag } from '#kit/ui.mjs';
 import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName } from '../shell.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
-import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf } from '../lib/stories.mjs';
+import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
 import { sized } from '../lib/pics.mjs';
 
 // An outlet's picture, hotlinked (never kept), asked at the size it's shown
@@ -79,6 +79,13 @@ const titleSpan = (story, cls) => {
   return h('span', { class: cls, lang: t.lang, text: t.text });
 };
 
+// 快訊: a breaking story's mark before its kicker (a red dot that pulses).
+export const liveTag = story => (isLive(story, state.page?.built) ? h('b', { class: 'nw-live-tag', text: W('快訊', 'Breaking') }) : null);
+const kickerOf = (story, about, lead = null) => {
+  const live = liveTag(story);
+  return live || lead || about ? h('small', { class: 'nw-kicker' }, [live, lead, about]) : null;
+};
+
 // What a story is about and how long it has run: 政治 · 報導 3 天; `when`
 // adds how long ago it was last heard of.
 export function aboutLine(story, { days = true, when = false } = {}) {
@@ -137,7 +144,7 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 export function storyRow(story, onOpen, { side = true, list = null, why = null, mark = null, note = null } = {}) {
   const pic = withClip(storyPicture(story, 'nw-thumb'), story);
   const mine = why?.(story);
-  const kicker = h('small', { class: 'nw-kicker' }, [mine ? mineTag(mine) : null, aboutLine(story, { days: false, when: true })]);
+  const kicker = kickerOf(story, aboutLine(story, { days: false, when: true }), mine ? mineTag(mine) : null);
   // (`mark(text)`: the title's found words marked, a search's; `note(story)`: a line under it, why it was found.)
   const title = titleSpan(story, 'nw-row-title');
   const pieces = mark ? mark(title.textContent) : null;
@@ -176,7 +183,7 @@ export function storyCard(story, onOpen, list = null) {
   const pic = withClip(storyPicture(story, 'nw-card-pic', { size: globalThis.innerWidth >= 600 ? 'l' : 's' }), story);
   return h('button', { type: 'button', class: `nw-card${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
-    h('span', { class: 'nw-card-body' }, [h('small', { class: 'nw-kicker', text: aboutLine(story, { when: true }) }), titleSpan(story, 'nw-card-title'), coverage(story)])
+    h('span', { class: 'nw-card-body' }, [kickerOf(story, aboutLine(story, { when: true })), titleSpan(story, 'nw-card-title'), coverage(story)])
   ]);
 }
 export const storyCards = (stories, onOpen) => h('div', { class: 'nw-cards q-rows-full' }, stories.map(s => storyCard(s, onOpen, stories)));
@@ -206,7 +213,7 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
   return h('button', { type: 'button', class: `nw-lead${pic ? ' has-pic' : ''}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
     pic,
     h('span', { class: 'nw-lead-body' }, [
-      about ? h('small', { class: 'nw-kicker', text: about }) : null,
+      kickerOf(story, about),
       titleSpan(story, 'nw-lead-title'),
       story.sum ? h('span', { class: 'nw-lead-sum', text: story.sum }) : null,
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),

@@ -84,6 +84,10 @@ h1, h2, h3, p { margin: 0; }
 
 /* What a story is about and when, over its headline: grey, plain words. */
 .nw-kicker { color: var(--q-label-2); font: 500 13px/18px var(--q-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 快訊: a breaking story's mark, the family's live red with a pulsing dot. */
+.nw-live-tag { display: inline-flex; align-items: center; gap: 5px; color: var(--q-live, var(--q-red)); font-weight: 600; margin-inline-end: 6px; }
+.nw-live-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: q-pulse 1.6s infinite; }
+@media (prefers-reduced-motion: reduce) { .nw-live-tag::before { animation: none; } }
 /* A story's coverage: the outlets' marks overlapping, how many, the bar. */
 .nw-cover { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .nw-cover .q-tag { margin-left: auto; flex: none; }

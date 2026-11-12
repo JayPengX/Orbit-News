@@ -139,3 +139,15 @@ test('測試工具: no switch, the same page; each switch a copy', async () => {
     delete globalThis.ORBIT_TEST;
   }
 });
+
+test('快訊: a story the builder marks live is breaking while the page is fresh and it was heard of lately, most outlets first', async () => {
+  const { isLive, liveOf } = await import('../public/lib/stories.mjs');
+  const a = { id: 'a', at: T, live: 8 };
+  assert.equal(isLive(a, T, T + 10 * 60_000), true);
+  // (A page built over an hour ago, a story heard of over 2 hours ago, or none marked: not breaking.)
+  assert.equal(isLive(a, T - 61 * 60_000, T), false);
+  assert.equal(isLive({ ...a, at: T - 3 * H }, T, T), false);
+  assert.equal(isLive({ id: 'b', at: T }, T, T), false);
+  const page = { built: T, tw: [{ id: 'x', at: T }, { id: 'y', at: T, live: 7 }], intl: [{ id: 'z', at: T, live: 20 }] };
+  assert.deepEqual(liveOf(page, T).map(s => s.id), ['z', 'y']);
+});

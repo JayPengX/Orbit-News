@@ -8,7 +8,7 @@ import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut } from '../shell.mjs';
-import { oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
+import { liveOf, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS } from '../lib/stories.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
 import { mineOf } from '../lib/mine.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
@@ -52,14 +52,20 @@ const more = (words, to) => {
 };
 
 // The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
-const leadsOf = (tw, intl) => [tw[0], tw[1], intl[0], tw[2], intl[1]].filter(Boolean);
+// (快訊 first, two at most: what's breaking now leads, then the day's usual five.)
+const leadsOf = (tw, intl, live = []) => {
+  const first = live.slice(0, 2);
+  const ids = new Set(first.map(s => s.id));
+  const [t, i] = [tw, intl].map(list => list.filter(s => !ids.has(s.id)));
+  return [...first, ...[t[0], t[1], i[0], t[2], i[1]].filter(Boolean)].slice(0, 5);
+};
 // Today, as a front page dates itself: 11月10日 星期二.
 const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
 
 export function renderTop(box) {
   if (notYet(box)) return;
   const { tw, intl } = state.page;
-  const leads = leadsOf(tw, intl);
+  const leads = leadsOf(tw, intl, liveOf(state.page));
   const seen = new Set(leads.map(s => s.id));
   const top = tw.filter(s => !seen.has(s.id)).slice(0, 6);
   for (const s of top) seen.add(s.id);

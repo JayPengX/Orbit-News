@@ -67,6 +67,15 @@ export const picturesOf = (story, { light = false } = {}) => {
   return light ? [...all.filter(p => !heavy(p[0])), ...all.filter(p => heavy(p[0]))] : all;
 };
 
+// 快訊: a story the builder found breaking (many outlets on it in the last
+// 2 hours, `live`), while the page is fresh (built within the hour) and the
+// story was heard of in the last 2 hours: a page left open overnight isn't breaking.
+export const LIVE_FRESH = 60 * 60_000;
+export const isLive = (story, built, now = Date.now()) => Boolean(story?.live > 0 && built && now - built <= LIVE_FRESH && now - (story.at || 0) <= 2 * LIVE_FRESH);
+// The page's breaking stories, both regions, the most outlets first.
+export const liveOf = (page, now = Date.now()) =>
+  REGIONS.flatMap(r => (page?.[r] || []).filter(s => isLive(s, page.built, now))).sort((a, b) => b.live - a.live);
+
 // A story by its id, on the page or among the past's.
 export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
 
