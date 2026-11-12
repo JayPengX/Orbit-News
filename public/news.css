@@ -506,8 +506,16 @@ h1, h2, h3, p { margin: 0; }
 }
 /* How coverage grew: a bar a day. */
 .nw-days { display: grid; gap: 8px; }
+/* A row a day (up to a week): its date, its bar across the width, its count. */
+.nw-days-list { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 8px; max-width: 560px; }
+.nw-day-row { display: contents; }
+.nw-day-k { color: var(--q-label-2); font: 500 13px/18px var(--q-font); font-variant-numeric: tabular-nums; }
+.nw-day-track { display: block; height: 10px; border-radius: 5px; background: var(--q-fill-3); overflow: hidden; }
+.nw-day-track i { display: block; height: 100%; border-radius: 5px; background: color-mix(in srgb, var(--q-accent) 70%, transparent); }
+.nw-day-n { color: var(--q-label); font: 600 13px/18px var(--q-font); font-variant-numeric: tabular-nums; text-align: end; }
+/* Longer: columns sharing the width. */
 .nw-days-bars { display: flex; align-items: stretch; gap: 4px; height: 56px; max-width: 560px; }
-.nw-day { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 3px; flex: 1 1 0; max-width: 34px; min-width: 0; }
+.nw-day { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 3px; flex: 1 1 0; min-width: 0; }
 .nw-day i { align-self: end; display: block; border-radius: 3px; background: color-mix(in srgb, var(--q-accent) 70%, transparent); }
 .nw-day small { color: var(--q-label-2); font: 500 10px/12px var(--q-font); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .nw-story-head, .nw-story-text { display: grid; gap: 12px; align-content: start; }

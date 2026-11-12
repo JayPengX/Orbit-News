@@ -363,13 +363,22 @@ function lawPart(story) {
   );
 }
 
-// How coverage grew, a bar a day (only past its first day).
+// How coverage grew, a bar a day (only past its first day). Most stories
+// last a few days (Jay 11-12: three bars in a width laid out for weeks):
+// up to a week a row a day, its bar across the width and its count; longer,
+// columns sharing the width.
+const ROWS_UP_TO = 7;
 function growthOf(story) {
   if (!(story.days?.length > 1)) return null;
   const peak = Math.max(1, ...story.days.map(x => x[1]));
-  return h('section', { class: 'nw-days', role: 'img', 'aria-label': story.days.map(([x, n]) => `${x} ${n}`).join(', ') }, [
+  const day = x => x.replace(/^0?(\d+)-0?(\d+)$/, '$1/$2');
+  const pct = n => `${Math.max(4, (n / peak) * 100)}%`;
+  const rows = story.days.length <= ROWS_UP_TO;
+  return h('section', { class: `nw-days${rows ? ' nw-days-rows' : ''}`, role: 'img', 'aria-label': story.days.map(([x, n]) => `${x} ${n}`).join(', ') }, [
     h('h3', { class: 'nw-story-h', text: W('每天的報導', 'Reports a day') }),
-    h('span', { class: 'nw-days-bars' }, story.days.map(([x, n]) => h('span', { class: 'nw-day' }, [h('i', { style: { height: `${Math.max(8, (n / peak) * 100)}%` } }), h('small', { text: x.replace(/^0?(\d+)-0?(\d+)$/, '$1/$2') })])))
+    rows
+      ? h('span', { class: 'nw-days-list' }, story.days.map(([x, n]) => h('span', { class: 'nw-day-row' }, [h('small', { class: 'nw-day-k', text: day(x) }), h('span', { class: 'nw-day-track' }, [h('i', { style: { width: pct(n) } })]), h('b', { class: 'nw-day-n', text: W(`${n} 則`, String(n)) })])))
+      : h('span', { class: 'nw-days-bars' }, story.days.map(([x, n]) => h('span', { class: 'nw-day' }, [h('i', { style: { height: pct(n) } }), h('small', { text: day(x) })])))
   ]);
 }
 
