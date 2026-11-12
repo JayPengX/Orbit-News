@@ -16,42 +16,30 @@
 Taiwan's and the world's news (politics, cross-strait, defence, the economy, tech, energy, justice, society, and life, health, science, culture and sport), the same event from every outlet gathered into one story: how many outlets lean green, centre or blue (left, centre or right for English news) carry it, which side left it out, and every headline side by side. The most important stories lead and stay for weeks, growing as coverage comes; swipe through the lead stories, from topic to topic and from story to story; the outlets' own clips play in the app. A tap opens the outlet's own page. Part of **Orbit**, a family of apps for life in Taiwan that share one sign-in, the Orbit Pass. See them all at [orbit.jaypengx.com](https://orbit.jaypengx.com/pass/).
 
 <p align="center">
-  <img src="docs/screenshots/news-1.webp" width="30%" alt="Today's top stories, every side">
-  <img src="docs/screenshots/news-2.webp" width="30%" alt="One story, each side's headlines">
-  <img src="docs/screenshots/news-3.webp" width="30%" alt="Today's five, picked for you">
+  <img src="docs/screenshots/news-1.webp" width="30%" alt="Every story, as every outlet tells it">
+  <img src="docs/screenshots/news-2.webp" width="30%" alt="One story, each side's headline">
+  <img src="docs/screenshots/news-3.webp" width="30%" alt="The stories only one side carries">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.webp" width="30%" alt="Taiwan's news, by importance">
-  <img src="docs/screenshots/news-5.webp" width="30%" alt="World news, left to right">
-  <img src="docs/screenshots/news-6.webp" width="30%" alt="Stories only one side carries">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/news-7.webp" width="30%" alt="Every outlet's place, and why">
-  <img src="docs/screenshots/news-8.webp" width="30%" alt="Tech news, every side">
-  <img src="docs/screenshots/news-9.webp" width="30%" alt="Politics, each side marked">
+  <img src="docs/screenshots/news-4.webp" width="30%" alt="World news, and how Taiwan reports it">
+  <img src="docs/screenshots/news-5.webp" width="30%" alt="81 outlets, each place sourced">
+  <img src="docs/screenshots/news-6.webp" width="30%" alt="14 topics, ranked by importance">
 </p>
 
 <details>
 <summary>中文畫面</summary>
 
 <p align="center">
-  <img src="docs/screenshots/news-1.zh.webp" width="30%" alt="今天的頭條，各家怎麼報">
-  <img src="docs/screenshots/news-2.zh.webp" width="30%" alt="同一則新聞，每一邊的標題">
-  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="今天五則，挑給你的">
+  <img src="docs/screenshots/news-1.zh.webp" width="30%" alt="每則新聞，各家怎麼報一次看">
+  <img src="docs/screenshots/news-2.zh.webp" width="30%" alt="同一件事，偏綠、中間、偏藍怎麼下標">
+  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="只有一邊在報的新聞">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="台灣新聞，依重要程度排">
-  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="國際新聞，左中右一眼看">
-  <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="只有一邊在報的新聞">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/news-7.zh.webp" width="30%" alt="每家媒體的立場與來源">
-  <img src="docs/screenshots/news-8.zh.webp" width="30%" alt="科技新聞，各方一起看">
-  <img src="docs/screenshots/news-9.zh.webp" width="30%" alt="政治新聞，標出立場">
+  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="國際大事，台灣媒體怎麼報">
+  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="81 家媒體，立場都有出處">
+  <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="14 個主題，照重要程度排">
 </p>
 
 </details>
