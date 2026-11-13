@@ -227,7 +227,12 @@ function storyParts(story, { clip = '' } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
   const sides = [...Object.keys(groups).filter(k => k !== 'none'), 'none'];
-  const cards = sides.filter(s => groups[s].length || (s !== 'none' && sidesTaken(story))).map(s => sideCard(s, groups[s], story));
+  // (A kind sides don't take, a game or a storm: one list of every outlet, never
+  // under 偏綠 · 中間 · 偏藍; Jay 11-13 "if this kind of news has no spectrum
+  // then don't list them like spectrum".)
+  const cards = sidesTaken(story)
+    ? sides.filter(s => groups[s].length || s !== 'none').map(s => sideCard(s, groups[s], story))
+    : [sideCard('all', story.items.filter(it => !groups.none.includes(it)), story, { most: 6 }), groups.none.length ? sideCard('none', groups.none, story) : null].filter(Boolean);
   // The head's picture, or the clip playing; a story with a clip shows its
   // picture with a play mark, and a tap plays it there. The picture is an
   // outlet's photo (Jay 11-13, never a clip's thumbnail while one gave a
@@ -357,11 +362,8 @@ function spectrum(story) {
     ...parts.map(p => h('span', { class: 'nw-legend-part' }, [h('i', { class: `nw-dot nw-s-${p.side}`, 'aria-hidden': 'true' }), sideFull(p.side), h('b', { text: String(p.n) })])),
     sm ? h('span', { class: 'nw-legend-part' }, [h('i', { class: 'nw-dot nw-s-none', 'aria-hidden': 'true' }), W('中國官媒', 'China state media'), h('b', { text: String(sm) })]) : null
   ]);
-  if (!taken)
-    return h('section', { class: 'nw-spec' }, [
-      h('div', { class: 'nw-spec-head' }, [h('b', { text: W('報導的媒體', 'Who covers it') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
-      h('p', { class: 'nw-spec-say', text: W('生活、健康、科學、文化和運動新聞沒有立場之分，這裡不畫光譜。', 'Life, health, science, culture and sport have no sides to take, so no spectrum here.') })
-    ]);
+  // (No sides to count: the outlets' list below says who covers it.)
+  if (!taken) return null;
   return h('section', { class: 'nw-spec' }, [
     h('div', { class: 'nw-spec-head' }, [h('b', { text: W('各邊的報導', 'Coverage by side') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
     bar(story, { big: true }),
@@ -584,10 +586,11 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const by = new Map();
   for (const it of [...items].sort((a, b) => b[3] - a[3])) by.set(it[0], [...(by.get(it[0]) || []), it]);
-  const outlets = [...by];
+  // (Every outlet of a story with no sides: those that wrote it up most first, then the newest.)
+  const outlets = side === 'all' ? [...by].sort((a, b) => b[1].length - a[1].length) : [...by];
   const head = h('div', { class: 'nw-side-head' }, [
-    h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }),
-    h('b', { text: side === 'none' ? W('中國官媒', 'China state media') : sideFull(side) }),
+    side === 'all' ? null : h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }),
+    h('b', { text: side === 'all' ? W('報導的媒體', 'Who covers it') : side === 'none' ? W('中國官媒', 'China state media') : sideFull(side) }),
     h('small', { text: W(`${outlets.length} 家`, `${outlets.length}`) })
   ]);
   const line = (it, first) =>
