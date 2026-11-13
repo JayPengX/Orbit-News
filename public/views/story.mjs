@@ -128,7 +128,7 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   // (Where the list was: given back on close, below.)
   const page = document.scrollingElement;
   const was = page?.scrollTop || 0;
-  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: story.title, onClose: () => {
+  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: shownTitle(story).text, onClose: () => {
       shown = null;
       // (The link's #s= let go: the same link opens it again.)
       if (/^#s=/.test(location.hash)) history.replaceState(history.state, '', `#${state.tab}`);
@@ -146,7 +146,7 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
     hooks.opened(s);
     body.replaceChildren(...storyParts(s, opts));
     translateIn(body, s);
-    sh.el.setAttribute('aria-label', s.title);
+    sh.el.setAttribute('aria-label', shownTitle(s).text);
     foot?.paint(i);
   };
   // The story beside: drawn at the sheet's top (the kit's own swipe slides it in).
