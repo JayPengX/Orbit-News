@@ -254,24 +254,24 @@ function storyParts(story, { clip = '' } = {}) {
     });
     media.append(yt.length ? h('button', { type: 'button', class: 'nw-story-play', 'aria-label': W('播放影片', 'Play the clip'), onclick: () => playIn(yt[0]) }, [img, playMark()]) : img, cap || '');
   }
-  // Every clip in one place (Jay 11-13: "one video at the top, one at the
-  // bottom … not organized"): a strip right under the head's player, the
-  // one at the head among them, marked once it plays; a tap plays it there
-  // (an outlet's own video page opens on its site). One clip alone, the
-  // head's, needs no strip.
+  const pic = media.childNodes.length ? media : null;
+  // Every clip (and outlets' own video pages): a row of their own, the one
+  // at the head among them, marked once it plays (so 影音 2 is both). One
+  // clip alone, playing at the head, isn't listed again.
   const all = story.clips || [];
-  const listed = all.length > 1 || (all[0] && !all[0][1]) || !media.childNodes.length ? all : [];
-  if (listed.length)
-    rail = kitUI.rail(
-      listed.map(c => {
-        const card = clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), openOut(x[2]))));
-        card.classList.add('nw-clip-sm');
-        if (c[1]) card.dataset.clip = c[1];
-        return card;
-      })
-    );
-  const strip = rail ? h('div', { class: 'nw-head-clips', role: 'group', 'aria-label': W(`影音 ${listed.length} 段`, `${listed.length} clips`) }, [rail]) : null;
-  const pic = media.childNodes.length || strip ? h('div', { class: 'nw-story-media' }, [media.childNodes.length ? media : null, strip].filter(Boolean)) : null;
+  const listed = all.length > 1 || (all[0] && !all[0][1]) || !pic ? all : [];
+  const clipRow = listed.length
+    ? h('section', { class: 'nw-story-clips' }, [
+        h('h3', {}, [W('影音', 'Video'), h('small', { text: ` ${listed.length}` })]),
+        (rail = kitUI.rail(
+          listed.map(c => {
+            const card = clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), openOut(x[2]))));
+            if (c[1]) card.dataset.clip = c[1];
+            return card;
+          })
+        ))
+      ])
+    : null;
   if (clip && atHead?.[1] === clip) mark(clip);
   const topics = (story.topics || []).map(t => topicName(t, story.region)).filter(Boolean);
   const d = daysOf(story);
@@ -294,6 +294,7 @@ function storyParts(story, { clip = '' } = {}) {
   return [
     head,
     pointsOf(story),
+    clipRow,
     spectrum(story),
     sidesSay(story),
     oddsPart(story),

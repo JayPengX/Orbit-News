@@ -422,7 +422,7 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* 影音: the outlets' clips in a row that scrolls sideways. */
-.nw-clips-sec .q-rail { --q-rail-w: 216px; }
+.nw-clips-sec .q-rail, .nw-story-clips .q-rail { --q-rail-w: 216px; }
 .nw-clip { display: grid; gap: 6px; align-content: start; padding: 0; border: 0; background: none; text-align: left; min-width: 0; }
 /* (Its width is its column's, never its picture's: without it, the row's
    share-the-width columns measured every clip's picture at its own size,
@@ -506,20 +506,13 @@ h1, h2, h3, p { margin: 0; }
 .nw-story-play img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .nw-story-play .nw-play { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
 .nw-story-play .nw-play svg { width: 28px; height: 28px; margin-left: 3px; }
-/* A story's clips, all in one place: the head's player, and a strip of
-   every clip right under it (a small card each, the one playing marked). */
-.nw-story-media { display: grid; gap: 10px; align-content: start; min-width: 0; }
-.nw-head-clips .q-rail { --q-rail-w: 148px; grid-auto-columns: var(--q-rail-w); gap: 10px; padding-bottom: 2px; }
-.nw-clip-sm { gap: 4px; }
-.nw-clip-sm .nw-clip-pic { border-radius: 10px; }
-.nw-clip-sm .nw-play { width: 30px; height: 30px; margin: -15px 0 0 -15px; }
-.nw-clip-sm .nw-play svg { width: 14px; height: 14px; margin-left: 2px; }
-.nw-clip-sm .nw-clip-src { font: 500 12px/16px var(--q-font); gap: 5px; }
-.nw-clip-sm .nw-clip-title { font: 400 13px/17px var(--q-font); color: var(--q-label-2); }
-.nw-clip-sm.on .nw-clip-title { color: var(--q-label); }
+.nw-story-clips { display: grid; gap: 8px; }
+.nw-story-clips h3 { font: 600 17px/22px var(--q-font); }
+.nw-story-clips h3 small { color: var(--q-label-2); font: var(--q-t-footnote); font-weight: 400; }
+/* (One or two clips keep a clip's width: never a screen-wide picture on a wide sheet.) */
+.nw-story .nw-story-clips .q-rail { grid-auto-columns: var(--q-rail-w); }
 @container q-sheet (min-width: 640px) {
-  /* (Beside the words on a wide sheet: the strip stays in its column.) */
-  .nw-head-clips .q-rail { margin: 0; padding: 2px 2px 4px; scroll-padding-inline: 0; }
+  .nw-story .nw-story-clips .q-rail { --q-rail-w: 260px; }
 }
 /* How coverage grew: a bar a day. */
 .nw-days { display: grid; gap: 8px; }
@@ -842,6 +835,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-story-pic figcaption > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nw-pic-clip { flex: none; padding: 0; border: 0; background: none; color: var(--q-accent); font: inherit; white-space: nowrap; cursor: pointer; }
 /* The clip playing at the head, among the 影音 row's. */
-.nw-clip.on .nw-clip-pic { box-shadow: 0 0 0 2px var(--q-accent); }
+.nw-clip.on .nw-clip-pic { box-shadow: 0 0 0 3px var(--q-accent); }
 .nw-clip.on .nw-play { opacity: 0; }
 .nw-clip-src small.nw-clip-on { color: var(--q-accent); }
