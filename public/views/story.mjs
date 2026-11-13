@@ -407,8 +407,8 @@ function oddsPart(story) {
   };
   const rowsOf = m => {
     const ps = pcts(m.rows, m.one);
-    const zh = !en && m.rows.every(x => x.zh);
-    return m.rows.map((r, i) => row(r, m.kind, zh, ps[i]));
+    // (Each row in Chinese where it has it: a person without a Chinese name the headlines use keeps the name as written.)
+    return m.rows.map((r, i) => row(r, m.kind, !en && !!r.zh, ps[i]));
   };
   // (What ▲▼ means, once, beside the heading: a day's move in percentage points.)
   const moved = ms.some(m => m.rows.some(r => move(r.d)));
