@@ -108,7 +108,7 @@ document.addEventListener('visibilitychange', () => {
 // redrawn under the person; 我的閱讀 is when they're back).
 hooks.read = outlet => {
   addRead(state.log, outlet, today());
-  stamp++;
+  readLater();
   pass.changed();
   keepLocal();
   sync({ soon: true });
@@ -117,8 +117,23 @@ hooks.read = outlet => {
 // closes), with how big it was, so big news since shows as 新進展.
 hooks.opened = story => {
   markRead(state.log, story);
-  logChanged();
+  opened.add(story.id);
+  readLater();
+  pass.changed();
+  keepLocal();
+  sync({ soon: true });
 };
+// What's read never reorders the list under the reader (Jay 11-13: closing a
+// story "reshuffle[d]" the list: a read story sinks, 你可能錯過 and 今天五則
+// move on). A closed sheet dims the rows it opened, in place; the lists are
+// ranked again with it only when drawn anew: another tab, a pull, new stories.
+const opened = new Set();
+let readWaiting = false;
+const readLater = () => (readWaiting = true);
+function dimOpened() {
+  for (const id of opened) for (const row of document.querySelectorAll(`[data-story="${CSS.escape(id)}"]`)) row.classList.add('nw-read');
+  opened.clear();
+}
 // Followed or let go (lib/reading.mjs keys): kept on the Pass like the reading,
 // and taught to 今天五則 (a topic followed lifts its stories).
 hooks.follow = (key, on) => {
@@ -279,6 +294,7 @@ function render({ ifChanged = false } = {}) {
   if (!box) return;
   if (ifChanged && box.dataset.drawn === String(stamp)) return;
   box.dataset.drawn = String(stamp);
+  readWaiting = false;
   VIEWS[state.tab](box);
   // (The title stays put as a swipe moves the list under it.)
   if (state.tab !== TABS[0]) {
@@ -294,6 +310,7 @@ const tabNav = tabBar({
 });
 function showTab(tab, { top = false } = {}) {
   state.tab = tab;
+  if (readWaiting) ((readWaiting = false), stamp++);
   tabNav.select(tab, top ? { top: true } : undefined);
   render({ ifChanged: true });
 }
@@ -302,7 +319,7 @@ const quietRefresh = () => {
   if (state.loaded) render({ ifChanged: true });
 };
 // A sheet closed: what changed under it drawn now.
-document.addEventListener('close', () => setTimeout(quietRefresh), true);
+document.addEventListener('close', () => setTimeout(() => (quietRefresh(), dimOpened())), true);
 
 window.__fxStarted = true;
 const gated = installGate('news', lang);
