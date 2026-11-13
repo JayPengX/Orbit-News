@@ -16,7 +16,7 @@ import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, storyList } from './parts.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
-import { pct, move, sourceUrl } from '../lib/markets.mjs';
+import { pcts, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
 
 // 新聞學單字: on a world story, the words being learned in Orbit Words
@@ -395,25 +395,32 @@ function oddsPart(story) {
   if (!ms?.length) return null;
   // (A long person's name by its last name alone, never cut: the long-name rule; anything else as written.)
   const fit = n => (n.length > 16 && /^\p{Lu}[\p{L}'-]+(?: \p{Lu}[\p{L}'.-]+)+$/u.test(n) ? n.split(' ').pop() : n);
-  const row = (r, kind, zh) => {
+  const row = (r, kind, zh, p) => {
     const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (zh ? r.zh : fit(r.en)) : '';
     const mv = move(r.d);
     return h('div', { class: `nw-odds-row${name ? '' : ' one'}` }, [
       name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !zh ? 'en' : null, text: name }) : null,
       h('span', { class: 'nw-odds-bar', 'aria-hidden': 'true' }, [h('i', { style: { width: `${Math.max(1, Math.round(r.p * 100))}%` } })]),
-      h('b', { class: 'nw-odds-p', text: pct(r.p) }),
+      h('b', { class: 'nw-odds-p', text: p }),
       h('small', { class: 'nw-odds-move', 'aria-label': mv ? W(`一天${r.d > 0 ? '上升' : '下降'} ${mv.slice(1)} 個百分點`, `${r.d > 0 ? 'Up' : 'Down'} ${mv.slice(1)} points in a day`) : null, text: mv })
     ].filter(Boolean));
   };
+  const rowsOf = m => {
+    const ps = pcts(m.rows, m.one);
+    const zh = !en && m.rows.every(x => x.zh);
+    return m.rows.map((r, i) => row(r, m.kind, zh, ps[i]));
+  };
+  // (What ▲▼ means, once, beside the heading: a day's move in percentage points.)
+  const moved = ms.some(m => m.rows.some(r => move(r.d)));
   return h('section', { class: 'nw-odds' }, [
-    h('h3', { class: 'nw-story-h' }, [W('預測市場', 'Market odds'), aiMark()]),
+    h('h3', { class: 'nw-story-h' }, [W('預測市場', 'Market odds'), aiMark(), moved ? h('small', { class: 'nw-odds-key', text: W('▲▼ 一天漲跌（百分點）', '▲▼ points moved in a day') }) : null].filter(Boolean)),
     h(
       'div',
       { class: 'nw-odds-cards' },
       ms.map(m =>
         h('div', { class: 'nw-odds-card' }, [
           h('p', { class: 'nw-odds-q', lang: en ? 'en' : 'zh-Hant', text: en ? m.en : m.zh }),
-          h('div', { class: 'nw-odds-rows' }, m.rows.map(r => row(r, m.kind, !en && m.rows.every(x => x.zh)))),
+          h('div', { class: 'nw-odds-rows' }, rowsOf(m)),
           h('a', { class: 'nw-odds-src', href: sourceUrl(m), target: '_blank', rel: 'noopener', onclick: e => (e.preventDefault(), openOut(sourceUrl(m))) }, [W('Polymarket 交易者估的機率', 'Chances as Polymarket traders price them'), h('span', { 'aria-hidden': 'true', text: ' ›' })])
         ])
       )

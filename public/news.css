@@ -703,6 +703,7 @@ h1, h2, h3, p { margin: 0; }
 .nw-odds { display: grid; gap: 10px; }
 .nw-odds .nw-story-h { display: flex; align-items: center; gap: 6px; }
 .nw-odds .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
+.nw-odds-key { margin-inline-start: auto; color: var(--q-label-2); font: var(--q-t-caption); white-space: nowrap; }
 .nw-odds-cards { display: grid; gap: 12px; }
 .nw-odds-card {
   display: grid;
