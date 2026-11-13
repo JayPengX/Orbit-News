@@ -5,6 +5,7 @@ import { h, tag } from '#kit/ui.mjs';
 import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName, readMark, isFollowing } from '../shell.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
+import { foreign, trCache } from '../lib/tr.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
 import { sized } from '../lib/pics.mjs';
 
@@ -73,7 +74,26 @@ const tapStory = (story, onOpen, list) => e => {
 // The headline as the reader sees it (a world story's in Chinese, by the
 // AI, from the outlets' own) and the AI's neutral one line under it, its
 // spark marking it the AI's (lib/lines.mjs).
-export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en);
+export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en, state.tr?.get?.(story.id));
+// The outlet's summary as the reader sees it: in their language where it's
+// been translated (lib/tr.mjs), else as the outlet wrote it.
+export const shownSum = story => {
+  const t = state.tr?.get?.(story.id);
+  const other = foreign(story.sum, en);
+  return other && t?.sum && t.s === story.sum ? { text: t.sum, lang: en ? 'en' : 'zh-Hant' } : { text: story.sum || '', lang: story.region === 'intl' ? 'en' : 'zh-Hant', wait: other };
+};
+// An outlet's own words in the reader's language: its translation where
+// it's had (lib/tr.mjs), else as written, marked to be swapped when the
+// story's translations come (views/story.mjs asks). `parts`: how it's
+// drawn as written (a world story's learned words underlined).
+export function said(tag, attrs, src, parts = [src]) {
+  const other = foreign(src, en);
+  const v = other ? trCache.get(src) : null;
+  if (v) return h(tag, { ...attrs, lang: en ? 'en' : 'zh-Hant', text: v });
+  const el = h(tag, attrs, parts);
+  if (other) el.dataset.tr = src;
+  return el;
+}
 const titleSpan = (story, cls) => {
   const t = shownTitle(story);
   return h('span', { class: cls, lang: t.lang, text: t.text });
@@ -210,7 +230,7 @@ export function clipCard(entry, onPlay) {
   return h('button', { type: 'button', class: 'nw-clip', 'data-story': story.id, onclick: () => onPlay(entry) }, [
     pic,
     h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
-    h('span', { class: 'nw-clip-title', lang: story.region === 'intl' ? 'en' : 'zh-Hant', text: clip[3] || story.title })
+    clip[3] ? said('span', { class: 'nw-clip-title', lang: story.region === 'intl' ? 'en' : 'zh-Hant' }, clip[3]) : h('span', { class: 'nw-clip-title', lang: shownTitle(story).lang, text: shownTitle(story).text })
   ]);
 }
 
@@ -229,7 +249,7 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
     h('span', { class: 'nw-lead-body' }, [
       kickerOf(story, about, mine ? mineTag(mine) : null),
       titleSpan(story, 'nw-lead-title'),
-      story.sum ? h('span', { class: 'nw-lead-sum', text: story.sum }) : null,
+      story.sum ? h('span', { class: 'nw-lead-sum', lang: shownSum(story).lang, text: shownSum(story).text }) : null,
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),
       sidesTaken(story) ? h('span', { class: 'nw-lead-bar' }, [bar(story, { big: true }), counts(story, { full: true })]) : null,
       coverage(story, { bar: false }),

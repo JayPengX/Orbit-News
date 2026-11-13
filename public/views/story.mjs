@@ -13,7 +13,8 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, r
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, storyList } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList } from './parts.mjs';
+import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
 import { pcts, move, sourceUrl } from '../lib/markets.mjs';
@@ -75,6 +76,33 @@ export function player(clip) {
   return box;
 }
 
+// The sheet in the reader's language (lib/tr.mjs): what's drawn in the
+// other one asked for as it shows (a column's 再看 3 家 too), swapped in
+// when it comes; as written till then, or when none can be had.
+const sumSaid = story => {
+  const t = shownSum(story);
+  return t.wait ? said('span', { lang: t.lang }, story.sum, marked(story.sum, story)) : h('span', { lang: t.lang, text: t.text });
+};
+function translateIn(body, story) {
+  const ask = () => {
+    const want = trWaiting(body);
+    if (want.length) askTr(story.id, want, en).then(n => n && trPaint(body, en));
+  };
+  ask();
+  // (One watcher a sheet: a column opened later asks for its own.)
+  if (body.__trWatch) return void (body.__trStory = story);
+  body.__trStory = story;
+  let t = 0;
+  body.__trWatch = new MutationObserver(() => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const want = trWaiting(body);
+      if (want.length) askTr(body.__trStory.id, want, en).then(n => n && trPaint(body, en));
+    }, 250);
+  });
+  body.__trWatch.observe(body, { childList: true, subtree: true });
+}
+
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
@@ -117,6 +145,7 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
     // (Read: its row quieter once the sheet closes; big news since, 新進展.)
     hooks.opened(s);
     body.replaceChildren(...storyParts(s, opts));
+    translateIn(body, s);
     sh.el.setAttribute('aria-label', s.title);
     foot?.paint(i);
   };
@@ -283,7 +312,7 @@ function storyParts(story, { clip = '' } = {}) {
       about ? h('small', { class: 'nw-kicker', text: about }) : null,
       ...storyTitle(story, lang),
       // (Our 重點整理 below says it fuller: the outlet's own summary then left to its site.)
-      story.sum && !state.briefs?.has?.(story.id) ? h('p', { class: 'nw-sum', lang }, [...marked(story.sum, story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
+      story.sum && !state.briefs?.has?.(story.id) ? h('p', { class: 'nw-sum' }, [sumSaid(story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })]),
       followRow(story)
     ])
@@ -347,7 +376,7 @@ function worldLink(story) {
   if (!w) return null;
   return h('button', { type: 'button', class: 'nw-world-go', onclick: () => openStory(w.id) }, [
     h('small', { text: W(`國際媒體也在報 · ${w.n} 家`, `World outlets carry it too · ${w.n}`) }),
-    h('span', { lang: 'en', text: w.title }),
+    h('span', { lang: shownTitle(w).lang, text: shownTitle(w).text }),
     h('b', { 'aria-hidden': 'true', text: '›' })
   ]);
 }
@@ -397,7 +426,7 @@ function timeline(story) {
     h('h3', { class: 'nw-story-h', text: W('來龍去脈', 'How it unfolded') }),
     h('ol', { class: 'nw-turns' }, turns.map(t => h('li', { class: 'nw-turn' }, [
       h('small', { class: 'nw-turn-when' }, [h('span', { class: 'num', text: when(t.at) }), t.n > 1 ? h('span', { text: W(` · ${t.n} 則`, ` · ${t.n}`) }) : null]),
-      outletLink([t.outlet, t.title, t.url], [outletMark(t.outlet, 18), h('span', { lang: story.region === 'intl' ? 'en' : 'zh-Hant', text: t.title })], 'nw-turn-head')
+      outletLink([t.outlet, t.title, t.url], [outletMark(t.outlet, 18), said('span', { lang: story.region === 'intl' ? 'en' : 'zh-Hant' }, t.title)], 'nw-turn-head')
     ])))
   ]);
 }
@@ -548,7 +577,7 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   const line = (it, first) =>
     outletLink(it, [
       first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
-      h('span', { class: 'nw-hl-t', lang }, marked(it[1], story))
+      said('span', { class: 'nw-hl-t', lang }, it[1], marked(it[1], story))
     ], first ? 'nw-hl' : 'nw-hl nw-hl-also');
   const group = ([o, [first, ...also]]) => {
     const box = h('div', { class: 'nw-hl-group' }, [line(first, true)]);

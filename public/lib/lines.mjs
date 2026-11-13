@@ -19,9 +19,14 @@ export function cleanLines(raw) {
 }
 
 // The headline a reader sees: a world story's in Chinese on a Chinese phone,
-// a Taiwan story's in English on an English one; else the outlets' own.
+// a Taiwan story's in English on an English one (the AI's, else the plain
+// translation's, `t`: lib/tr.mjs); else the outlets' own.
 // `ai`: whether it's the AI's (said so where it shows).
-export function titleOf(story, l, en = false) {
-  const want = en ? story.region !== 'intl' && l?.en : story.region === 'intl' && l?.zh;
-  return want ? { text: want, ai: true, lang: en ? 'en' : 'zh-Hant' } : { text: story.title, ai: false, lang: story.region === 'intl' ? 'en' : 'zh-Hant' };
+export function titleOf(story, l, en = false, t = null) {
+  const other = en ? story.region !== 'intl' : story.region === 'intl';
+  const k = en ? 'en' : 'zh';
+  const want = other && l?.[k];
+  if (want) return { text: want, ai: true, lang: en ? 'en' : 'zh-Hant' };
+  if (other && t?.[k]) return { text: t[k], ai: false, lang: en ? 'en' : 'zh-Hant' };
+  return { text: story.title, ai: false, lang: story.region === 'intl' ? 'en' : 'zh-Hant' };
 }

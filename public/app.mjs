@@ -20,6 +20,7 @@ import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOfflin
 import { state, hooks, lang, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
+import { cleanTr } from './lib/tr.mjs';
 import { cleanSides } from './lib/sides.mjs';
 import { cleanMarkets } from './lib/markets.mjs';
 import { cleanBriefs } from './lib/briefs.mjs';
@@ -173,6 +174,20 @@ function loadLines(fresh) {
     })
     .catch(() => {});
 }
+// One language (lib/tr.mjs): every headline the AI didn't title, the top summaries, translated ahead.
+const TR = 'news/tr.json';
+let trBuilt = null;
+function loadTr(fresh) {
+  return packJson(TR, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
+    .then(raw => {
+      if (raw?.built === trBuilt) return;
+      trBuilt = raw?.built ?? null;
+      state.tr = cleanTr(raw);
+      stamp++;
+      quietRefresh();
+    })
+    .catch(() => {});
+}
 // 看法案: the laws Taiwan's stories name (Orbit-Core's builders/news-laws.js), read with the stories.
 const LAWS = 'news/laws.json';
 let lawsBuilt = null;
@@ -241,6 +256,7 @@ function loadInterests() {
 function load({ fresh = false } = {}) {
   if (reading) return reading;
   loadLines(fresh);
+  loadTr(fresh);
   loadInterests();
   loadLaws(fresh);
   loadSides(fresh);
