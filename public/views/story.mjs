@@ -176,26 +176,46 @@ function storyParts(story, { clip = '' } = {}) {
   const sides = [...Object.keys(groups).filter(k => k !== 'none'), 'none'];
   const cards = sides.filter(s => groups[s].length || (s !== 'none' && sidesTaken(story))).map(s => sideCard(s, groups[s], story));
   // The head's picture, or the clip playing; a story with a clip shows its
-  // picture with a play mark, and a tap plays it there.
+  // picture with a play mark, and a tap plays it there. The picture is an
+  // outlet's photo (Jay 11-13, never a clip's thumbnail while one gave a
+  // photo), most often another outlet's than the clip's: each credited for
+  // its own, 圖：壹蘋 · ▶ 中天的影片, never the photo called the clip (Jay
+  // 11-13: the title video wasn't the one listed).
   const yt = (story.clips || []).filter(c => c[1]);
-  // (Credited; a clip also opens on YouTube, should its player refuse here.)
-  const credit = (c, by = story.imgBy) =>
+  const youtube = c => h('a', { href: `https://www.youtube.com/watch?v=${c[1]}`, target: '_blank', rel: 'noopener', text: W('在 YouTube 看', 'Watch on YouTube') });
+  const photoBy = by => W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`);
+  // (Playing, or its own still: 影片：中天 · 在 YouTube 看.)
+  const credit = c => h('figcaption', {}, [W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`), youtube(c)]);
+  // (A photo; a clip to play beside it named for its own outlet.)
+  const photoCredit = (by, c) =>
     h('figcaption', {}, [
-      c ? W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`) : W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`),
-      c ? h('a', { href: `https://www.youtube.com/watch?v=${c[1]}`, target: '_blank', rel: 'noopener', text: W('在 YouTube 看', 'Watch on YouTube') }) : null
+      by ? h('span', { text: photoBy(by) }) : h('span'),
+      c ? h('button', { type: 'button', class: 'nw-pic-clip', onclick: () => playIn(c), text: W(`▶ ${outletName(c[0])}的影片`, `▶ ${outletName(c[0])}’s clip`) }) : null
     ]);
   const media = h('figure', { class: 'nw-story-pic' });
-  const playIn = c => media.replaceChildren(player(c), credit(c));
+  // (The clip at the head marked in the 影音 row under it.)
+  let rail = null;
+  const mark = id =>
+    rail?.querySelectorAll('.nw-clip').forEach(b => {
+      const on = !!id && b.dataset.clip === id;
+      b.classList.toggle('on', on);
+      b.querySelector('.nw-clip-on')?.remove();
+      if (on) b.querySelector('.nw-clip-src')?.append(h('small', { class: 'nw-clip-on', text: W('播放中', 'Playing') }));
+    });
+  const playIn = c => (media.replaceChildren(player(c), credit(c)), mark(c[1]));
   const pics = picturesOf(story);
   const still = pics[0]?.[0] || yt[0]?.[4];
-  if (clip && yt.some(c => c[1] === clip)) playIn(yt.find(c => c[1] === clip));
+  const atHead = (clip && yt.find(c => c[1] === clip)) || yt[0] || null;
+  if (clip && atHead?.[1] === clip) media.replaceChildren(player(atHead), credit(atHead));
   else if (still) {
     // (One that won't load gives way to another outlet's, then the clip's
     // own still; the credit follows it. Each asked at a sheet's size first,
     // lib/pics.mjs, then as given.)
     const next = [...pics, ...(yt[0]?.[4] ? [[yt[0][4], '']] : [])].flatMap(a => [[sized(a[0], 'l'), a[1]], a]).filter((a, i, all) => all.findIndex(b => b[0] === a[0]) === i);
     next.shift();
-    let cap = yt.length ? credit(yt[0]) : pics[0]?.[1] ? credit(null, pics[0][1]) : null;
+    const capOf = by => (by ? photoCredit(by, yt[0]) : yt.length ? credit(yt[0]) : null);
+    let capBy = pics[0]?.[1] || '';
+    let cap = capOf(capBy);
     const img = h('img', {
       src: sized(still, 'l'),
       alt: '',
@@ -205,20 +225,31 @@ function storyParts(story, { clip = '' } = {}) {
         const alt = next.shift();
         if (!alt) return void (yt.length ? img.remove() : media.remove());
         img.src = alt[0];
-        if (!yt.length && cap && alt[1]) cap.replaceWith((cap = credit(null, alt[1])));
+        // (The clip's own still at last: credited as the clip.)
+        if (cap && alt[1] !== capBy) cap.replaceWith((cap = capOf((capBy = alt[1])) || h('span')));
       }
     });
     media.append(yt.length ? h('button', { type: 'button', class: 'nw-story-play', 'aria-label': W('播放影片', 'Play the clip'), onclick: () => playIn(yt[0]) }, [img, playMark()]) : img, cap || '');
   }
   const pic = media.childNodes.length ? media : null;
-  // The other clips (and outlets' own video pages): a row of their own.
-  const others = (story.clips || []).filter(c => c[1] !== (clip || yt[0]?.[1]));
-  const clipRow = others.length
+  // Every clip (and outlets' own video pages): a row of their own, the one
+  // at the head among them, marked once it plays (so 影音 2 is both). One
+  // clip alone, playing at the head, isn't listed again.
+  const all = story.clips || [];
+  const listed = all.length > 1 || (all[0] && !all[0][1]) || !pic ? all : [];
+  const clipRow = listed.length
     ? h('section', { class: 'nw-story-clips' }, [
-        h('h3', {}, [W('影音', 'Video'), h('small', { text: ` ${others.length}` })]),
-        kitUI.rail(others.map(c => clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), openOut(x[2]))))))
+        h('h3', {}, [W('影音', 'Video'), h('small', { text: ` ${listed.length}` })]),
+        (rail = kitUI.rail(
+          listed.map(c => {
+            const card = clipCard({ story, clip: c }, ({ clip: x }) => (x[1] ? (playIn(x), media.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })) : (hooks.read(x[0]), openOut(x[2]))));
+            if (c[1]) card.dataset.clip = c[1];
+            return card;
+          })
+        ))
       ])
     : null;
+  if (clip && atHead?.[1] === clip) mark(clip);
   const topics = (story.topics || []).map(t => topicName(t, story.region)).filter(Boolean);
   const d = daysOf(story);
   const about = [...topics, d > 1 ? W(`報導 ${d} 天`, `${d} days`) : ''].filter(Boolean).join(' · ');

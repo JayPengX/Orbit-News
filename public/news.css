@@ -831,3 +831,10 @@ h1, h2, h3, p { margin: 0; }
 .nw-turn-head .q-logo { margin-top: 2px; flex: none; }
 
 .nw-related { display: grid; gap: 4px; }
+/* The head's credit: the photo's outlet, and the clip's own, a tap playing it. */
+.nw-story-pic figcaption > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nw-pic-clip { flex: none; padding: 0; border: 0; background: none; color: var(--q-accent); font: inherit; white-space: nowrap; cursor: pointer; }
+/* The clip playing at the head, among the 影音 row's. */
+.nw-clip.on .nw-clip-pic { box-shadow: 0 0 0 3px var(--q-accent); }
+.nw-clip.on .nw-play { opacity: 0; }
+.nw-clip-src small.nw-clip-on { color: var(--q-accent); }

@@ -62,6 +62,7 @@ remove a feature on purpose, delete its line in the same commit.
 - A topic's tab lists the stories of that topic with the topic as their tag; a topic with fewer than three stories has no tab — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export const asTopic`, `export const TAB_MIN`
 - The videos inside the outlets' articles (Jay 11-12): Taiwan's outlets' pages read for the article's own clip, a YouTube one played here, one on the outlet's own player opened on its site (Orbit-Core `pageOf`, `CLIPS_AT`) — `public/views/parts.mjs`: `到網站看`
 - More videos a story (Jay 11-13): up to 6, those that play here before the outlets' own video pages, many outlets before one outlet's second (Orbit-Core `CLIPS_SHOWN`, `CLIP_LOOSE`) — `public/views/story.mjs`: `nw-story-clips`
+- A story's head credits its photo and its clip each to its own outlet, a tap on the clip's name playing it; its 影音 row holds every clip, the one playing at the head marked (Jay 11-13) — `public/views/story.mjs`: `nw-pic-clip`, `nw-clip-on`
 - A clip YouTube won't play here (its owner allows it only on YouTube) opens YouTube instead — `public/views/story.mjs`: `enablejsapi=1`, `nw-player-out`
 - A world story shows how Taiwan's outlets put it: their bar and headlines by side — `public/views/story.mjs`, `public/lib/stories.mjs`: `function taiwanPart`, `function twOf`
 - A headline opens the outlet's own page and counts for 我的閱讀 — `public/shell.mjs`: `export function outletLink`, `hooks.read(o)`
