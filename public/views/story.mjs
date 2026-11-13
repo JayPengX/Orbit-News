@@ -97,10 +97,18 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
   const body = h('div', { class: 'nw-story' });
   // (The way to the stories beside it stays at the sheet's foot: ‹ 上一則 3 / 20 下一則 ›.)
   const foot = order.length > 1 ? footOf(order, d => step(d)) : null;
+  // (Where the list was: given back on close, below.)
+  const page = document.scrollingElement;
+  const was = page?.scrollTop || 0;
   const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: story.title, onClose: () => {
       shown = null;
       // (The link's #s= let go: the same link opens it again.)
       if (/^#s=/.test(location.hash)) history.replaceState(history.state, '', `#${state.tab}`);
+      // Closed (a swipe down, ✕): the list just where it was (Jay 11-13: a
+      // swipe off "will scroll back to the top", iPhone's Safari redrawing
+      // the list under a sheet). After the redraw the close brings
+      // (app.mjs quietRefresh); stepped on to another story, its row in view.
+      setTimeout(() => requestAnimationFrame(() => keepPlace(page, was, order[at]?.id !== id && order[at]?.id)));
     } });
   shown = sh;
   const draw = (i, opts = {}) => {
@@ -127,6 +135,21 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
     if (e.target.closest?.('input, textarea, iframe') || e.altKey || e.metaKey || e.ctrlKey) return;
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') step(e.key === 'ArrowRight' ? 1 : -1) && e.preventDefault();
   });
+}
+
+// The list put back under a closed sheet: at `was`, or with `moved`'s row
+// (the story the reader stepped on to) in view; never while another sheet
+// is open (a related story's, opened from this one).
+function keepPlace(page, was, moved) {
+  if (!page || document.querySelector('dialog.q-sheet[open]')) return;
+  const view = globalThis.innerHeight || 0;
+  const row = moved && [...document.querySelectorAll(`#panel-${state.tab} [data-story="${moved}"]`)].find(n => n.getClientRects().length);
+  if (row) {
+    const r = row.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > view) page.scrollTo?.({ top: Math.max(0, page.scrollTop + r.top - view / 3) });
+    return;
+  }
+  if (Math.abs(page.scrollTop - was) > 2) page.scrollTo?.({ top: was });
 }
 
 // A story's clip played from a list (a tap on its picture's play mark).
