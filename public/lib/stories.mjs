@@ -110,7 +110,8 @@ export function oneASaga(stories, shown = [], zhOf) {
 }
 
 // A story by its id, on the page or among the past's.
-export const storyById = (page, id, past = null) => [page, past].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
+// (`more`: the past's stories, Sports' sports reports, looked through after the page.)
+export const storyById = (page, id, ...more) => [page, ...more].flatMap(p => REGIONS.map(r => p?.[r]?.find(s => s.id === id))).find(Boolean) || null;
 
 // The stories on a topic ('all': every one), in the builder's order.
 export const onTopic = (stories, topic) => (topic === 'all' ? stories : topic === 'video' ? stories.filter(s => s.clips?.length) : stories.filter(s => s.topics?.includes(topic)));

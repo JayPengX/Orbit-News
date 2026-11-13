@@ -69,6 +69,11 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   [[picture, outlet]] (other outlets', tried in turn when img won't load) }`;
   `blind` is the side that left it out (3 outlets or more, 2 hours or more,
   all on one side; only a topic sides take).
+  Also `news/sport.json` (Jay 11-13, for Orbit Sports' 相關新聞): the sports
+  stories of 3 days, one outlet's report too (never on News' own pages), each
+  with its kind (`k`: injury, ban, coach, move; kit `news-sport.mjs`) and the
+  AI's reading of its names (`who`, `builders/ai.js` news-sport). Sports
+  links one as `#s=<id>`; `hooks.sport` reads the pack only for such a link.
 - **The outlets** (Orbit-Core `kit/news-outlets.mjs`, one table for the
   builder and the app): each outlet's name, site, owner, kind, its place on
   藍綠 (`tw`), 統獨 (`cs`) or left–right (`lr`: AllSides', else Media

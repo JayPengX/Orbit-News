@@ -29,6 +29,8 @@ export const state = {
   // The past's page (older stories kept, news/past.json), read when asked.
   past: null,
   pastFailed: false,
+  // Orbit Sports' sports reports (news/sport.json), read for a link from its 相關新聞.
+  sport: null,
   // The AI's one lines and titles by story (lib/lines.mjs), an empty Map until read.
   lines: new Map(),
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).

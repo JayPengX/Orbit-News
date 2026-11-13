@@ -50,6 +50,7 @@ const TAB_ICONS = {
 const VERSION = document.querySelector('meta[name="build-version"]')?.content || 'dev';
 const PAGE = 'news/index.json';
 const PAST = 'news/past.json';
+const SPORT = 'news/sport.json';
 
 const q = orbitSession('news', { lang });
 // 今天五則 learns from what's opened and passed over (the kit's feedback.mjs, the
@@ -261,6 +262,13 @@ hooks.past = () =>
     })
     .catch(() => (state.pastFailed = true))
     .finally(() => (pastReading = null)));
+// Orbit Sports' 相關新聞 opens a sports report here (#s=), one outlet's too,
+// which News' own pages leave out: the builder's sports pack (the kit's
+// news-sport.mjs SPORT_PATH), read only for such a link. (None read: an empty one.)
+hooks.sport = () =>
+  packJson(SPORT, { ttl: 10 * 60_000, timeout: 20_000 })
+    .then(raw => (state.sport = cleanPage(raw)))
+    .catch(() => (state.sport = cleanPage(null)));
 // A new build every 10 minutes: looked for every 5 while the app is in view.
 setInterval(() => document.visibilityState === 'visible' && load(), 5 * 60_000);
 

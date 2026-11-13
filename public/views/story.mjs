@@ -79,11 +79,15 @@ let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
 export function openStory(id, { clip = '', list = null, via = '' } = {}) {
-  const story = storyById(state.page, id, state.past);
-  // (An older story, from a link: the past read first.)
-  // (Gone from both, or the older ones unreadable: said, never a tap that does nothing.)
+  const find = () => storyById(state.page, id, state.past, state.sport);
+  const story = find();
+  // (An older story, from a link: the past read first. A sports report Orbit
+  // Sports' 相關新聞 opened, one outlet's, not on News' pages: the sports pack.)
+  // (Gone from all, or the older ones unreadable: said, never a tap that does nothing.)
   const gone = () => kitUI.toast?.(state.pastFailed ? W('暫時讀不到這則新聞，稍後再試。', 'Can’t get this story right now. Try again shortly.') : W('這則新聞已經不在了。', 'This story is no longer available.'), { ms: 2400 });
-  if (!story) return void (state.past ? gone() : hooks.past().then(() => (storyById(state.page, id, state.past) ? openStory(id, { clip, list, via }) : gone())));
+  const again = () => (find() ? openStory(id, { clip, list, via }) : gone());
+  const past = () => (state.past ? gone() : hooks.past().then(again));
+  if (!story) return void (!state.sport && hooks.sport ? hooks.sport().then(() => (find() ? again() : past())) : past());
   // (What's opened teaches 今天五則: from it, or from anywhere else.)
   state.fb?.picked?.('news', itemOf(story), Date.now(), { from: via === 'brief' ? 'list' : 'elsewhere' });
   shown?.close?.();

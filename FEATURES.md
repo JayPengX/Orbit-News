@@ -42,6 +42,7 @@ remove a feature on purpose, delete its line in the same commit.
 - 單邊 by region, side, then kind: a text tab for 台灣 and 國際 (a swipe between), each end's count of stories it left out as a tile that filters to them, then each kind (政治, 兩岸, 經濟…) three at a time with the rest folded — `public/views/lists.mjs`, `public/lib/stories.mjs`: `const sideRegions`, `nw-blind-tile`, `function kindPart`, `export function byKind`
 - 媒體: your reading by side (Taiwan's and the world's), every outlet on its line — `public/views/outlets.mjs`: `export function renderOutlets`, `TW_PLACES`, `INTL_PLACES`
 - A tab or a story from the address (#intl, #s=<id>) — `public/app.mjs`: `function openFromHash`, `s=(\w+)`
+- A sports report Orbit Sports' 相關新聞 opens (#s=<id>), one outlet's too, which News' pages leave out: read from the builder's sports pack only for such a link — `public/app.mjs`, `public/views/story.mjs`: `hooks.sport`, `state.sport`
 
 ## The sheets
 
