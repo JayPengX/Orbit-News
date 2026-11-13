@@ -171,3 +171,16 @@ test('one saga once: a Taiwan story on a world story, or two on the same one, sh
   assert.deepEqual(oneASaga([quit, world, board, leave, null], [], zhOf).map(s => s.id), ['a', 'c']);
   assert.deepEqual(oneASaga([board, leave], [quit], zhOf).map(s => s.id), ['c']);
 });
+
+test('a list drawn again keeps its order, fresh numbers in it, a new story at its own place (Jay 11-13: "reshuffle")', async () => {
+  const { steady } = await import('../public/lib/stories.mjs');
+  const held = new Map();
+  const s = (id, n = 1) => ({ id, n });
+  assert.deepEqual(steady(held, 'tw', [s('a'), s('b'), s('c')]).map(x => x.id), ['a', 'b', 'c']);
+  const again = steady(held, 'tw', [s('c', 9), s('new'), s('a'), s('b')]);
+  assert.deepEqual(again.map(x => x.id), ['a', 'new', 'b', 'c']);
+  assert.equal(again.at(-1).n, 9, 'its fresh numbers');
+  assert.deepEqual(steady(held, 'tw', [s('b'), s('a')]).map(x => x.id), ['a', 'b'], 'a story gone leaves');
+  held.clear();
+  assert.deepEqual(steady(held, 'tw', [s('b'), s('a')]).map(x => x.id), ['b', 'a'], 'a pull ranks anew');
+});

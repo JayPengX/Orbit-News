@@ -51,6 +51,8 @@ export const state = {
   log: emptyLog(),
   // What's followed on the page: id → { why, lift } (lib/follows.mjs followedOf), made each 頭條, 台灣 or 國際 draw.
   followed: new Map(),
+  // The lists' order as first drawn this opening (lib/stories.mjs steady), cleared on a pull.
+  held: new Map(),
   // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then or on an older kit).
   fb: null,
   loaded: false

@@ -139,6 +139,8 @@ function dimOpened() {
 // and taught to 今天五則 (a topic followed lifts its stories).
 hooks.follow = (key, on) => {
   setFollow(state.log, key, on);
+  // (Following something lifts its stories now: the lists ranked anew.)
+  state.held.clear();
   if (on && key.startsWith('t:')) state.fb?.did?.('news', [key], 3);
   logChanged();
   quietRefresh();
@@ -153,7 +155,7 @@ hooks.render = () => (stamp++, render());
 hooks.tab = tab => showTab(tab, { top: true });
 hooks.word = w => q.go('vocab', `word=${encodeURIComponent(w)}`);
 hooks.law = hash => q.go('law', hash);
-hooks.reload = () => load({ fresh: true });
+hooks.reload = () => (state.held.clear(), load({ fresh: true }));
 
 // ---- The stories ----------------------------------------------------------------------
 
@@ -330,9 +332,18 @@ function showTab(tab, { top = false } = {}) {
   tabNav.select(tab, top ? { top: true } : undefined);
   render({ ifChanged: true });
 }
+// (Many reads land together as News opens: the stories, the AI's titles, the
+// translations, the markets. One draw for them all, not a whole page each:
+// the page froze two seconds on a phone, Jay 11-13.)
+let redraw = 0;
 const quietRefresh = () => {
-  if (document.querySelector('dialog.q-sheet[open]')) return;
-  if (state.loaded) render({ ifChanged: true });
+  if (redraw) return;
+  redraw = setTimeout(() => {
+    redraw = 0;
+    if (document.querySelector('dialog.q-sheet[open]')) return;
+    if (state.loaded) render({ ifChanged: true });
+    dimOpened();
+  }, 80);
 };
 // A sheet closed: what changed under it drawn now.
 document.addEventListener('close', () => setTimeout(() => (quietRefresh(), dimOpened())), true);
@@ -342,15 +353,18 @@ const gated = installGate('news', lang);
 watchUpdates({ current: VERSION, key: 'orbitNews', cachePrefix: 'orbit-news-' });
 // A pull down on a phone, the refresh button on a computer (the kit's; it
 // spins while a read runs, and runs when the connection comes back).
-topActions(q, { refresh: () => load({ fresh: true }) });
+topActions(q, { refresh: () => (state.held.clear(), load({ fresh: true })) });
 
 async function boot() {
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
-  const [kept, keptLines] = await Promise.all([PAGE, LINES].map(p => orbitKit.peekPack?.(p).catch(() => null)));
+  const [kept, keptLines, keptTr, keptMarkets] = await Promise.all([PAGE, LINES, TR, MARKETS].map(p => orbitKit.peekPack?.(p).catch(() => null)));
   if (kept?.data && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
-  // (The AI's titles kept with them, so the first draw is the whole one: the fresh ones redraw only if newer.)
+  // (The AI's titles, the translations and the markets kept with them, so the
+  // first draw is the whole one: the fresh ones redraw only if newer.)
   if (keptLines?.data && linesBuilt === null) ((state.lines = cleanLines(keptLines.data)), (linesBuilt = keptLines.data.built ?? null));
+  if (keptTr?.data && trBuilt === null) ((state.tr = cleanTr(keptTr.data)), (trBuilt = keptTr.data.built ?? null));
+  if (keptMarkets?.data && marketsBuilt === null) ((state.markets = cleanMarkets(keptMarkets.data)), (marketsBuilt = keptMarkets.data.built ?? null));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
   if (mine) absorb(mine);
   const first = load();
@@ -360,7 +374,11 @@ async function boot() {
   };
   // (Drawn once: the kept stories at once, else the fresh ones when they
   // land; the fresh ones over the kept draw themselves, load(), only if newer.)
+  // (A kept front over an hour old is waited on a moment for today's, so the
+  // first draw isn't reshuffled a second later: 1.5 s at most, then the kept one.)
+  const old = !state.page || Date.now() - (state.page.built || 0) > 3_600_000;
   if (!state.page) await first;
+  else if (old) await Promise.race([first, new Promise(r => setTimeout(r, 1500))]);
   show();
   kitUI.ready(Promise.resolve());
   const signed = await starting;

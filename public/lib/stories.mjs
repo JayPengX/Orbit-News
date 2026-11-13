@@ -302,3 +302,21 @@ export function timelineOf(story, { most = 6 } = {}) {
   const mid = out.slice(1, -1).sort((a, b) => b.n - a.n).slice(0, most - 2);
   return [out[0], ...out.slice(1, -1).filter(x => mid.includes(x)), out.at(-1)];
 }
+
+// What's on screen keeps its place (Jay 11-13: opening News "get stuck a few
+// seconds then reshuffle"): a list drawn again in the same opening keeps the
+// order it was first drawn in, each story with its fresh numbers; a story
+// gone leaves, a new one comes in at its own place. Ranked anew on a pull or
+// the next opening. `held`: Map(list's key → its ids in order).
+export function steady(held, key, list) {
+  const was = held.get(key);
+  if (!was) {
+    held.set(key, list.map(s => s.id));
+    return list;
+  }
+  const pos = new Map(was.map((id, i) => [id, i]));
+  const out = list.filter(s => pos.has(s.id)).sort((a, b) => pos.get(a.id) - pos.get(b.id));
+  list.forEach((s, i) => !pos.has(s.id) && out.splice(Math.min(i, out.length), 0, s));
+  held.set(key, out.map(s => s.id));
+  return out;
+}

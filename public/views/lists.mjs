@@ -8,7 +8,7 @@ import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
-import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive } from '../lib/stories.mjs';
+import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive, steady } from '../lib/stories.mjs';
 import { balanceOf, leanOf, followKey, followsOf } from '../lib/reading.mjs';
 import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
 import { followPill, openFollows, followName } from './follows.mjs';
@@ -89,8 +89,8 @@ export function renderTop(box) {
   // marks. What's followed, in a line under the date.
   const followed = followedNow();
   const theirs = [...followed].filter(([, f]) => f.why).map(([id, f]) => ({ story: byId(id), why: f.why })).filter(x => x.story);
-  const tw = lifted(state.page.tw, followed);
-  const intl = lifted(state.page.intl, followed);
+  const tw = steady(state.held, 'tw', lifted(state.page.tw, followed));
+  const intl = steady(state.held, 'intl', lifted(state.page.intl, followed));
   const leads = leadsOf(tw, intl, liveOf(state.page));
   const seen = new Set(leads.map(s => s.id));
   const top = oneASaga(tw.filter(s => !seen.has(s.id)), leads, zhOf).slice(0, 6);
@@ -198,7 +198,7 @@ export function readingLine(b) {
 export function renderRegion(box, region) {
   if (notYet(box)) return;
   // (Most important first, what's followed risen and tagged, as on 頭條.)
-  const stories = lifted(state.page[region], followedNow());
+  const stories = steady(state.held, region, lifted(state.page[region], followedNow()));
   const tabs = tabsOf(region);
   const topic = tabs.includes(state.topic[region]) ? state.topic[region] : 'all';
   const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
