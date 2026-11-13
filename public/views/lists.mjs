@@ -13,7 +13,7 @@ import { balanceOf, leanOf, followKey, followsOf } from '../lib/reading.mjs';
 import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
 import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
-import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar } from './parts.mjs';
+import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle } from './parts.mjs';
 import { openStory } from './story.mjs';
 import { withSearch } from './search.mjs';
 
@@ -80,6 +80,18 @@ export function followedNow() {
   return state.followed;
 }
 
+// 頭條's 運動: Taiwan's sports stories and the world's sports outlets' in
+// turn (Jay 11-13: "our sport news is … all about Taiwanese outlet": ESPN,
+// The Athletic, Sky Sports and the rest beside 中職), each list's own order.
+function bothSides(tw, intl, ok) {
+  const a = tw.filter(ok);
+  // (On a Chinese page, the world's once in Chinese: a story the
+  // translation hasn't reached yet waits, never an English title here.)
+  const b = intl.filter(s => ok(s) && (en || shownTitle(s).lang === 'zh-Hant'));
+  const out = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) out.push(...[a[i], b[i]].filter(Boolean));
+  return out;
+}
 export function renderTop(box) {
   if (notYet(box)) return;
   // What's followed rises through the whole front (Jay 11-13: "more
@@ -105,7 +117,7 @@ export function renderTop(box) {
   // own section above stands for the world: one 國際 on the page).
   const topicLists = topicOrder()
     .filter(t => !(t === 'world' && world.length))
-    .map(t => [t, tw.filter(s => s.topics?.[0] === t && !seen.has(s.id))])
+    .map(t => [t, t === 'sport' ? bothSides(tw, intl, s => s.topics?.[0] === t && !seen.has(s.id)) : tw.filter(s => s.topics?.[0] === t && !seen.has(s.id))])
     .filter(([, list]) => list.length >= 2);
   const topics = topicLists.map(([t, list]) =>
       section(topicName(t, 'tw'), [storyList(list.slice(0, 3), s => open(s, list)), more(W(`更多${topicName(t, 'tw')}新聞`, `More ${topicName(t, 'tw').toLowerCase()}`), go('tw', t))], { cls: 'nw-topic-sec' })
