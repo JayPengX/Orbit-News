@@ -141,7 +141,6 @@ h1, h2, h3, p { margin: 0; }
 /* The AI's spark (各方怎麼說's head). */
 .nw-ai-mark { flex: none; display: inline-flex; width: 13px; height: 13px; margin-top: 3px; color: var(--q-label-3); }
 .nw-ai-mark svg { width: 100%; height: 100%; fill: currentColor; }
-.nw-story-orig { color: var(--q-label-2); font: var(--q-t-subhead); max-width: 40em; }
 .nw-ai-note { display: block; color: var(--q-label-3); font: var(--q-t-caption); }
 @media (hover: hover) {
   .nw-row:hover { background: var(--q-fill-4); }
@@ -815,6 +814,27 @@ h1, h2, h3, p { margin: 0; }
 }
 .nw-points-list li { font: 400 16px/23px var(--q-font); text-wrap: pretty; padding-left: 2px; }
 .nw-points-list li::marker { color: var(--q-label-3); }
+.nw-points-rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
+  border-radius: var(--q-r-card);
+  box-shadow: var(--nv-edge, none);
+}
+.nw-points-rows dt { color: var(--q-label-2); font: 600 13px/23px var(--q-font); white-space: nowrap; }
+.nw-points-rows dd { margin: 0; font: 400 16px/23px var(--q-font); text-wrap: pretty; min-width: 0; }
+@media (max-width: 359px) {
+  /* (A small phone: each kind's name over its points, the text the width.) */
+  .nw-points-rows { grid-template-columns: 1fr; row-gap: 2px; }
+  .nw-points-rows dt.nw-points-same { display: none; }
+  .nw-points-rows dd + dt { margin-top: 8px; }
+  .nw-points-rows dt { line-height: 18px; }
+  .nw-points-rows .nw-points-same + dd { margin-top: 6px; }
+}
+.nw-kicker .nw-ai-mark { display: inline-block; width: 13px; height: 13px; margin-left: 6px; vertical-align: -2px; color: var(--q-ai, var(--q-accent)); }
 .nw-full-row { display: flex; }
 .nw-full { display: inline-flex; align-items: center; justify-self: start; min-height: 36px; padding: 0 16px; border-radius: 999px; background: var(--q-fill-3); color: var(--q-label); font: 600 15px/20px var(--q-font); text-decoration: none; white-space: nowrap; }
 .nw-full b { color: var(--q-label-3); font-weight: 400; }

@@ -212,13 +212,14 @@ function footOf(order, step) {
 
 // One story's parts, top to bottom.
 // The sheet's headline: the AI's in the reader's language over the outlets'
-// own (a world story on a Chinese phone), said to be the AI's.
-function storyTitle(story, lang) {
+// own (a world story on a Chinese phone), the Orbit AI mark beside the line above it.
+function storyTitle(story) {
   const t = shownTitle(story);
   return [
-    h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text }),
-    t.ai ? h('p', { class: 'nw-story-orig', lang }, marked(story.title, story)) : null,
-    t.ai ? h('small', { class: 'nw-ai-note', text: W('標題由 AI 依各家標題翻譯', 'Headline translated by AI from the outlets’ own') }) : null
+    // (The AI's title alone, its mark in the line above: the outlets' own
+    // headlines are each side's, below. Jay 11-13: the English original and a
+    // note under it were text scattered over the story.)
+    h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text })
   ];
 }
 
@@ -309,8 +310,8 @@ function storyParts(story, { clip = '' } = {}) {
   const head = h('div', { class: 'nw-story-head' }, [
     pic,
     h('div', { class: 'nw-story-text' }, [
-      about ? h('small', { class: 'nw-kicker', text: about }) : null,
-      ...storyTitle(story, lang),
+      about || shownTitle(story).ai ? h('small', { class: 'nw-kicker' }, [about, shownTitle(story).ai ? aiMark(W('標題由 AI 依各家標題寫成', 'Headline written by AI from the outlets’ own')) : null]) : null,
+      ...storyTitle(story),
       // (Our 重點整理 below says it fuller: the outlet's own summary then left to its site.)
       story.sum && !state.briefs?.has?.(story.id) ? h('p', { class: 'nw-sum' }, [sumSaid(story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })]),
@@ -394,9 +395,24 @@ function pointsOf(story) {
   const lang = en ? 'en' : 'zh-Hant';
   return h('section', { class: 'nw-points' }, [
     h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
-    h('ul', { class: 'nw-points-list' }, b.points.map(p => h('li', { lang, text: en ? p.en : p.zh }))),
+    b.points.every(p => p.k) ? pointRows(b.points, lang) : h('ul', { class: 'nw-points-list' }, b.points.map(p => h('li', { lang, text: en ? p.en : p.zh }))),
     full
   ]);
+}
+
+// The points by kind (Jay 11-13: points that didn't help him understand
+// the news): what happened, the background, what's next, each kind named
+// once beside its first point.
+const KIND_NAME = { what: ['發生什麼', 'What happened'], why: ['背景', 'Background'], next: ['接下來', 'What’s next'] };
+function pointRows(points, lang) {
+  return h(
+    'dl',
+    { class: 'nw-points-rows' },
+    points.flatMap((p, i) => [
+      h('dt', { class: points[i - 1]?.k === p.k ? 'nw-points-same' : '', text: points[i - 1]?.k === p.k ? '' : W(...KIND_NAME[p.k]) }),
+      h('dd', { lang, text: en ? p.en : p.zh })
+    ])
+  );
 }
 
 // 追蹤: the story's topic and the parties its headlines name, each a follow
@@ -457,8 +473,8 @@ function sidesSay(story) {
 }
 
 // The Orbit AI mark beside a part the AI had a hand in (the family's, never a sparkle).
-function aiMark() {
-  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': 'Orbit AI' });
+function aiMark(label = 'Orbit AI') {
+  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': label, title: label });
   mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
   return mark;
 }
