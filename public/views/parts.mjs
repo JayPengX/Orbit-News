@@ -152,24 +152,32 @@ export function marks(story, most = 4) {
   const ids = [...all.filter(id => isFollowing(`o:${id}`)), ...all.filter(id => !isFollowing(`o:${id}`))].slice(0, most);
   return h('span', { class: 'nw-marks', 'aria-hidden': 'true' }, ids.map(id => outletMark(id, 18)));
 }
-// 單邊's mark on a story wherever it's listed, the split in it (Jay 11-14:
-// 「綠 9 · 藍 1」), in the colour of the side that left it out.
+// 單邊's mark on a story wherever it's listed: words in the colour of the
+// side that left it out, saying so in words (偏藍沒報, or 偏藍少報 where one
+// or two carried it); never the counts (Jay 11-14: "using number to
+// indicate is such a bad design"; the bar beside it shows the split, the
+// sheet's line counts it).
 export function oneSideTag(story) {
   const o = oneSideOf(story);
   if (!o) return null;
-  return tag(W(`單邊 ${sideText(o.heavy)} ${o.H} · ${sideText(o.light)} ${o.L}`, `One-sided · ${sideText(o.heavy)} ${o.H} · ${sideText(o.light)} ${o.L}`), 'tint', `var(--nw-${o.light})`);
+  // (Coloured words, not a capsule: the family's tags, docs/DESIGN.md §6.)
+  return tag(o.L ? W(`${sideFull(o.light)}少報`, `Few ${LEANING[o.light].toLowerCase()}`) : W(`${sideFull(o.light)}沒報`, `None ${LEANING[o.light].toLowerCase()}`), 'tint', `var(--nw-${o.light})`);
 }
-// Who carried it and who didn't, in a line, by code (Jay 11-14): 偏左 20
-// 家在報（CNN、衛報、NPR 等），偏右只有 2 家（福斯新聞、紐約郵報）.
+// Who carried it and who didn't, in a line, by code (Jay 11-14): in the
+// sheet with the counts, 偏左 20 家在報（CNN、衛報、NPR 等），偏右只有 2 家
+// （福斯新聞、紐約郵報）; in a list by name only, no numbers on a card:
+// 偏右只有福斯新聞、紐約郵報在報, or 只有偏綠的自由時報、三立新聞等在報.
 const LEANING = { g: 'Green-leaning', b: 'Blue-leaning', l: 'Left-leaning', r: 'Right-leaning' };
-// (`full`: the sheet's, the carrying side's outlets named too; a list's
-// names only the token few, two lines at 320.)
 export function oneSideLine(story, { full = false } = {}) {
   const o = oneSideOf(story);
   if (!o) return '';
   const names = (ids, most) => ids.slice(0, most).map(outletName).join(W('、', ', ')) + (ids.length > most ? W('等', ' and more') : '');
-  const few = o.L ? (full ? W(`只有 ${o.L} 家（${names(o.few, 2)}）`, `only ${o.L} (${names(o.few, 2)})`) : W(`只有${names(o.few, 2)}`, `only ${names(o.few, 2)}`)) : W('一家都沒報', 'none');
-  const many = full ? W(`${o.H} 家在報（${names(o.carried, 3)}）`, `${o.H} (${names(o.carried, 3)})`) : W(`${o.H} 家在報`, String(o.H));
+  if (!full)
+    return o.L
+      ? W(`${sideFull(o.light)}只有${names(o.few, 2)}在報`, `Of the ${LEANING[o.light].toLowerCase()}, only ${names(o.few, 2)}`)
+      : W(`只有${sideFull(o.heavy)}的${names(o.carried, 2)}在報`, `Only the ${LEANING[o.heavy].toLowerCase()}: ${names(o.carried, 2)}`);
+  const few = o.L ? W(`只有 ${o.L} 家（${names(o.few, 2)}）`, `only ${o.L} (${names(o.few, 2)})`) : W('一家都沒報', 'none');
+  const many = W(`${o.H} 家在報（${names(o.carried, 3)}）`, `${o.H} (${names(o.carried, 3)})`);
   return W(`${sideFull(o.heavy)} ${many}，${sideFull(o.light)}${few}`, `${LEANING[o.heavy]}: ${many}; ${LEANING[o.light].toLowerCase()}: ${few}`);
 }
 // A story's coverage in a line: the marks, how many outlets, the bar (only
