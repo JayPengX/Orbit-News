@@ -230,7 +230,7 @@ export function renderRegion(box, region) {
   } else box.replaceChildren(chips, body);
   const dir = slideNext;
   slideNext = 0;
-  if (dir) slideIn(body, dir);
+  if (dir) kitUI.glideIn?.(body, dir);
   // (Then the topics either side drawn ahead, while the phone is idle: a tap or a swipe to them is instant.)
   drawAhead(box, region, tabs, topic);
 }
@@ -279,14 +279,9 @@ function drawAhead(box, region, tabs, topic) {
   };
   ahead = idle(step, { timeout: 1500 });
 }
-// A topic tapped: its list comes in from the side of its tab (as a swipe's
-// does: the kit's daySwipe), the same glide.
+// A topic tapped: its list comes in from the side of its tab (the kit's
+// glideIn, as a swipe's does with daySwipe).
 let slideNext = 0;
-const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-function slideIn(el, dir) {
-  if (reducedMotion() || typeof el.animate !== 'function') return;
-  el.animate([{ transform: `translateX(${dir * 28}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
-}
 // A topic's list: its lead story in its picture, then the rest, more on a
 // tap, then the older ones kept (運動 by league).
 function regionBody(region, topic, stories) {
