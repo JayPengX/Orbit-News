@@ -191,6 +191,12 @@ export const storyList = (stories, onOpen, opts = {}) => h('div', { class: 'nw-l
 // 今天五則: five lines, numbered, each what it's about (or what of the
 // person's: 持股 台積電) over its headline; no pictures, the brief reads at a glance.
 // (A follow by its name alone, in the follow's colour: the kicker stays one line at 320.)
+// An outlet the reader follows, put first inside a story (its headline, its
+// clip) and said so: never lifted unseen (Jay 11-14: "mark it so user know
+// they follow it and it's not secretly being push front causing bias reading").
+export const followsOutlet = id => isFollowing(`o:${id}`);
+export const followedFirst = (list, idOf) => [...list.filter(x => followsOutlet(idOf(x))), ...list.filter(x => !followsOutlet(idOf(x)))];
+export const followMark = () => h('small', { class: 'nw-follow-mark', text: W('★ 追蹤', '★ Following') });
 export const mineTag = mine => h('b', { class: `nw-mine-tag nw-mine-${mine.kind}`, text: mine.kind === 'hold' ? `${W('持股', 'Held')} ${mine.label}` : mine.label });
 export function briefList(items, onOpen) {
   const list = items.map(x => x.story);
@@ -229,7 +235,7 @@ export function clipCard(entry, onPlay) {
   pic.append(playMark());
   return h('button', { type: 'button', class: 'nw-clip', 'data-story': story.id, onclick: () => onPlay(entry) }, [
     pic,
-    h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
+    h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), followsOutlet(clip[0]) ? followMark() : null, clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
     clip[3] ? said('span', { class: 'nw-clip-title', lang: story.region === 'intl' ? 'en' : 'zh-Hant' }, clip[3]) : h('span', { class: 'nw-clip-title', lang: shownTitle(story).lang, text: shownTitle(story).text })
   ]);
 }

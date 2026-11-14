@@ -42,6 +42,8 @@ remove a feature on purpose, delete its line in the same commit.
 - 運動 by league, as Orbit Sports has them (NBA, 中華職棒, 英超… then NFL, 網球…), four a league, the rest a tap away (Jay 11-14) — `public/views/lists.mjs`, `public/lib/leagues.mjs`: `function byLeague`, `export function leagueOf`, `nw-league-sec`
 - 相關新聞 of a sports story: its league's only, never another sport's or a non-sports story (Jay 11-14, judo under 七六人 v 暴龍) — `public/lib/stories.mjs`: `export function relatedOf`
 - 媒體's 運動媒體: the sports outlets on no lean scale, a group of their own, never counted as state media (Jay 11-14) — `public/views/outlets.mjs`, `public/lib/stories.mjs`: `sportsCard`, `free`
+- Inside a story, the outlets you follow first (their headline in 各家怎麼下標, their clip in 影音 and at the head), each marked ★ 追蹤 so it's never a hidden lift (Jay 11-14) — `public/views/parts.mjs`, `public/views/story.mjs`: `followedFirst`, `followMark`, `nw-follow-mark`
+- The story sheet full width at full height (nothing of the page behind at its sides), its 上一則 · 3 / 20 · 下一則 a glass capsule pinned at its foot (Jay 11-14) — `public/views/story.mjs`, `public/news.css`: `detent: 'large'`, `nw-foot-bar`
 - A swipe across 台灣, 國際 or 單邊 goes to the topic beside, the title and tabs staying put — `public/views/lists.mjs`, `public/app.mjs`: `function swipeTabs`, `q-day-still`
 - The older stories kept (a month), asked for at a list's end or by an old link — `public/views/lists.mjs`, `public/app.mjs`, `public/views/story.mjs`: `function pastPart`, `hooks.past =`, `news/past.json`, `state.past`
 - 單邊: stories only one side carries, grouped by the side that left them out — `public/views/lists.mjs`, `public/lib/stories.mjs`: `export function renderSide`, `export function oneSided`

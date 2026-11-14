@@ -13,7 +13,7 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, r
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
@@ -137,7 +137,9 @@ export function openStory(id, { clip = '', list = null, via = '', start = 0 } = 
   // (Where the list was: given back on close, below.)
   const page = document.scrollingElement;
   const was = page?.scrollTop || 0;
-  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', body: [body], foot, label: shownTitle(story).text, onClose: () => {
+  // (Full height, side to side: nothing of the page behind showing down its
+  // edges, Jay 11-14: "the edge is the thing behind the sheet".)
+  const sh = sheet({ title: regionName(story.region), cls: 'q-sheet-wide nw-story-sheet', detent: 'large', body: [body], foot, label: shownTitle(story).text, onClose: () => {
       shown = null;
       // (The link's #s= let go: the same link opens it again.)
       if (/^#s=/.test(location.hash)) history.replaceState(history.state, '', `#${state.tab}`);
@@ -207,7 +209,7 @@ function footOf(order, step) {
   const prev = go(-1);
   const next = go(1);
   const at = h('small', { class: 'nw-foot-at', 'aria-live': 'polite' });
-  const nav = h('nav', { class: 'q-sheet-foot nw-story-foot', 'aria-label': W('上一則、下一則', 'Previous and next') }, [prev, at, next]);
+  const nav = h('nav', { class: 'q-sheet-foot nw-story-foot', 'aria-label': W('上一則、下一則', 'Previous and next') }, [h('div', { class: 'nw-foot-bar' }, [prev, at, next])]);
   return Object.assign(nav, {
     paint(i) {
       prev.disabled = i <= 0;
@@ -248,11 +250,12 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
   // photo), most often another outlet's than the clip's: each credited for
   // its own, 圖：壹蘋 · ▶ 中天的影片, never the photo called the clip (Jay
   // 11-13: the title video wasn't the one listed).
-  const yt = (story.clips || []).filter(c => c[1]);
+  // (The outlets the reader follows first, each marked ★ 追蹤.)
+  const yt = followedFirst((story.clips || []).filter(c => c[1]), c => c[0]);
   const youtube = c => h('a', { href: `https://www.youtube.com/watch?v=${c[1]}`, target: '_blank', rel: 'noopener', text: W('在 YouTube 看', 'Watch on YouTube') });
   const photoBy = by => W(`圖：${outletName(by)}`, `Photo: ${outletName(by)}`);
   // (Playing, or its own still: 影片：中天 · 在 YouTube 看.)
-  const credit = c => h('figcaption', {}, [W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`), youtube(c)]);
+  const credit = c => h('figcaption', {}, [h('span', {}, [W(`影片：${outletName(c[0])}`, `Video: ${outletName(c[0])}`), followsOutlet(c[0]) ? followMark() : null]), youtube(c)]);
   // (A photo; a clip to play beside it named for its own outlet.)
   const photoCredit = (by, c) =>
     h('figcaption', {}, [
@@ -302,7 +305,7 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
   // Every clip (and outlets' own video pages): a row of their own, the one
   // at the head among them, marked once it plays (so 影音 2 is both). One
   // clip alone, playing at the head, isn't listed again.
-  const all = story.clips || [];
+  const all = followedFirst(story.clips || [], c => c[0]);
   const listed = all.length > 1 || (all[0] && !all[0][1]) || !pic ? all : [];
   const clipRow = listed.length
     ? h('section', { class: 'nw-story-clips' }, [
@@ -596,7 +599,8 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   const by = new Map();
   for (const it of [...items].sort((a, b) => b[3] - a[3])) by.set(it[0], [...(by.get(it[0]) || []), it]);
   // (Every outlet of a story with no sides: those that wrote it up most first, then the newest.)
-  const outlets = side === 'all' ? [...by].sort((a, b) => b[1].length - a[1].length) : [...by];
+  // (And the outlets the reader follows ahead of the rest, marked: Jay 11-14.)
+  const outlets = followedFirst(side === 'all' ? [...by].sort((a, b) => b[1].length - a[1].length) : [...by], ([o]) => o);
   const head = h('div', { class: 'nw-side-head' }, [
     side === 'all' ? null : h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }),
     h('b', { text: side === 'all' ? W('報導的媒體', 'Who covers it') : side === 'none' ? W('中國官媒', 'China state media') : sideFull(side) }),
@@ -604,7 +608,7 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   ]);
   const line = (it, first) =>
     outletLink(it, [
-      first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
+      first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), followsOutlet(it[0]) ? followMark() : null, h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
       said('span', { class: 'nw-hl-t', lang }, it[1], marked(it[1], story))
     ], first ? 'nw-hl' : 'nw-hl nw-hl-also');
   const group = ([o, [first, ...also]]) => {

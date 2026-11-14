@@ -614,17 +614,24 @@ h1, h2, h3, p { margin: 0; }
 .nw-legend-part b { color: var(--q-label); font-weight: 600; font-variant-numeric: tabular-nums; }
 .nw-spec-note .q-tag { font-weight: 600; }
 .nw-spec-say { color: var(--q-label-2); font: var(--q-t-footnote); text-wrap: pretty; }
-/* The sheet's foot: ‹ 上一則 · 3 / 20 · 下一則 ›, always in reach. */
-.nw-story-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
-.nw-foot-go { display: grid; gap: 2px; min-height: 44px; align-content: center; padding: 6px 4px; border: 0; background: none; color: var(--q-accent); text-align: left; min-width: 0; }
+/* The sheet's foot: ‹ 上一則 · 3 / 20 · 下一則 › on a glass capsule, as the
+   tab bar is, pinned at the sheet's foot over the story scrolling under it
+   (Jay 11-14: "not pinned … not even styled like orbit"). */
+.q-sheet-foot.nw-story-foot { display: flex; justify-content: center; margin-top: 0; padding: 8px var(--q-margin) calc(10px + env(safe-area-inset-bottom)); border-top: 0; background: none; pointer-events: none; }
+.nw-foot-bar { pointer-events: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 4px; width: min(100%, 420px); padding: 4px; border-radius: 999px; background: var(--q-glass-strong); -webkit-backdrop-filter: var(--q-glass-blur); backdrop-filter: var(--q-glass-blur); box-shadow: var(--q-glass-rim), var(--q-glass-drop); box-sizing: border-box; }
+.nw-foot-go { display: grid; gap: 1px; min-height: 44px; align-content: center; padding: 4px 16px; border: 0; border-radius: 999px; background: none; color: var(--q-accent); text-align: left; min-width: 0; -webkit-tap-highlight-color: transparent; }
+.nw-foot-go:not(:disabled):active { background: var(--q-glass-pick); }
 .nw-foot-next { text-align: right; }
-.nw-foot-go b { font: 600 17px/22px var(--q-font); }
+.nw-foot-go b { font: 600 16px/21px var(--q-font); white-space: nowrap; }
 .nw-foot-go:disabled { color: var(--q-label-3); }
-.nw-foot-t { display: none; color: var(--q-label-2); font: var(--q-t-footnote); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nw-foot-at { color: var(--q-label-2); font: 500 15px/20px var(--q-font); font-variant-numeric: tabular-nums; text-align: center; }
+.nw-foot-t { display: none; color: var(--q-label-2); font: var(--q-t-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nw-foot-at { padding: 0 4px; color: var(--q-label-2); font: 500 14px/20px var(--q-font); font-variant-numeric: tabular-nums; text-align: center; white-space: nowrap; }
 @container q-sheet (min-width: 620px) {
+  .nw-foot-bar { width: min(100%, 640px); }
   .nw-foot-t { display: block; }
 }
+/* (The story clear of the capsule at its end.) */
+.nw-story-sheet .nw-story { padding-bottom: 8px; }
 /* A part's own heading on the sheet: 各邊怎麼下標, 每天的報導. */
 .nw-story-h { font: 600 20px/25px var(--q-font); padding: 8px 2px 0; }
 .nw-story-h small { color: var(--q-label-2); font: var(--q-t-footnote); }
@@ -919,3 +926,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-clip.on .nw-clip-pic { box-shadow: 0 0 0 3px var(--q-accent); }
 .nw-clip.on .nw-play { opacity: 0; }
 .nw-clip-src small.nw-clip-on { color: var(--q-accent); }
+/* An outlet the reader follows, put first inside a story: said so (Jay 11-14). */
+.nw-hl-src small.nw-follow-mark, .nw-clip-src small.nw-follow-mark { margin-left: 0; flex: none; color: var(--q-accent); font: 600 12px/16px var(--q-font); white-space: nowrap; }
+.nw-story-pic figcaption .nw-follow-mark { margin-left: 6px; color: var(--q-accent); font-weight: 600; }
