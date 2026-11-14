@@ -703,7 +703,6 @@ h1, h2, h3, p { margin: 0; }
 
 /* A world story's Taiwan part; a Taiwan story's way to the world's. */
 .nw-tw-spec { gap: 10px; }
-.nw-tw-n { color: var(--q-label-2); font: var(--q-t-footnote); white-space: nowrap; }
 .nw-world-go {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -744,6 +743,8 @@ h1, h2, h3, p { margin: 0; }
 /* 各方怎麼說: each side's angle in a line (the AI's, from their headlines),
    the difference that matters most on top; side by side on a wide sheet. */
 .nw-say { display: grid; gap: 10px; }
+.nw-say-in .nw-story-h { display: flex; align-items: center; gap: 6px; }
+.nw-say-in .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
 .nw-say .nw-story-h { display: flex; align-items: center; gap: 6px; }
 .nw-say .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
 .nw-say-card {
@@ -867,9 +868,10 @@ h1, h2, h3, p { margin: 0; }
 .nw-missed .nw-story-h { font: 600 15px/20px var(--q-font); color: var(--q-label-2); padding: 0 2px; }
 
 /* 重點整理: our few points (the AI's), then the way to the whole report on the outlet's site. */
-.nw-points { display: grid; gap: 10px; }
-.nw-points .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-points .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
+.nw-points, .nw-points-in, .nw-say-in, .nw-ai-part { display: grid; gap: 10px; }
+.nw-ai-part { justify-items: start; }
+.nw-points-in .nw-story-h { display: flex; align-items: center; gap: 6px; }
+.nw-points-in .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
 .nw-points-list {
   display: grid;
   gap: 10px;

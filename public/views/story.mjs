@@ -7,6 +7,7 @@
 // or the arrow keys) goes to the story beside it in the list it came from.
 import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
+import { aiTap, aiSays } from '#kit/ai.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, relatedOf, timelineOf } from '../lib/stories.mjs';
@@ -117,15 +118,6 @@ function translateIn(body, story) {
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
-// A finger down on a story (app.mjs): its 重點整理 and 各方怎麼說 asked now, not after the
-// tap opens it (the same ask openStory's makes, lib/open-ai.mjs keeps one a story).
-export function warmStory(id) {
-  const story = storyById(state.page, id, state.past, state.sport);
-  if (!story) return;
-  if (!state.briefs?.get?.(story.id) && briefAsked(story)) openAi('news-brief', story.id);
-  if (sidesTaken(story) && !state.sides?.has?.(story.id) && sidesAsked(story)) openAi('news-sides', story.id);
-}
-
 export function openStory(id, { clip = '', list = null, via = '', start = 0 } = {}) {
   const find = () => storyById(state.page, id, state.past, state.sport);
   const story = find();
@@ -340,8 +332,7 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
     h('div', { class: 'nw-story-text' }, [
       about || shownTitle(story).ai ? h('small', { class: 'nw-kicker' }, [about, shownTitle(story).ai ? aiMark(W('標題由 AI 依各家標題寫成', 'Headline written by AI from the outlets’ own')) : null]) : null,
       ...storyTitle(story),
-      // (Our 重點整理 below says it fuller: the outlet's own summary then left to its site.)
-      story.sum && !state.briefs?.has?.(story.id) ? h('p', { class: 'nw-sum' }, [sumSaid(story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
+      story.sum ? h('p', { class: 'nw-sum' }, [sumSaid(story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })]),
       followRow(story)
     ])
@@ -409,41 +400,63 @@ function worldLink(story) {
 
 // 重點整理 (Jay 11-13: reading kept in the app): the story's few points in
 // our own words (the AI's, from the outlets' headlines and feed summaries:
-// lib/briefs.mjs), and the way to the whole report on the outlet's own site
-// (iOS's quick view in the app, closed back to the story; the Safari app
-// when the person chose it on the Pass). Never an article copied here.
-function pointsOf(story, { ask = true } = {}) {
-  const b = state.briefs?.get?.(story.id);
+// lib/briefs.mjs), on a tap (Jay 11-14: "make AI feature like this a button
+// to click like we do in orbit law"); then the way to the whole report on the
+// outlet's own site (iOS's quick view in the app, closed back to the story;
+// the Safari app when the person chose it on the Pass). Never an article copied here.
+function pointsOf(story) {
   const lead = story.items.find(it => it[0] === story.by) || story.items[0];
   const full = lead ? outletLink(lead, [h('span', { text: W(`到${outletName(lead[0])}看全文`, `Read it on ${outletName(lead[0])}`) }), h('b', { 'aria-hidden': 'true', text: ' ›' })], 'nw-full') : null;
-  // (None kept yet: made now, on this first open (lib/open-ai.mjs), its shape held meanwhile.)
-  if (!b && ask && briefAsked(story)) return later(pointsShape(), openAi('news-brief', story.id), out => {
-    const got = cleanBriefs({ briefs: { [story.id]: out } }).get(story.id);
-    if (got) state.briefs?.set?.(story.id, got);
-    return pointsOf(story, { ask: false });
-  });
-  if (!b) return full ? h('div', { class: 'nw-full-row' }, [full]) : null;
-  const lang = en ? 'en' : 'zh-Hant';
-  return h('section', { class: 'nw-points' }, [
-    h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
-    b.points.every(p => p.k) ? pointRows(b.points, lang) : h('ul', { class: 'nw-points-list' }, b.points.map(p => h('li', { lang, text: en ? p.en : p.zh }))),
-    full
-  ]);
+  const kept = () => state.briefs?.get?.(story.id);
+  const part = kept() || briefAsked(story)
+    ? aiPart(`b|${story.id}`, W('重點整理', 'The key points'), {
+        kept,
+        make: () => openAi('news-brief', story.id).then(r => {
+          const got = r.out && cleanBriefs({ briefs: { [story.id]: r.out } }).get(story.id);
+          if (got) state.briefs?.set?.(story.id, got);
+          return got ? { out: got } : { error: r.error || 'upstream' };
+        }),
+        shape: pointsShape,
+        draw: b => h('div', { class: 'nw-points-in' }, [
+          h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
+          b.points.every(p => p.k) ? pointRows(b.points, en ? 'en' : 'zh-Hant') : h('ul', { class: 'nw-points-list' }, b.points.map(p => h('li', { lang: en ? 'en' : 'zh-Hant', text: en ? p.en : p.zh })))
+        ])
+      })
+    : null;
+  if (!part && !full) return null;
+  return h('section', { class: 'nw-points' }, [part, full ? h('div', { class: 'nw-full-row' }, [full]) : null]);
 }
 
-// A part made on open: its shape (the kit's `waiting`) until the answer
-// comes, then what `draw` makes of it (nothing: the shape goes).
-function later(shape, made, draw) {
-  kitUI.waiting(shape);
-  made.then(out => {
-    const real = out ? draw(out) : draw(null);
-    if (real) shape.replaceWith(real);
-    else shape.remove();
-  });
-  return shape;
+// An AI part on a tap, as Orbit Law's (Jay 11-14: "never spend a penny on AI
+// on things user didn't interact with"): the kit's quiet AI button; a tap
+// shows the one kept for everyone at once (free, so open to every pass:
+// data-ai-free), else makes it, its shape held meanwhile, or says why not.
+// Tapped once, the story shows it straight away for the rest of the visit.
+const tapped = new Set();
+function aiPart(key, label, { kept, make, shape, draw }) {
+  if (tapped.has(key) && kept()) return draw(kept());
+  const box = h('div', { class: 'nw-ai-part' });
+  const button = (note = '') => {
+    const btn = aiTap(label, go);
+    if (kept()) btn.dataset.aiFree = '';
+    box.replaceChildren(...[btn, note ? h('small', { class: 'nw-ai-note', text: note }) : null].filter(Boolean));
+  };
+  async function go() {
+    tapped.add(key);
+    if (kept()) return void box.replaceChildren(draw(kept()));
+    const wait = shape();
+    kitUI.waiting(wait);
+    box.replaceChildren(wait);
+    const r = await make();
+    if (r.out) box.replaceChildren(draw(r.out));
+    else (tapped.delete(key), button(aiSays(r.error)));
+  }
+  button();
+  return box;
 }
+
 const pointsShape = () =>
-  h('section', { class: 'nw-points' }, [
+  h('div', { class: 'nw-points-in' }, [
     h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
     pointRows([{ k: 'what', zh: '這則新聞發生了什麼事，簡短說明', en: 'What happened, in a short line or two' }, { k: 'why', zh: '它的來龍去脈，簡短說明一下', en: 'The background to it, in a short line' }, { k: 'next', zh: '接下來會怎樣', en: 'What comes next' }], en ? 'en' : 'zh-Hant')
   ]);
@@ -506,17 +519,28 @@ function relatedPart(story) {
 // 各方怎麼說: each side's angle in a line, the one difference that matters
 // most on top (the AI's, from their headlines only; lib/sides.mjs), over
 // the headlines themselves, which show it's so.
-function sidesSay(story, { ask = true } = {}) {
-  const said = sidesTaken(story) && sidesOf(story, state.sides?.get?.(story.id));
-  // (None kept yet for a story the sides frame: made on this first open, as 重點整理.)
-  if (!said && ask && sidesTaken(story) && !state.sides?.has?.(story.id) && sidesAsked(story)) return later(sidesShape(story), openAi('news-sides', story.id), out => {
-    const got = out && cleanSides({ sides: { [story.id]: out } }).get(story.id);
-    if (got) state.sides?.set?.(story.id, got);
-    return sidesSay(story, { ask: false });
-  });
-  if (!said) return null;
-  const pick = x => (en ? x.en : x.zh);
+function sidesSay(story) {
+  if (!sidesTaken(story)) return null;
+  const kept = () => sidesOf(story, state.sides?.get?.(story.id));
+  if (!kept() && (state.sides?.has?.(story.id) || !sidesAsked(story))) return null;
   return h('section', { class: 'nw-say' }, [
+    aiPart(`s|${story.id}`, W('各方怎麼說', 'How each side tells it'), {
+      kept,
+      make: () => openAi('news-sides', story.id).then(r => {
+        const got = r.out && cleanSides({ sides: { [story.id]: r.out } }).get(story.id);
+        if (got) state.sides?.set?.(story.id, got);
+        const said = got && sidesOf(story, got);
+        return said ? { out: said } : { error: r.error || 'upstream' };
+      }),
+      shape: () => sidesShape(story),
+      draw: said => sidesDrawn(said)
+    })
+  ]);
+}
+
+function sidesDrawn(said) {
+  const pick = x => (en ? x.en : x.zh);
+  return h('div', { class: 'nw-say-in' }, [
     h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), aiMark()]),
     h('div', { class: 'nw-say-card' }, [
       said.diff ? h('p', { class: 'nw-say-diff', lang: en ? 'en' : 'zh-Hant', text: pick(said.diff) }) : null,
@@ -527,7 +551,7 @@ function sidesSay(story, { ask = true } = {}) {
 }
 
 const sidesShape = story =>
-  h('section', { class: 'nw-say' }, [
+  h('div', { class: 'nw-say-in' }, [
     h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), aiMark()]),
     h('div', { class: 'nw-say-card' }, [
       h('p', { class: 'nw-say-diff', text: W('各邊最不一樣的地方', 'Where the sides differ most') }),

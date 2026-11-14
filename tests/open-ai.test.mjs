@@ -1,6 +1,6 @@
-// 重點整理 and 各方怎麼說 made on a story's first open (lib/open-ai.mjs, Jay
-// 11-14: "only spend it as I use it"): asked once a visit, a failure asked
-// again next open, only for stories that would have one.
+// 重點整理 and 各方怎麼說 made on a tap (lib/open-ai.mjs, Jay 11-14: "make AI
+// feature like this a button to click"): asked once a visit, a failure asked
+// again on the next tap and said by its reason, only for stories that would have one.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openAi, briefAsked, sidesAsked } from '../public/lib/open-ai.mjs';
@@ -8,10 +8,10 @@ import { openAi, briefAsked, sidesAsked } from '../public/lib/open-ai.mjs';
 test('asked once a story; a failure is asked again', async () => {
   const urls = [];
   let ok = false;
-  const fetchImpl = async u => (urls.push(u), ok ? new Response(JSON.stringify({ out: { points: [1] } })) : new Response('{}', { status: 502 }));
-  assert.equal(await openAi('news-brief', 'x1', { fetchImpl }), null);
+  const fetchImpl = async u => (urls.push(u), ok ? new Response(JSON.stringify({ out: { points: [1] } })) : new Response('{"error":"level"}', { status: 403 }));
+  assert.deepEqual(await openAi('news-brief', 'x1', { fetchImpl }), { error: 'level' });
   ok = true;
-  assert.deepEqual(await openAi('news-brief', 'x1', { fetchImpl }), { points: [1] });
+  assert.deepEqual(await openAi('news-brief', 'x1', { fetchImpl }), { out: { points: [1] } });
   await openAi('news-brief', 'x1', { fetchImpl });
   assert.equal(urls.length, 2, 'kept once it came');
   assert.match(urls[0], /\/ai\/open\?f=news-brief&id=x1$/);
