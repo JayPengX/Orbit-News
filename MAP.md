@@ -11,7 +11,7 @@ Live: https://orbit.jaypengx.com/news/
 Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in Orbit-Core `docs/RULEBOOK.md`.
 
 - 11-10 Taiwan's and English news grouped into stories, each outlet's side shown (藍綠 and 統獨 for Taiwan, US left/right for English). "Like Ground News but for Taiwan" is the idea only, never its name, look or words (its "Blindspot" is our 單邊).
-- 11-10 An outlet's place comes from a published source (`kit/news-outlets.mjs` `BASIS`), or its owner's stated stance marked weaker; never our own reading of its stories. No outlet placed 白: stories name the parties instead. Every outlet has a place (AllSides, else Media Bias/Fact Check); only China's state media stand apart, as 官媒.
+- 11-10 An outlet's place comes from a published source (`kit/news-outlets.mjs` `BASIS`), or its owner's stated stance marked weaker; never our own reading of its stories. No outlet placed 白: stories name the parties instead. Every outlet has a place (AllSides, else Media Bias/Fact Check).
 - 11-10 Headlines, links, the outlet's short summary and feed picture only, each credited; every tap opens the outlet; never a whole article, never a picture or clip kept. No AI in the builder's grouping or placing.
 - 11-10 Cloudflare goes out from Orbit-Core: News's site is published by Orbit-Core's `news-site.yml` with Orbit-Core's token.
 - 11-10 A hub for any story outlets could take sides on (politics in the wide sense, tech, the economy, society); (08:08) life, health, science, culture and sport too (`TOPICS` `spectrum: false`: never one-sided, no bar, sport and culture ranked lighter). A story of no topic (a game of Pokémon) stays out; the topics are one table, so widening is a line.
@@ -35,6 +35,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-13 What's on screen never moves by itself (Jay: opening News "get stuck a few seconds then reshuffle"): lists hold their first-drawn order for the opening (`steady`), new stories slotting in; only a pull, a follow or the next opening ranks anew. Reads that land together are drawn once.
 - 11-14 影音 is the news told by its clips, not a list of videos (Jay: "Video is basically a list of video super unhelpful … improve it significantly so it's actually about using video to look for news"): a story a card, its best clip playing in place, its title and one line, every outlet's clip on it beside, the whole story a tap away at the same second; one ends, the next story's begins. No second row of kinds under the tabs (it said the tabs again).
 - 11-14 單邊 is the important stories one side all but leaves out, not the ones it has none of (Jay: "most news there is just less notable news"; "if just one of the other side report it it's not in 單邊?"): 8 outlets or more, 4 or more on one end and on the other a token one or two (one in 8 of a big story's), the lead 4 times past each end's usual share of the day's front, as important as the front's middle story or more (Orbit-Core `oneSidedOf`); the most important first; every one marked wherever it's listed by words in the colour of the side that left it out (偏藍沒報, 偏右少報; Jay 11-14: "using number to indicate is such a bad design": no counts on a card, the bar beside it shows the split), who carried it by name under it in 單邊, the counts only in its sheet; by code, never AI. By outlets, not readers: no published figures place each outlet's reach.
+- 11-14 No Chinese state media (環球時報, CGTN, 新華社), not read, listed or counted (Jay: "remove 中國官媒 we don't need dictatorship to tell us what news is"). Stories about China come from everyone else's reporting.
 - 11-14 AI only for what someone opens (Jay: "only spend it as I use it but kept fast enough"): 重點整理 and 各方怎麼說 are made the first time anyone opens a story (Orbit-Core `/ai/open`, `lib/open-ai.mjs`), kept for everyone, their shape shown meanwhile, asked when a finger touches the story (`warmStory`); only 頭條's lead stories are made ahead (Orbit-Core `newsOpenAhead`). Titles nobody had made stay the outlets' own (Google's plain translation for the other language); 預測市場's new pairs and the sports stories' AI-read names wait (those made before stay).
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
@@ -91,8 +92,8 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   Bias/Fact Check's), and the sources for it (`BASIS`, `weak` where it rests
   on owner, group or stance alone; Taiwan's TV by TEDS 2019's question on
   each channel's colour, `teds2019`: deep where named as often as 中天,
-  leaning where 5 points apart). Every outlet has a place (no 未評) but China's
-  state media, counted apart as 官媒. No outlet is placed 白: no study rates
+  leaning where 5 points apart). Every outlet has a place (no 未評); China's
+  state media aren't read at all. No outlet is placed 白: no study rates
   one so; a story names the parties its headlines name (`partiesIn`). Its
   `TOPICS` are what News covers: the sides' own (政治, 兩岸, 國際, 國防,
   經濟, 科技, 能源, 司法, 社會) and those past them (生活, 健康, 科學, 文化,

@@ -19,9 +19,9 @@ import { followKey, followsOf } from '../lib/reading.mjs';
 // Each line's places, end to end, with the side colour each stands on.
 const TW_PLACES = [-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'g' : v > 0 ? 'b' : 'c', label: placeWord('tw', v, lang), of: o => o.region === 'tw' && o.tw === v }));
 const INTL_PLACES = [
-  ...[-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'l' : v > 0 ? 'r' : 'c', label: placeWord('lr', v, lang), of: o => o.region === 'intl' && o.lr === v })),
-  { side: 'none', label: W('中國官媒', 'Chinese state media'), of: o => o.kind === 'state' }
+  ...[-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'l' : v > 0 ? 'r' : 'c', label: placeWord('lr', v, lang), of: o => o.region === 'intl' && o.lr === v }))
 ];
+// (No Chinese state media, Jay 11-14: "we don't need dictatorship to tell us what news is".)
 // The sports outlets: on no scale, a group of their own (Jay 11-14: "let them be alone").
 const SPORTS = kitNews.SPORTS_OUTLETS || new Set();
 const sportsCard = () => {

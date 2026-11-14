@@ -35,19 +35,19 @@ test("a story's bar: each side's count and share of the outlets with a side", ()
   assert.deepEqual(parts.map(p => [p.side, p.n, p.share]), [['g', 1, 0.25], ['c', 1, 0.25], ['b', 2, 0.5]]);
 });
 
-test('headlines by side, China\'s state media apart', () => {
+test('headlines by side; China\'s state media no longer read (Jay 11-14)', () => {
   const page = cleanPage(raw);
   const tw = bySide(page.tw[0]);
   assert.deepEqual(tw.b.map(i => i[0]), ['udn', 'chinatimes']);
   assert.deepEqual(tw.g.map(i => i[0]), ['ltn']);
   const intl = bySide(page.intl[0]);
-  assert.deepEqual([intl.l.length, intl.r.length, intl.none.map(i => i[0])], [1, 1, ['xinhua']]);
+  assert.deepEqual([intl.l.length, intl.r.length, intl.none.map(i => i[0])], [1, 1, []]);
 });
 
-test('a story counts China\'s state media apart; the sides\' bar only for a kind sides take', async () => {
+test('no story counts state media (none read, Jay 11-14); the sides\' bar only for a kind sides take', async () => {
   const { stateMedia, sidesTaken } = await import('../public/lib/stories.mjs');
   const page = cleanPage(raw);
-  assert.equal(stateMedia(page.intl[0]), 1);
+  assert.equal(stateMedia(page.intl[0]), 0);
   assert.equal(stateMedia(page.tw[0]), 0);
   // (A reading's bar has no headlines: 媒體 went blank for anyone who'd opened one, 11-10.)
   assert.equal(stateMedia({ region: 'tw', sides: { g: 2, c: 1, b: 0 }, n: 3 }), 0);
