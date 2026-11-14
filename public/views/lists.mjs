@@ -16,6 +16,7 @@ import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle } from './parts.mjs';
 import { openStory } from './story.mjs';
 import { withSearch } from './search.mjs';
+import { renderVideo, videoStories } from './video.mjs';
 
 // A story opened, with the list it was in (its sheet swipes through it).
 const open = (story, list) => openStory(story.id, { list });
@@ -134,7 +135,7 @@ export function renderTop(box) {
     followLine(),
     leads.length ? carousel(leads, open) : null,
     top.length ? section(W('要聞', 'Top stories'), [storyCards(top, open)], { cls: 'nw-top-sec' }) : null,
-    clips.length ? section(W('影音', 'Video'), [kitUI.rail(clips.map(c => clipCard(c, play))), h('p', { class: 'nw-foot', text: W('各家媒體自己的影片，在 YouTube 的播放器裡播。', 'Each outlet’s own clips, played in YouTube’s player.') })], { cls: 'nw-clips-sec' }) : null
+    clips.length ? section(W('影音', 'Video'), [kitUI.rail(clips.map(c => clipCard(c, play))), more(W('看影音新聞', 'Watch the news'), go('tw', 'video'))], { cls: 'nw-clips-sec' }) : null
   ]);
   const parts = [
     brief.length
@@ -222,11 +223,8 @@ export function renderRegion(box, region) {
   const chips = textTabs(tabs, topic, name, pick);
   swipeTabs(box, region, () => tabsOf(region), () => (state.shown[region] = 20));
   showTab(chips);
-  if (topic === 'video') {
-    const clips = stories.flatMap(s => (s.clips || []).slice(0, 2).map(clip => ({ story: s, clip })));
-    box.replaceChildren(chips, h('div', { class: 'nw-region' }, [h('div', { class: 'nw-clip-grid' }, clips.map(c => clipCard(c, play))), builtLine(state.page)]));
-    return;
-  }
+  // (影音: the stories told by their clips, views/video.mjs.)
+  if (topic === 'video') return renderVideo(box, region, stories, { chips, foot: builtLine(state.page) });
   const all = onTopic(stories, topic).map(s => asTopic(s, topic));
   const shown = all.slice(0, state.shown[region]);
   const left = all.length - shown.length;
@@ -256,7 +254,7 @@ const storyListIn = (shown, all) => storyList(shown, story => open(story, all));
 function tabsOf(region) {
   const stories = state.page?.[region] || [];
   const have = new Set(topicsIn(stories).filter(([, n]) => n >= TAB_MIN).map(([t]) => t));
-  return ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(stories.some(s => s.clips?.length) ? ['video'] : [])];
+  return ['all', ...topicOrder().filter(t => have.has(t) && topicName(t, region)), ...(videoStories(stories).length ? ['video'] : [])];
 }
 // A row of text tabs, the chosen one marked (it stays as the list slides).
 const textTabs = (tabs, on, name, pick) =>

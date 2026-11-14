@@ -30,6 +30,7 @@ import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, setFollow 
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory } from './views/story.mjs';
+import { stopVideo, videoPlaying } from './views/video.mjs';
 import { searchFor } from './views/search.mjs';
 import { askQuery } from './lib/search.mjs';
 import { testPage, testFlags } from './lib/testing.mjs';
@@ -327,6 +328,7 @@ const tabNav = tabBar({
   hash: id => `#${id}`
 });
 function showTab(tab, { top = false } = {}) {
+  if (tab !== state.tab) stopVideo();
   state.tab = tab;
   if (readWaiting) ((readWaiting = false), stamp++);
   tabNav.select(tab, top ? { top: true } : undefined);
@@ -341,6 +343,8 @@ const quietRefresh = () => {
   redraw = setTimeout(() => {
     redraw = 0;
     if (document.querySelector('dialog.q-sheet[open]')) return;
+    // (A clip playing in 影音 isn't cut off: drawn once it stops.)
+    if (videoPlaying()) return;
     if (state.loaded) render({ ifChanged: true });
     dimOpened();
   }, 80);

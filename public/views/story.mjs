@@ -42,10 +42,13 @@ function learnPart(story) {
 // YouTube refuse to play it here (its owner allows it only on YouTube, or
 // it's gone), the player says so and opens it there (Jay 11-10: clips that
 // won't play).
-export function player(clip) {
+// `start`: the second to start at; `onTime(seconds)` as it plays, `onEnd()`
+// once it has played to its end (views/video.mjs: on to the next story).
+export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
   hooks.read(clip[0]);
+  const from = start > 0 ? `&start=${Math.floor(start)}` : '';
   const frame = h('iframe', {
-    src: `https://www.youtube-nocookie.com/embed/${clip[1]}?autoplay=1&playsinline=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`,
+    src: `https://www.youtube-nocookie.com/embed/${clip[1]}?autoplay=1&playsinline=1&rel=0&enablejsapi=1${from}&origin=${encodeURIComponent(location.origin)}`,
     title: clip[3] || 'YouTube',
     allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
     allowfullscreen: true,
@@ -70,6 +73,12 @@ export function player(clip) {
       return;
     }
     if (m?.event === 'onError' && [2, 5, 100, 101, 150, 153].includes(Number(m.info))) (removeEventListener('message', hear), refused());
+    // (Where it is, and its end: state 0.)
+    const t = Number(m?.info?.currentTime);
+    if (onTime && m?.event === 'infoDelivery' && Number.isFinite(t)) onTime(t);
+    const ended = (m?.event === 'onStateChange' && Number(m.info) === 0) || (m?.event === 'infoDelivery' && m.info?.playerState === 0);
+    if (ended && onEnd && !box.__ended) ((box.__ended = true), onEnd());
+    if (!box.isConnected) removeEventListener('message', hear);
   };
   addEventListener('message', hear);
   frame.addEventListener('load', () => frame.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: clip[1], channel: 'widget' }), '*'));
@@ -106,7 +115,7 @@ function translateIn(body, story) {
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
-export function openStory(id, { clip = '', list = null, via = '' } = {}) {
+export function openStory(id, { clip = '', list = null, via = '', start = 0 } = {}) {
   const find = () => storyById(state.page, id, state.past, state.sport);
   const story = find();
   // (An older story, from a link: the past read first. A sports report Orbit
@@ -158,7 +167,7 @@ export function openStory(id, { clip = '', list = null, via = '' } = {}) {
     else if (top) sh.el.scrollTo?.(0, 0);
     return true;
   };
-  draw(at, { clip });
+  draw(at, { clip, start });
   kitUI.daySwipe?.(body, dir => step(dir));
   sh.el.addEventListener('keydown', e => {
     if (e.target.closest?.('input, textarea, iframe') || e.altKey || e.metaKey || e.ctrlKey) return;
@@ -223,7 +232,7 @@ function storyTitle(story) {
   ];
 }
 
-function storyParts(story, { clip = '' } = {}) {
+function storyParts(story, { clip = '', start = 0 } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
   const sides = [...Object.keys(groups).filter(k => k !== 'none' && k !== 'free'), 'none'];
@@ -264,7 +273,7 @@ function storyParts(story, { clip = '' } = {}) {
   const pics = picturesOf(story);
   const still = pics[0]?.[0] || yt[0]?.[4];
   const atHead = (clip && yt.find(c => c[1] === clip)) || yt[0] || null;
-  if (clip && atHead?.[1] === clip) media.replaceChildren(player(atHead), credit(atHead));
+  if (clip && atHead?.[1] === clip) media.replaceChildren(player(atHead, { start }), credit(atHead));
   else if (still) {
     // (One that won't load gives way to another outlet's, then the clip's
     // own still; the credit follows it. Each asked at a sheet's size first,
@@ -475,7 +484,7 @@ function sidesSay(story) {
 }
 
 // The Orbit AI mark beside a part the AI had a hand in (the family's, never a sparkle).
-function aiMark(label = 'Orbit AI') {
+export function aiMark(label = 'Orbit AI') {
   const mark = h('i', { class: 'nw-ai-mark', 'aria-label': label, title: label });
   mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
   return mark;
