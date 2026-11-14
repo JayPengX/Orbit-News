@@ -117,6 +117,15 @@ function translateIn(body, story) {
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
+// A finger down on a story (app.mjs): its 重點整理 and 各方怎麼說 asked now, not after the
+// tap opens it (the same ask openStory's makes, lib/open-ai.mjs keeps one a story).
+export function warmStory(id) {
+  const story = storyById(state.page, id, state.past, state.sport);
+  if (!story) return;
+  if (!state.briefs?.get?.(story.id) && briefAsked(story)) openAi('news-brief', story.id);
+  if (sidesTaken(story) && !state.sides?.has?.(story.id) && sidesAsked(story)) openAi('news-sides', story.id);
+}
+
 export function openStory(id, { clip = '', list = null, via = '', start = 0 } = {}) {
   const find = () => storyById(state.page, id, state.past, state.sport);
   const story = find();

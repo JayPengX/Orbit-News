@@ -29,7 +29,7 @@ import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
-import { openStory } from './views/story.mjs';
+import { openStory, warmStory } from './views/story.mjs';
 import { stopVideo, videoPlaying } from './views/video.mjs';
 import { searchFor } from './views/search.mjs';
 import { askQuery } from './lib/search.mjs';
@@ -351,6 +351,11 @@ const quietRefresh = () => {
 };
 // A sheet closed: what changed under it drawn now.
 document.addEventListener('close', () => setTimeout(() => (quietRefresh(), dimOpened())), true);
+// (A finger down on a story: its AI parts asked a moment before the tap opens it; views/story.mjs warmStory.)
+document.addEventListener('pointerdown', e => {
+  const id = e.target?.closest?.('[data-story]')?.dataset?.story;
+  if (id) warmStory(id);
+}, { passive: true, capture: true });
 
 window.__fxStarted = true;
 const gated = installGate('news', lang);
