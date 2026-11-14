@@ -226,7 +226,7 @@ function storyTitle(story) {
 function storyParts(story, { clip = '' } = {}) {
   const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
-  const sides = [...Object.keys(groups).filter(k => k !== 'none'), 'none'];
+  const sides = [...Object.keys(groups).filter(k => k !== 'none' && k !== 'free'), 'none'];
   // (A kind sides don't take, a game or a storm: one list of every outlet, never
   // under 偏綠 · 中間 · 偏藍; Jay 11-13 "if this kind of news has no spectrum
   // then don't list them like spectrum".)
@@ -569,7 +569,7 @@ function taiwanPart(story) {
   const fake = { region: 'tw', sides: tw.sides, n: tw.n, items: tw.items };
   const groups = bySide(fake);
   const cards = Object.keys(groups)
-    .filter(k => k !== 'none' && groups[k].length)
+    .filter(k => k !== 'none' && k !== 'free' && groups[k].length)
     .map(k => sideCard(k, groups[k], fake, { most: 3 }));
   return h('section', { class: 'nw-sides-sec nw-tw-sec' }, [
     h('h3', { class: 'nw-story-h' }, [W('台灣媒體怎麼報', 'How Taiwan’s outlets put it'), h('small', { text: W(` ${tw.n} 家`, ` ${tw.n}`) })]),

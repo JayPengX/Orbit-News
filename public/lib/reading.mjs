@@ -146,8 +146,9 @@ export function balanceOf(log, region, today, days = 30) {
       const out = outletOf(o);
       if (!out || out.region !== region) continue;
       const s = sideOf(out, region);
+      // (China's state media counted apart; a sports outlet, on no scale, not at all.)
       if (s) sides[s] += n;
-      else none += n;
+      else if (out.kind === 'state') none += n;
       by.set(o, (by.get(o) || 0) + n);
     }
   }

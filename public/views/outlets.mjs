@@ -6,6 +6,7 @@
 // linked), and the stories it's in today.
 import { h, section, sheet, list, cell, empty } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
+import * as kitNews from '#kit/news-outlets.mjs';
 import { OUTLETS, BASIS, placeWord, outletOf } from '#kit/news-outlets.mjs';
 import { state, W, lang, en, today, outletName, outletMark, sideFull, regionName } from '../shell.mjs';
 import { balanceOf, leanOf } from '../lib/reading.mjs';
@@ -21,10 +22,16 @@ const INTL_PLACES = [
   ...[-2, -1, 0, 1, 2].map(v => ({ v, side: v < 0 ? 'l' : v > 0 ? 'r' : 'c', label: placeWord('lr', v, lang), of: o => o.region === 'intl' && o.lr === v })),
   { side: 'none', label: W('中國官媒', 'Chinese state media'), of: o => o.kind === 'state' }
 ];
+// The sports outlets: on no scale, a group of their own (Jay 11-14: "let them be alone").
+const SPORTS = kitNews.SPORTS_OUTLETS || new Set();
+const sportsCard = () => {
+  const all = Object.values(OUTLETS).filter(o => SPORTS.has(o.id));
+  return all.length ? h('div', { class: 'nw-chips' }, all.map(o => h('button', { type: 'button', class: 'nw-chip', onclick: () => openOutlet(o.id) }, [outletMark(o.id, 20), h('span', { text: outletName(o.id) })]))) : null;
+};
 
 // One card: each place a row, its side's dot and name over its outlets.
 function places(list) {
-  const all = Object.values(OUTLETS);
+  const all = Object.values(OUTLETS).filter(o => !SPORTS.has(o.id));
   const rows = list
     .map(p => ({ ...p, outlets: all.filter(p.of) }))
     .filter(p => p.outlets.length)
@@ -72,6 +79,7 @@ export function renderOutlets(box) {
     reading,
     section(W('台灣媒體', 'Taiwan’s outlets'), [h('p', { class: 'nw-lede', text: W('藍綠的位置依學術研究；各家在統獨上的位置也一樣排。', 'Placed blue–green by published research; each stands the same way on unification–independence.') }), places(TW_PLACES)]),
     section(W('國際媒體', 'World outlets'), [h('p', { class: 'nw-lede', text: W('左右的位置依 AllSides Media Bias Ratings™；AllSides 沒評過的，依 Media Bias/Fact Check。', 'Left and right as rated by AllSides Media Bias Ratings™; where AllSides has none, by Media Bias/Fact Check.') }), places(INTL_PLACES)]),
+    sportsCard() ? section(W('運動媒體', 'Sports outlets'), [h('div', { class: 'nw-places' }, [sportsCard()])]) : null,
     h('p', { class: 'nw-foot', text: W('點一家看它的擁有者、位置和依據。位置說的是一家媒體整體的傾向，不是每一篇報導。', 'Tap one for its owner, place and why. A place is an outlet’s lean as a whole, not each report’s.') })
   ];
   box.replaceChildren(h('div', { class: 'q-flow nw-flow' }, parts));
@@ -82,14 +90,15 @@ export function renderOutlets(box) {
 export function openOutlet(id) {
   const o = outletOf(id);
   if (!o) return;
-  const places =
-    o.region === 'tw'
+  const places = SPORTS.has(id)
+    ? [cell({ title: W('運動媒體', 'Sports outlet'), value: W('不排藍綠左右', 'On no side') })]
+    : o.region === 'tw'
       ? [
           cell({ title: W('藍綠', 'Blue–green'), value: placeWord('tw', o.tw, lang) }),
           cell({ title: W('統獨', 'Unification–independence'), value: placeWord('cs', o.cs, lang) })
         ]
       : [
-          cell({ title: W('左右', 'Left–right'), value: o.kind === 'state' ? W('不適用', 'Not placed') : placeWord('lr', o.lr, lang) }),
+          cell({ title: W('左右', 'Left–right'), value: o.kind === 'state' || SPORTS.has(o.id) ? W('不適用', 'Not placed') : placeWord('lr', o.lr, lang) }),
           o.cs != null ? cell({ title: W('統獨', 'Unification–independence'), value: placeWord('cs', o.cs, lang) }) : null
         ].filter(Boolean);
   const why = o.basis.map(k => BASIS[k]).filter(Boolean).map(b => cell({ title: en ? b.en : b.zh, href: b.url || '', chevron: Boolean(b.url) }));
@@ -98,7 +107,7 @@ export function openOutlet(id) {
   const body = h('div', { class: 'nw-outlet' }, [
     h('div', { class: 'nw-outlet-head' }, [outletMark(id, 56), h('span', {}, [h('b', { text: outletName(id) }), h('small', { text: en ? o.owner.en : o.owner.zh })]), followPill(followKey('o', id))]),
     list(places, { head: W('位置', 'Place') }),
-    list(why, { head: W('依據', 'Why'), foot: o.weak ? W('沒有研究評過這家，依擁有者和公開立場判斷，依據較弱。', 'No study has rated it: placed by owner and stated stance, weaker evidence.') : '' }),
+    SPORTS.has(id) ? null : list(why, { head: W('依據', 'Why'), foot: o.weak ? W('沒有研究評過這家，依擁有者和公開立場判斷，依據較弱。', 'No study has rated it: placed by owner and stated stance, weaker evidence.') : '' }),
     // (The count the rows shown: 自由時報's said 「最近的 183 則」 over twelve, 11-12.)
     stories.length ? section(W(`最近的 ${Math.min(12, stories.length)} 則`, `${Math.min(12, stories.length)} recent stories`), [storyList(stories.slice(0, 12), s => openStory(s.id, { list: stories }))], { shd: true }) : null
   ]);

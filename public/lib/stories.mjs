@@ -144,11 +144,13 @@ export function barOf(story) {
   return { rated, parts: counts.map(([side, n]) => ({ side, n, share: rated ? n / rated : 0 })) };
 }
 
-// A story's headlines by side: { <side>: [[outlet, headline, url, at]…], none: […] },
-// each side's outlets newest first, an outlet's headlines together.
+// A story's headlines by side: { <side>: [[outlet, headline, url, at]…], none: […], free: […] },
+// each side's outlets newest first, an outlet's headlines together. none:
+// China's state media; free: an outlet on no scale, a sports outlet (Jay
+// 11-14: "let them be alone"), listed with the rest where sides aren't taken.
 export function bySide(story) {
-  const out = Object.fromEntries([...(SIDES[story.region] || SIDES.tw), 'none'].map(s => [s, []]));
-  for (const it of story.items) out[sideOf(it[0], story.region) || 'none'].push(it);
+  const out = Object.fromEntries([...(SIDES[story.region] || SIDES.tw), 'none', 'free'].map(s => [s, []]));
+  for (const it of story.items) out[sideOf(it[0], story.region) || (outletOf(it[0])?.kind === 'state' ? 'none' : 'free')].push(it);
   for (const k of Object.keys(out)) {
     const newest = new Map();
     for (const it of out[k]) newest.set(it[0], Math.max(newest.get(it[0]) || 0, it[3] || 0));
