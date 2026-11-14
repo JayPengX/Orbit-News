@@ -343,10 +343,20 @@ function showTab(tab, { top = false } = {}) {
 // translations, the markets. One draw for them all, not a whole page each:
 // the page froze two seconds on a phone, Jay 11-13.)
 let redraw = 0;
+// (Never drawn under a finger or while the page still moves: a list drawn
+// anew mid-drag changes the page's length under the scroll bar, which then
+// lets go (Jay 11-14: "I can't hold the side bar to scroll … it's refusing
+// my hold"). Drawn once the page has been still a moment.)
+let fingers = 0;
+let movedAt = 0;
+for (const type of ['touchstart', 'touchend', 'touchcancel']) document.addEventListener(type, e => (fingers = e.touches?.length || 0), { passive: true, capture: true });
+document.addEventListener('scroll', () => (movedAt = Date.now()), { passive: true, capture: true });
+const STILL_MS = 700;
 const quietRefresh = () => {
   if (redraw) return;
   redraw = setTimeout(() => {
     redraw = 0;
+    if (fingers || Date.now() - movedAt < STILL_MS) return void setTimeout(quietRefresh, STILL_MS);
     if (document.querySelector('dialog.q-sheet[open]')) return;
     // (A clip playing in 影音 isn't cut off: drawn once it stops.)
     if (videoPlaying()) return;

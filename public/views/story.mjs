@@ -173,7 +173,8 @@ export function openStory(id, { clip = '', list = null, via = '', start = 0 } = 
     return true;
   };
   draw(at, { clip, start });
-  kitUI.daySwipe(body, dir => step(dir));
+  // (The sheet's own: never the page's touches under it, page: false.)
+  kitUI.daySwipe(body, dir => step(dir), { page: false });
   sh.el.addEventListener('keydown', e => {
     if (e.target.closest?.('input, textarea, iframe') || e.altKey || e.metaKey || e.ctrlKey) return;
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') step(e.key === 'ArrowRight' ? 1 : -1) && e.preventDefault();
