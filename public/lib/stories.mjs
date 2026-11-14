@@ -9,6 +9,7 @@
 // headline, url, at, video?]] }.
 import { sideOf, SIDES, outletOf } from '#kit/news-outlets.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
+import * as kitSport from './leagues.mjs';
 import { heavy, notPicture } from './pics.mjs';
 
 export const REGIONS = ['tw', 'intl'];
@@ -230,6 +231,9 @@ const storyTerms = s => termsOf([s.title, ...(s.items || []).slice(0, 8).map(it 
 // Taiwan story's world story and the other way round a little nearer), `most`
 // at most, the nearest first: [{ story, link }] (`link`: the builder joined
 // them). `pages`: the page and the past (either may be null).
+const isSport = s => s.topics?.[0] === 'sport';
+const leagues = new WeakMap();
+const leagueOf = s => (leagues.has(s) ? leagues.get(s) : (leagues.set(s, kitSport.leagueOf?.(s) || ''), leagues.get(s)));
 export function relatedOf(story, pages, { most = 4, min = 0.2 } = {}) {
   if (!story) return [];
   const all = [];
@@ -252,6 +256,11 @@ export function relatedOf(story, pages, { most = 4, min = 0.2 } = {}) {
     // (Only a direct join: many Taiwan stories hang loosely on one world story.)
     const link = s.id === story.world || s.world === story.id;
     if (!link && s.region !== story.region) continue;
+    // (A game's related are its league's, a sport's never another's: a judo
+    // final under 七六人 v 暴龍 shared only 「上演…逆轉」, Jay 11-14. And a
+    // sports story is no other story's.)
+    if (!link && isSport(s) !== isSport(story)) continue;
+    if (!link && isSport(story) && leagueOf(s) !== leagueOf(story)) continue;
     const score = dot / (mineNorm * norm(set)) + (link ? 0.1 : 0);
     if (score >= min) out.push({ story: s, link: Boolean(link), score });
   }

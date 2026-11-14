@@ -7,6 +7,7 @@
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
+import * as kitSport from '../lib/leagues.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
 import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive, steady } from '../lib/stories.mjs';
 import { balanceOf, leanOf, followKey, followsOf } from '../lib/reading.mjs';
@@ -226,6 +227,13 @@ export function renderRegion(box, region) {
   // (影音: the stories told by their clips, views/video.mjs.)
   if (topic === 'video') return renderVideo(box, region, stories, { chips, foot: builtLine(state.page) });
   const all = onTopic(stories, topic).map(s => asTopic(s, topic));
+  // (運動 by league, as Orbit Sports has them, Jay 11-14: "sport news should
+  // sort by league which matches the sports app more".)
+  if (topic === 'sport' && kitSport.leagueOf && all.length) {
+    const follow = h('div', { class: 'nw-topic-follow' }, [followPill(followKey('t', topic), { label: W(`追蹤${name(topic)}`, `Follow ${name(topic)}`) })]);
+    box.replaceChildren(chips, h('div', { class: 'nw-region' }, [follow, ...byLeague(all), pastPart(region, topic), builtLine(state.page)]));
+    return;
+  }
   const shown = all.slice(0, state.shown[region]);
   const left = all.length - shown.length;
   // (Its first story with a picture leads; the rest in their order.)
@@ -245,6 +253,28 @@ export function renderRegion(box, region) {
       builtLine(state.page)
     ])
   );
+}
+// 運動's leagues, each a section in Orbit Sports' order (the kit's
+// LEAGUE_ORDER), its stories by importance, four shown, the rest a tap away.
+const LEAGUE_SHOWN = 4;
+function byLeague(all) {
+  const groups = new Map();
+  for (const s of all) {
+    const k = kitSport.leagueOf(s);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(s);
+  }
+  const order = kitSport.LEAGUE_ORDER || [];
+  const keys = [...groups.keys()].sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
+  state.leaguesOpen ||= new Set();
+  return keys.map(k => {
+    const list = groups.get(k);
+    const wide = state.leaguesOpen.has(k);
+    const shown = wide ? list : list.slice(0, LEAGUE_SHOWN);
+    const rest = list.length - LEAGUE_SHOWN;
+    const toggle = rest > 0 ? moreToggle({ more: W(`再看 ${rest} 則`, `${rest} more`), less: W('收起', 'Less'), open: wide, onToggle: () => (state.leaguesOpen[wide ? 'delete' : 'add'](k), hooks.render()) }) : null;
+    return section(kitSport.leagueName(k, en ? 'en' : 'zh'), [storyList(shown, s => open(s, list)), toggle], { cls: 'nw-league-sec' });
+  });
 }
 // Rows that open with the whole topic's list (not only those shown).
 const storyListIn = (shown, all) => storyList(shown, story => open(story, all));
