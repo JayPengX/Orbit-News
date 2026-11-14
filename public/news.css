@@ -320,10 +320,9 @@ h1, h2, h3, p { margin: 0; }
   height: 44px;
   margin: -22px 0 0 -22px;
   border-radius: 50%;
-  background: rgb(0 0 0 / 0.55);
+  /* (No blur behind it: one on every clip's picture made a quick scroll stutter, Jay 11-14 on a Mac.) */
+  background: rgb(0 0 0 / 0.6);
   color: #fff;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
 }
 .nw-play svg { width: 22px; height: 22px; margin-left: 2px; }
 .nw-thumb .nw-play { width: 28px; height: 28px; margin: -14px 0 0 -14px; }

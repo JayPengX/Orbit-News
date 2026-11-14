@@ -27,7 +27,7 @@ import { cleanBriefs } from './lib/briefs.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, setFollow } from './lib/reading.mjs';
-import { renderTop, renderRegion, renderSide } from './views/lists.mjs';
+import { renderTop, renderRegion, renderSide, keptLists } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory, warmStory } from './views/story.mjs';
 import { stopVideo, videoPlaying } from './views/video.mjs';
@@ -133,7 +133,8 @@ const opened = new Set();
 let readWaiting = false;
 const readLater = () => (readWaiting = true);
 function dimOpened() {
-  for (const id of opened) for (const row of document.querySelectorAll(`[data-story="${CSS.escape(id)}"]`)) row.classList.add('nw-read');
+  // (In the lists kept for another topic too: views/lists.mjs.)
+  for (const id of opened) for (const root of [document, ...keptLists()]) for (const row of root.querySelectorAll(`[data-story="${CSS.escape(id)}"]`)) row.classList.add('nw-read');
   opened.clear();
 }
 // Followed or let go (lib/reading.mjs keys): kept on the Pass like the reading,
@@ -152,7 +153,10 @@ function logChanged() {
   keepLocal();
   sync({ soon: true });
 }
-hooks.render = () => (stamp++, render());
+// (Something tapped on the list shown: that list drawn again, the others kept as they are.)
+hooks.render = () => render();
+// (What the lists were drawn from: views/lists.mjs keeps each topic's list till it changes.)
+hooks.stamp = () => stamp;
 hooks.tab = tab => showTab(tab, { top: true });
 hooks.word = w => q.go('vocab', `word=${encodeURIComponent(w)}`);
 hooks.law = hash => q.go('law', hash);
@@ -293,6 +297,7 @@ hooks.past = () =>
     .then(raw => {
       state.past = cleanPage(raw);
       state.pastFailed = false;
+      stamp++;
     })
     .catch(() => (state.pastFailed = true))
     .finally(() => (pastReading = null)));

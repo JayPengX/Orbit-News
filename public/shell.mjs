@@ -62,7 +62,7 @@ export const state = {
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
 // reads the older stories (a promise); word(w) opens a word's card in Orbit Words; law(hash) a law or bill in Orbit Law.
 // follow(key, on) follows or lets go (lib/reading.mjs keys); opened(story) marks a story read.
-export const hooks = { read() {}, render() {}, tab() {}, reload() {}, play() {}, word() {}, law() {}, follow() {}, opened() {}, past: async () => {} };
+export const hooks = { read() {}, render() {}, stamp: () => 0, tab() {}, reload() {}, play() {}, word() {}, law() {}, follow() {}, opened() {}, past: async () => {} };
 
 // A story as far as this person has read it: '' not opened, 'read', or 'new'
 // (a big development since they read it: lib/reading.mjs readState).

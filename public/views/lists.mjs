@@ -211,28 +211,92 @@ export function readingLine(b) {
 // the older stories kept.
 export function renderRegion(box, region) {
   if (notYet(box)) return;
-  // (Most important first, what's followed risen and tagged, as on 頭條.)
-  const stories = steady(state.held, region, lifted(state.page[region], followedNow()));
   const tabs = tabsOf(region);
   const topic = tabs.includes(state.topic[region]) ? state.topic[region] : 'all';
-  const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
-  const pick = t => () => {
-    state.topic[region] = t;
-    state.shown[region] = 20;
-    hooks.render();
-  };
-  const chips = textTabs(tabs, topic, name, pick);
+  const chips = chipRow(region, tabs, topic);
   swipeTabs(box, region, () => tabsOf(region), () => (state.shown[region] = 20));
   showTab(chips);
-  // (影音: the stories told by their clips, views/video.mjs.)
-  if (topic === 'video') return renderVideo(box, region, stories, { chips, foot: builtLine(state.page) });
+  // (影音: the stories told by their clips, views/video.mjs; drawn each time, a clip may be playing.)
+  if (topic === 'video') return renderVideo(box, region, storiesOf(region), { chips, foot: builtLine(state.page) });
+  // (Each topic's list kept as drawn: going back to one shows the very same
+  // rows and pictures, nothing drawn again, nothing fading in again (Jay 11-14:
+  // "switching between type of news is laggy", pictures flashing). Drawn anew
+  // only when the stories, the reading or what's shown changed.)
+  const body = bodyOf(region, topic);
+  // (The row of topics left in place, where it was scrolled: only the list under it changes.)
+  if (chips.parentNode === box) {
+    for (const n of [...box.children]) if (n !== chips && n !== body) n.remove();
+    if (chips.nextSibling !== body) chips.after(body);
+  } else box.replaceChildren(chips, body);
+  const dir = slideNext;
+  slideNext = 0;
+  if (dir) slideIn(body, dir);
+  // (Then the topics either side drawn ahead, while the phone is idle: a tap or a swipe to them is instant.)
+  drawAhead(box, region, tabs, topic);
+}
+// A topic's list as last drawn, by region and topic, with what it was drawn from.
+const bodies = new Map();
+const MAX_KEPT = 12;
+// (再看 and a league opened change a kept list in place: not here.)
+const sigOf = () => [hooks.stamp?.() ?? 0, en, state.past ? 1 : 0, state.pastFailed ? 1 : 0].join('|');
+// (The region's stories, most important first, what's followed risen and tagged, as on 頭條: once a drawing.)
+let storiesKept = { sig: '', region: '', list: [] };
+function storiesOf(region) {
+  const sig = sigOf(region);
+  if (storiesKept.sig !== sig || storiesKept.region !== region) storiesKept = { sig, region, list: steady(state.held, region, lifted(state.page[region], followedNow())) };
+  return storiesKept.list;
+}
+function bodyOf(region, topic) {
+  const key = `${region}:${topic}`;
+  const sig = sigOf(region);
+  const kept = bodies.get(key);
+  if (kept?.sig === sig) {
+    bodies.delete(key);
+    bodies.set(key, kept);
+    return kept.node;
+  }
+  const node = regionBody(region, topic, storiesOf(region));
+  bodies.delete(key);
+  bodies.set(key, { sig, node });
+  while (bodies.size > MAX_KEPT) bodies.delete(bodies.keys().next().value);
+  return node;
+}
+// The lists kept but not on the page (app.mjs dims the stories just read in them too).
+export const keptLists = () => [...bodies.values()].map(b => b.node).filter(n => !n.isConnected);
+let ahead = 0;
+function drawAhead(box, region, tabs, topic) {
+  const idle = globalThis.requestIdleCallback || (fn => setTimeout(fn, 120));
+  const cancel = globalThis.cancelIdleCallback || clearTimeout;
+  if (ahead) cancel(ahead);
+  const i = tabs.indexOf(topic);
+  const next = [tabs[i + 1], tabs[i - 1]].filter(t => t && t !== 'video');
+  const step = () => {
+    ahead = 0;
+    const t = next.shift();
+    if (!t || box.hidden || state.tab !== region || state.topic[region] !== topic) return;
+    bodyOf(region, t);
+    if (next.length) ahead = idle(step, { timeout: 1500 });
+  };
+  ahead = idle(step, { timeout: 1500 });
+}
+// A topic tapped: its list comes in from the side of its tab (as a swipe's
+// does: the kit's daySwipe), the same glide.
+let slideNext = 0;
+const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+function slideIn(el, dir) {
+  if (reducedMotion() || typeof el.animate !== 'function') return;
+  el.animate([{ transform: `translateX(${dir * 28}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+}
+// A topic's list: its lead story in its picture, then the rest, more on a
+// tap, then the older ones kept (運動 by league).
+function regionBody(region, topic, stories) {
+  const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
   const all = onTopic(stories, topic).map(s => asTopic(s, topic));
   // (運動 by league, as Orbit Sports has them, Jay 11-14: "sport news should
   // sort by league which matches the sports app more".)
   if (topic === 'sport' && kitSport.leagueOf && all.length) {
     const follow = h('div', { class: 'nw-topic-follow' }, [followPill(followKey('t', topic), { label: W(`追蹤${name(topic)}`, `Follow ${name(topic)}`) })]);
-    box.replaceChildren(chips, h('div', { class: 'nw-region' }, [follow, ...byLeague(all), pastPart(region, topic), builtLine(state.page)]));
-    return;
+    return h('div', { class: 'nw-region' }, [follow, ...byLeague(all), pastPart(region, topic), builtLine(state.page)]);
   }
   const shown = all.slice(0, state.shown[region]);
   const left = all.length - shown.length;
@@ -244,22 +308,47 @@ export function renderRegion(box, region) {
   const list = all.length ? storyListIn(rest, all) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') });
   // 再看 20 則: the next twenty put under the ones there, the page not drawn
   // again (Jay 11-14: it "jump[ed] the UI": every row and picture made anew).
+  // (Counted by this list itself: it's kept, and comes back as it was left.)
+  let upto = shown.length;
   const pager = left > 0 ? moreToggle({ more: moreWords(left), less: null, onToggle: () => {
-    const from = state.shown[region];
-    state.shown[region] += 20;
-    pageOn(list, pager, storyListIn(all.slice(from, state.shown[region]).filter(s => s !== lead), all), all.length - state.shown[region], () => pastPart(region, topic));
+    const from = upto;
+    upto += 20;
+    state.shown[region] = upto;
+    pageOn(list, pager, storyListIn(all.slice(from, upto).filter(s => s !== lead), all), all.length - upto, () => pastPart(region, topic));
   } }) : null;
-  box.replaceChildren(
-    chips,
-    h('div', { class: 'nw-region' }, [
-      follow,
-      lead ? h('div', { class: 'nw-region-lead' }, [leadCard(lead, open, { list: all })]) : null,
-      list,
-      pager,
-      left > 0 ? null : pastPart(region, topic),
-      builtLine(state.page)
-    ])
-  );
+  return h('div', { class: 'nw-region' }, [
+    follow,
+    lead ? h('div', { class: 'nw-region-lead' }, [leadCard(lead, open, { list: all })]) : null,
+    list,
+    pager,
+    left > 0 ? null : pastPart(region, topic),
+    builtLine(state.page)
+  ]);
+}
+// A region's row of topic tabs, kept: a tap moves its mark, the row stays
+// where it was scrolled (drawn anew only when the topics themselves change).
+const chipRows = {};
+function chipRow(region, tabs, topic) {
+  const name = t => (t === 'all' ? W('全部', 'All') : topicName(t, region));
+  const key = `${en}|${tabs.join()}`;
+  let row = chipRows[region];
+  if (row?.key !== key) {
+    const pick = t => () => {
+      const now = tabs.includes(state.topic[region]) ? state.topic[region] : 'all';
+      if (t === now) return;
+      slideNext = Math.sign(tabs.indexOf(t) - tabs.indexOf(now));
+      state.topic[region] = t;
+      state.shown[region] = 20;
+      hooks.render();
+    };
+    row = chipRows[region] = { key, el: textTabs(tabs, topic, name, pick) };
+  }
+  for (const b of row.el.children) {
+    const on = b.dataset.tab === topic;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  }
+  return row.el;
 }
 // 運動's leagues, each a section in Orbit Sports' order (the kit's
 // LEAGUE_ORDER), its stories by importance, four shown, the rest a tap away.
@@ -304,7 +393,7 @@ function tabsOf(region) {
 }
 // A row of text tabs, the chosen one marked (it stays as the list slides).
 const textTabs = (tabs, on, name, pick) =>
-  h('div', { class: 'q-chips q-texttabs nw-topics q-day-still', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${on === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(on === t), onclick: pick(t), text: name(t) })));
+  h('div', { class: 'q-chips q-texttabs nw-topics q-day-still', role: 'tablist' }, tabs.map(t => h('button', { type: 'button', class: `q-chip${on === t ? ' on' : ''}`, role: 'tab', 'aria-selected': String(on === t), 'data-tab': t, onclick: pick(t), text: name(t) })));
 // The chosen tab in view, as a swipe moves it past the row's edge.
 function showTab(chips) {
   if (!chips) return;
@@ -340,12 +429,14 @@ function pastPart(region, topic) {
     ]);
   const list = onTopic(state.past[region] || [], topic).map(s => asTopic(s, topic));
   if (!list.length) return null;
-  const shown = list.slice(0, state.shownPast?.[region] || 20);
+  const shown = list.slice(0, 20);
   const left = list.length - shown.length;
   const rows = storyList(shown, open);
+  let upto = shown.length;
   const pager = left > 0 ? moreToggle({ more: moreWords(left), less: null, onToggle: () => {
-    const from = state.shownPast?.[region] || 20;
-    state.shownPast = { ...state.shownPast, [region]: from + 20 };
+    const from = upto;
+    upto += 20;
+    state.shownPast = { ...state.shownPast, [region]: upto };
     pageOn(rows, pager, storyList(list.slice(from, from + 20), open), list.length - from - 20);
   } }) : null;
   return section(W('更早', 'Earlier'), [rows, pager]);

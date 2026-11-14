@@ -16,7 +16,9 @@ import { sized } from '../lib/pics.mjs';
 // card's has-pic, only when none load (Jay 11-11: an empty space where 32
 // other outlets had one). `onBy(outlet)`: whose shows now ('' none). Its
 // place is held at its shape, filled grey, and the picture fades in once
-// it's there (one already loaded this visit is there at once: no fade).
+// it's there, decoded first so it never shows half drawn (one already
+// loaded this visit is there at once: no fade, Jay 11-14 "image flashing").
+const loadedPics = new Set();
 export const picture = (src, cls, { eager = false, alts = [], onBy = null, size = 's' } = {}) => {
   if (!src) return null;
   const queue = [];
@@ -25,14 +27,23 @@ export const picture = (src, cls, { eager = false, alts = [], onBy = null, size 
   for (const [u, by] of [[src, null], ...(alts || []).filter(a => a?.[0])]) add(sized(u, size), by), add(u, by);
   const box = h('span', { class: cls });
   let by = null;
+  // (The first of them this visit has shown, if any: that one straight away.)
+  const known = queue.findIndex(([u]) => loadedPics.has(u));
+  if (known > 0) queue.unshift(...queue.splice(known, 1));
+  const was = known >= 0;
   const img = h('img', {
     src: queue.shift()[0],
     alt: '',
-    loading: eager ? 'eager' : 'lazy',
+    loading: eager || was ? 'eager' : 'lazy',
     fetchpriority: eager ? 'high' : null,
-    decoding: 'async',
+    decoding: was ? 'sync' : 'async',
     referrerpolicy: 'no-referrer',
-    onload: () => box.classList.remove('nw-pic-wait'),
+    onload: () => {
+      loadedPics.add(img.getAttribute('src'));
+      if (!box.classList.contains('nw-pic-wait')) return;
+      const show = () => box.classList.remove('nw-pic-wait');
+      img.decode ? img.decode().then(show, show) : show();
+    },
     onerror: () => {
       const next = queue.shift();
       if (next) {
@@ -45,10 +56,29 @@ export const picture = (src, cls, { eager = false, alts = [], onBy = null, size 
       onBy?.('');
     }
   });
-  if (!img.complete) box.classList.add('nw-pic-wait');
+  if (!was && !img.complete) box.classList.add('nw-pic-wait');
   box.append(img);
+  if (!eager && !was) nearSoon(img);
   return box;
 };
+// A picture a screen or so below asked for before it scrolls in: Safari waits
+// till one is all but on the screen, so a quick scroll on a Mac met grey
+// boxes fading in one after another (Jay 11-14).
+let near = null;
+function nearSoon(img) {
+  if (typeof IntersectionObserver !== 'function') return;
+  near ||= new IntersectionObserver(
+    list => {
+      for (const e of list) {
+        if (!e.isIntersecting) continue;
+        near.unobserve(e.target);
+        e.target.loading = 'eager';
+      }
+    },
+    { rootMargin: '1200px 0px 1200px 0px' }
+  );
+  near.observe(img);
+}
 // A story's picture with its others to fall back on.
 const storyPicture = (story, cls, opts = {}) => {
   const [first, ...alts] = picturesOf(story, { light: (opts.size || 's') === 's' });
