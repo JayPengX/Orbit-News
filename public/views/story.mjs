@@ -16,7 +16,9 @@ import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark, oneSideTag, oneSideLine } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
-import { sidesOf } from '../lib/sides.mjs';
+import { sidesOf, cleanSides } from '../lib/sides.mjs';
+import { cleanBriefs } from '../lib/briefs.mjs';
+import { openAi, briefAsked, sidesAsked } from '../lib/open-ai.mjs';
 import { pcts, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
 
@@ -401,10 +403,16 @@ function worldLink(story) {
 // lib/briefs.mjs), and the way to the whole report on the outlet's own site
 // (iOS's quick view in the app, closed back to the story; the Safari app
 // when the person chose it on the Pass). Never an article copied here.
-function pointsOf(story) {
+function pointsOf(story, { ask = true } = {}) {
   const b = state.briefs?.get?.(story.id);
   const lead = story.items.find(it => it[0] === story.by) || story.items[0];
   const full = lead ? outletLink(lead, [h('span', { text: W(`到${outletName(lead[0])}看全文`, `Read it on ${outletName(lead[0])}`) }), h('b', { 'aria-hidden': 'true', text: ' ›' })], 'nw-full') : null;
+  // (None kept yet: made now, on this first open (lib/open-ai.mjs), its shape held meanwhile.)
+  if (!b && ask && briefAsked(story)) return later(pointsShape(), openAi('news-brief', story.id), out => {
+    const got = cleanBriefs({ briefs: { [story.id]: out } }).get(story.id);
+    if (got) state.briefs?.set?.(story.id, got);
+    return pointsOf(story, { ask: false });
+  });
   if (!b) return full ? h('div', { class: 'nw-full-row' }, [full]) : null;
   const lang = en ? 'en' : 'zh-Hant';
   return h('section', { class: 'nw-points' }, [
@@ -413,6 +421,23 @@ function pointsOf(story) {
     full
   ]);
 }
+
+// A part made on open: its shape (the kit's `waiting`) until the answer
+// comes, then what `draw` makes of it (nothing: the shape goes).
+function later(shape, made, draw) {
+  kitUI.waiting?.(shape);
+  made.then(out => {
+    const real = out ? draw(out) : draw(null);
+    if (real) shape.replaceWith(real);
+    else shape.remove();
+  });
+  return shape;
+}
+const pointsShape = () =>
+  h('section', { class: 'nw-points' }, [
+    h('h3', { class: 'nw-story-h' }, [W('重點整理', 'The key points'), aiMark()]),
+    pointRows([{ k: 'what', zh: '這則新聞發生了什麼事，簡短說明', en: 'What happened, in a short line or two' }, { k: 'why', zh: '它的來龍去脈，簡短說明一下', en: 'The background to it, in a short line' }, { k: 'next', zh: '接下來會怎樣', en: 'What comes next' }], en ? 'en' : 'zh-Hant')
+  ]);
 
 // The points by kind (Jay 11-13: points that didn't help him understand
 // the news): what happened, the background, what's next, each kind named
@@ -472,8 +497,14 @@ function relatedPart(story) {
 // 各方怎麼說: each side's angle in a line, the one difference that matters
 // most on top (the AI's, from their headlines only; lib/sides.mjs), over
 // the headlines themselves, which show it's so.
-function sidesSay(story) {
+function sidesSay(story, { ask = true } = {}) {
   const said = sidesTaken(story) && sidesOf(story, state.sides?.get?.(story.id));
+  // (None kept yet for a story the sides frame: made on this first open, as 重點整理.)
+  if (!said && ask && sidesTaken(story) && !state.sides?.has?.(story.id) && sidesAsked(story)) return later(sidesShape(story), openAi('news-sides', story.id), out => {
+    const got = out && cleanSides({ sides: { [story.id]: out } }).get(story.id);
+    if (got) state.sides?.set?.(story.id, got);
+    return sidesSay(story, { ask: false });
+  });
   if (!said) return null;
   const pick = x => (en ? x.en : x.zh);
   return h('section', { class: 'nw-say' }, [
@@ -485,6 +516,15 @@ function sidesSay(story) {
     ].filter(Boolean))
   ]);
 }
+
+const sidesShape = story =>
+  h('section', { class: 'nw-say' }, [
+    h('h3', { class: 'nw-story-h' }, [W('各方怎麼說', 'How each side tells it'), aiMark()]),
+    h('div', { class: 'nw-say-card' }, [
+      h('p', { class: 'nw-say-diff', text: W('各邊最不一樣的地方', 'Where the sides differ most') }),
+      h('div', { class: 'nw-say-rows' }, (story.region === 'intl' ? ['l', 'r'] : ['g', 'b']).map(k => h('div', { class: 'nw-say-row' }, [h('span', { class: 'nw-say-who' }, [h('i', { class: `nw-dot nw-s-${k}`, 'aria-hidden': 'true' }), h('b', { text: sideFull(k) })]), h('p', { text: W('這一邊的標題怎麼說', 'How this side’s headlines put it') })])))
+    ])
+  ]);
 
 // The Orbit AI mark beside a part the AI had a hand in (the family's, never a sparkle).
 export function aiMark(label = 'Orbit AI') {
