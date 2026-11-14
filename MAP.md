@@ -34,6 +34,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-13 A kind with no sides (a game, a storm) lists its outlets in one card, those that wrote most first, never under 偏綠 · 中間 · 偏藍 (Jay: "if this kind of news has no spectrum then don't list them like spectrum"). The world's sports stories are 運動 by their teams and players (the Curry injury was 科技), and Taiwan's sports story finds the world's by the English names Sports' AI already gave it (`news/sport-who.json`, no new AI call), a game only a game (Jay: "why is this Taiwan outlet only"). A foreign person in Chinese only by the name Taiwan's press fixes (translate.js `KNOWN`), anyone else in English (Scott Colom, never 史考特科洛姆).
 - 11-13 What's on screen never moves by itself (Jay: opening News "get stuck a few seconds then reshuffle"): lists hold their first-drawn order for the opening (`steady`), new stories slotting in; only a pull, a follow or the next opening ranks anew. Reads that land together are drawn once.
 - 11-14 影音 is the news told by its clips, not a list of videos (Jay: "Video is basically a list of video super unhelpful … improve it significantly so it's actually about using video to look for news"): a story a card, its best clip playing in place, its title and one line, every outlet's clip on it beside, the whole story a tap away at the same second; one ends, the next story's begins. No second row of kinds under the tabs (it said the tabs again).
+- 11-14 單邊 is the important stories one side all but leaves out, not the ones it has none of (Jay: "most news there is just less notable news"; "if just one of the other side report it it's not in 單邊?"): 8 outlets or more, 4 or more on one end and on the other a token one or two (one in 8 of a big story's), the lead 4 times past each end's usual share of the day's front, as important as the front's middle story or more (Orbit-Core `oneSidedOf`); the most important first; every one marked wherever it's listed with its split (單邊 綠 9 · 藍 1), and who carried it and who didn't in a line, by code, never AI. By outlets, not readers: no published figures place each outlet's reach.
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
@@ -74,8 +75,10 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   sides, blind, parties, topics, imp, clips: [[outlet, youtubeId or '', url,
   title, picture]], items: [[outlet, headline, url, at, video?]], alts:
   [[picture, outlet]] (other outlets', tried in turn when img won't load) }`;
-  `blind` is the side that left it out (3 outlets or more, 2 hours or more,
-  all on one side; only a topic sides take).
+  `blind` is the side that left it out, or all but (`blindOf`, `oneSidedOf`:
+  a topic sides take, 2 hours or more, 8 outlets or more, 4 or more on one
+  end and a token one or two on the other, the lead past the day's front's,
+  as important as the front's middle story or more).
   Also `news/sport.json` (Jay 11-13, for Orbit Sports' 相關新聞): the sports
   stories of 3 days, one outlet's report too (never on News' own pages), each
   with its kind (`k`: injury, ban, coach, move; kit `news-sport.mjs`) and the
@@ -104,7 +107,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | File | What |
 | --- | --- |
 | `app.mjs`, `shell.mjs` | Start, reading the page (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`); state, outlets' names and marks, `outletLink`, `openOut` (the kit's `openLink`) |
-| `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, one-sided groups, topics, clips |
+| `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, one-sided groups (`oneSided`, `blindAll`, `oneSideOf`), topics, clips |
 | `lib/mine.mjs`, `brief.mjs`, `learn.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`); 新聞學單字 (Words' `vocab.learning`) |
 | `lib/markets.mjs` | 預測市場: Polymarket's chances on a story's question (Orbit-Core `builders/news-markets.js` → `news/markets.json`, every 30 minutes; nothing shown past 3 hours old), drawn in the sheet's `oddsPart` |
 | `lib/lines.mjs`, `sides.mjs` | The AI made once by Orbit-Core `builders/ai.js`: world stories' Chinese titles and Taiwan's English ones (`news/lines.json`); 各方怎麼說 (`news/sides.json`) |

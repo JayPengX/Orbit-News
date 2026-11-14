@@ -13,7 +13,7 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, r
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark, oneSideTag, oneSideLine } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf } from '../lib/sides.mjs';
@@ -380,7 +380,7 @@ function spectrum(story) {
     h('div', { class: 'nw-spec-head' }, [h('b', { text: W('各邊的報導', 'Coverage by side') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
     bar(story, { big: true }),
     legend,
-    story.blind ? h('p', { class: 'nw-spec-note' }, [tag(W(`${sideFull(story.blind)}的媒體都沒報`, `No ${sideFull(story.blind).toLowerCase()} outlet carries it`), 'tint', `var(--nw-${story.blind})`)]) : null,
+    story.blind ? h('p', { class: 'nw-spec-note' }, [oneSideTag(story), h('span', { class: 'nw-who', text: oneSideLine(story, { full: true }) })]) : null,
     parties ? h('p', { class: 'nw-spec-say', text: parties }) : null
   ]);
 }

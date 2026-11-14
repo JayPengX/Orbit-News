@@ -25,7 +25,7 @@ export function testPage(page) {
     const count = side => s.items.filter(it => sideOf(it[0], 'tw') === side).length;
     const missing = ENDS.tw.slice().sort((a, b) => count(a) - count(b))[0];
     const items = s.items.filter(it => sideOf(it[0], 'tw') !== missing);
-    tw = [{ ...s, blind: missing, items: items.length ? items : s.items }, ...tw.slice(1)];
+    tw = [{ ...s, blind: missing, sides: { ...s.sides, [missing]: 0 }, items: items.length ? items : s.items }, ...tw.slice(1)];
   }
   if (on.badClip) {
     // (Eleven characters, YouTube's shape: a clip that isn't there, error 100.)

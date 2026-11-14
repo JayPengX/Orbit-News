@@ -6,7 +6,7 @@ import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, t
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
 import { foreign, trCache } from '../lib/tr.mjs';
-import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
+import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive, oneSideOf } from '../lib/stories.mjs';
 import { sized } from '../lib/pics.mjs';
 
 // An outlet's picture, hotlinked (never kept), asked at the size it's shown
@@ -152,11 +152,31 @@ export function marks(story, most = 4) {
   const ids = [...all.filter(id => isFollowing(`o:${id}`)), ...all.filter(id => !isFollowing(`o:${id}`))].slice(0, most);
   return h('span', { class: 'nw-marks', 'aria-hidden': 'true' }, ids.map(id => outletMark(id, 18)));
 }
+// 單邊's mark on a story wherever it's listed, the split in it (Jay 11-14:
+// 「綠 9 · 藍 1」), in the colour of the side that left it out.
+export function oneSideTag(story) {
+  const o = oneSideOf(story);
+  if (!o) return null;
+  return tag(W(`單邊 ${sideText(o.heavy)} ${o.H} · ${sideText(o.light)} ${o.L}`, `One-sided · ${sideText(o.heavy)} ${o.H} · ${sideText(o.light)} ${o.L}`), 'tint', `var(--nw-${o.light})`);
+}
+// Who carried it and who didn't, in a line, by code (Jay 11-14): 偏左 20
+// 家在報（CNN、衛報、NPR 等），偏右只有 2 家（福斯新聞、紐約郵報）.
+const LEANING = { g: 'Green-leaning', b: 'Blue-leaning', l: 'Left-leaning', r: 'Right-leaning' };
+// (`full`: the sheet's, the carrying side's outlets named too; a list's
+// names only the token few, two lines at 320.)
+export function oneSideLine(story, { full = false } = {}) {
+  const o = oneSideOf(story);
+  if (!o) return '';
+  const names = (ids, most) => ids.slice(0, most).map(outletName).join(W('、', ', ')) + (ids.length > most ? W('等', ' and more') : '');
+  const few = o.L ? (full ? W(`只有 ${o.L} 家（${names(o.few, 2)}）`, `only ${o.L} (${names(o.few, 2)})`) : W(`只有${names(o.few, 2)}`, `only ${names(o.few, 2)}`)) : W('一家都沒報', 'none');
+  const many = full ? W(`${o.H} 家在報（${names(o.carried, 3)}）`, `${o.H} (${names(o.carried, 3)})`) : W(`${o.H} 家在報`, String(o.H));
+  return W(`${sideFull(o.heavy)} ${many}，${sideFull(o.light)}${few}`, `${LEANING[o.heavy]}: ${many}; ${LEANING[o.light].toLowerCase()}: ${few}`);
+}
 // A story's coverage in a line: the marks, how many outlets, the bar (only
 // for a kind sides take: the spectrum is one feature, Jay 11-10), and its
-// one-sided tag when one side left it out.
+// 單邊 mark when one side left it out, or all but.
 export function coverage(story, { side = true, bar: withBar = true } = {}) {
-  const tail = side && story.blind ? tag(W(`${sideFull(story.blind)}沒報`, `None ${sideFull(story.blind).toLowerCase()}`), 'tint', `var(--nw-${story.blind})`) : null;
+  const tail = side ? oneSideTag(story) : null;
   return h('span', { class: 'nw-cover' }, [
     marks(story),
     h('span', { class: 'nw-n', text: W(`${story.n} 家媒體`, `${story.n} outlets`) }),

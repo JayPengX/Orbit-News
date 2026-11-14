@@ -169,21 +169,36 @@ export const stateMedia = story => outletsOf(story).filter(o => outletOf(o)?.kin
 const SPECTRUM = new Set((kitNews.TOPICS || []).filter(t => t.spectrum !== false).map(t => t.id));
 export const sidesTaken = story => !story.topics?.length || story.topics.some(t => SPECTRUM.has(t) || !(kitNews.TOPICS || []).some(x => x.id === t));
 
-// The one-sided stories (the builder's `blind`: carried by one end, none of
-// the other), grouped by the side that left them out, widest first:
-// [{ region, missing, stories }], only groups with any.
+// The one-sided stories (the builder's `blind`: an important story one end
+// carries widely and the other not or only once or twice, Orbit-Core
+// builders/news.js oneSidedOf), grouped by the side that left them out,
+// most important first: [{ region, missing, stories }], only groups with any.
 export function oneSided(page, topic = 'all') {
   const out = [];
   for (const region of REGIONS)
     for (const missing of ENDS[region]) {
-      const stories = onTopic(page?.[region] || [], topic).filter(s => s.blind === missing).sort((a, b) => b.n - a.n || b.at - a.at);
+      const stories = onTopic(page?.[region] || [], topic).filter(s => s.blind === missing).sort(byImp);
       if (stories.length) out.push({ region, missing, stories });
     }
   return out;
 }
 
-// Every one-sided story, Taiwan's and the world's, widest first.
-export const blindAll = page => REGIONS.flatMap(r => (page?.[r] || []).filter(s => s.blind)).sort((a, b) => b.n - a.n || b.at - a.at);
+// Every one-sided story, Taiwan's and the world's, most important first
+// (Jay 11-14: the widest first had left the notable ones behind small news).
+const byImp = (a, b) => (b.imp || 0) - (a.imp || 0) || b.n - a.n || b.at - a.at;
+export const blindAll = page => REGIONS.flatMap(r => (page?.[r] || []).filter(s => s.blind)).sort(byImp);
+// A one-sided story's two ends: `heavy` the one that carries it, `light`
+// the one that left it out, each end's outlets (bySide's order). null if
+// it isn't one-sided.
+export function oneSideOf(story) {
+  if (!story?.blind) return null;
+  const [a, b] = ENDS[story.region] || ENDS.tw;
+  if (story.blind !== a && story.blind !== b) return null;
+  const heavy = story.blind === a ? b : a;
+  const by = bySide(story);
+  const ids = side => [...new Set((by[side] || []).map(it => it[0]))];
+  return { heavy, light: story.blind, carried: ids(heavy), few: ids(story.blind), H: Number(story.sides?.[heavy]) || 0, L: Number(story.sides?.[story.blind]) || 0 };
+}
 // Stories by kind, `order` the kinds' order: [[topic, stories]], each story
 // once, under the first of its topics in `order`; only kinds with any.
 export function byKind(stories, order) {

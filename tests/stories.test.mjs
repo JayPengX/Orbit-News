@@ -100,6 +100,19 @@ test('單邊 by kind: each one-sided story once, under its first kind; each side
   assert.deepEqual(all.map(s => s.id), ['a', 'd', 'b']);
   assert.deepEqual(byKind(all, ['pol', 'cs', 'eco']).map(([t, l]) => [t, l.map(s => s.id)]), [['pol', ['a']], ['cs', ['d']], ['eco', ['b']]]);
   assert.deepEqual(oneSided(page, 'cs').map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'b', ['a']], ['intl', 'r', ['d']]]);
+  // The most important first, not the widest (Jay 11-14: 單邊 had been small news).
+  const imp = { tw: [{ ...st('w', 'tw', 'b', ['pol'], 9), imp: 10 }, { ...st('i', 'tw', 'b', ['pol'], 8), imp: 30 }] };
+  assert.deepEqual(blindAll(imp).map(s => s.id), ['i', 'w']);
+});
+
+test('單邊: who carried it and who didn’t (a token one of the other side’s)', async () => {
+  const { oneSideOf } = await import('../public/lib/stories.mjs');
+  const s = { region: 'intl', blind: 'r', sides: { l: 3, c: 1, r: 1 }, items: [['cnn', 'a', '', 3], ['nyt', 'b', '', 2], ['guardian', 'c', '', 1], ['fox', 'd', '', 1], ['bbc', 'e', '', 1]] };
+  const o = oneSideOf(s);
+  assert.deepEqual([o.heavy, o.light, o.H, o.L], ['l', 'r', 3, 1]);
+  assert.deepEqual(o.few, ['fox']);
+  assert.equal(o.carried.length, 3);
+  assert.equal(oneSideOf({ ...s, blind: '' }), null);
 });
 
 
