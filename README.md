@@ -20,12 +20,12 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 <p align="center">
   <img src="docs/screenshots/news-1.webp" width="30%" alt="Every story, as every outlet tells it">
   <img src="docs/screenshots/news-2.webp" width="30%" alt="One story, each side's headline">
-  <img src="docs/screenshots/news-3.webp" width="30%" alt="The stories only one side carries">
+  <img src="docs/screenshots/news-3.webp" width="30%" alt="Every outlet's video news, in one place">
 </p>
 
 <p align="center">
   <img src="docs/screenshots/news-4.webp" width="30%" alt="World news, and how Taiwan reports it">
-  <img src="docs/screenshots/news-5.webp" width="30%" alt="122 outlets, each place sourced">
+  <img src="docs/screenshots/news-5.webp" width="30%" alt="118 outlets, each place sourced">
   <img src="docs/screenshots/news-6.webp" width="30%" alt="14 topics, ranked by importance">
 </p>
 
@@ -35,12 +35,12 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 <p align="center">
   <img src="docs/screenshots/news-1.zh.webp" width="30%" alt="每則新聞，各家怎麼報一次看">
   <img src="docs/screenshots/news-2.zh.webp" width="30%" alt="同一件事，偏綠、中間、偏藍怎麼下標">
-  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="只有一邊在報的新聞">
+  <img src="docs/screenshots/news-3.zh.webp" width="30%" alt="各家的影音新聞，一頁看">
 </p>
 
 <p align="center">
   <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="國際大事，台灣媒體怎麼報">
-  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="122 家媒體，立場都有出處">
+  <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="118 家媒體，立場都有出處">
   <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="14 個主題，照重要程度排">
 </p>
 
