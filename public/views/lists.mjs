@@ -241,13 +241,20 @@ export function renderRegion(box, region) {
   const rest = shown.filter(s => s !== lead);
   // (A topic's tab: follow it, its stories then rise through 頭條.)
   const follow = topic !== 'all' && topic !== 'video' ? h('div', { class: 'nw-topic-follow' }, [followPill(followKey('t', topic), { label: W(`追蹤${name(topic)}`, `Follow ${name(topic)}`) })]) : null;
-  const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`), less: null, onToggle: () => ((state.shown[region] += 20), hooks.render()) }) : null;
+  const list = all.length ? storyListIn(rest, all) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') });
+  // 再看 20 則: the next twenty put under the ones there, the page not drawn
+  // again (Jay 11-14: it "jump[ed] the UI": every row and picture made anew).
+  const pager = left > 0 ? moreToggle({ more: moreWords(left), less: null, onToggle: () => {
+    const from = state.shown[region];
+    state.shown[region] += 20;
+    pageOn(list, pager, storyListIn(all.slice(from, state.shown[region]).filter(s => s !== lead), all), all.length - state.shown[region], () => pastPart(region, topic));
+  } }) : null;
   box.replaceChildren(
     chips,
     h('div', { class: 'nw-region' }, [
       follow,
       lead ? h('div', { class: 'nw-region-lead' }, [leadCard(lead, open, { list: all })]) : null,
-      all.length ? storyListIn(rest, all) : empty({ icon: 'list', title: W('還沒有新聞', 'No stories yet'), body: W('兩家以上在報的新聞會出現在這裡。', 'Stories two outlets or more carry show here.') }),
+      list,
       pager,
       left > 0 ? null : pastPart(region, topic),
       builtLine(state.page)
@@ -272,8 +279,17 @@ function byLeague(all) {
     const wide = state.leaguesOpen.has(k);
     const shown = wide ? list : list.slice(0, LEAGUE_SHOWN);
     const rest = list.length - LEAGUE_SHOWN;
-    const toggle = rest > 0 ? moreToggle({ more: W(`再看 ${rest} 則`, `${rest} more`), less: W('收起', 'Less'), open: wide, onToggle: () => (state.leaguesOpen[wide ? 'delete' : 'add'](k), hooks.render()) }) : null;
-    return section(kitSport.leagueName(k, en ? 'en' : 'zh'), [storyList(shown, s => open(s, list)), toggle], { cls: 'nw-league-sec' });
+    // (Opened and closed in place, the page not drawn again.)
+    const rows = storyList(shown, s => open(s, list));
+    const toggle = rest > 0 ? moreToggle({ more: W(`再看 ${rest} 則`, `${rest} more`), less: W('收起', 'Less'), open: wide, onToggle: on => {
+      state.leaguesOpen[on ? 'add' : 'delete'](k);
+      if (on) {
+        const more = storyList(list.slice(LEAGUE_SHOWN), s => open(s, list));
+        rows.append(...more.children);
+      }
+      else while (rows.children.length > LEAGUE_SHOWN) rows.lastElementChild.remove();
+    } }) : null;
+    return section(kitSport.leagueName(k, en ? 'en' : 'zh'), [rows, toggle], { cls: 'nw-league-sec' });
   });
 }
 // Rows that open with the whole topic's list (not only those shown).
@@ -326,10 +342,22 @@ function pastPart(region, topic) {
   if (!list.length) return null;
   const shown = list.slice(0, state.shownPast?.[region] || 20);
   const left = list.length - shown.length;
-  return section(W('更早', 'Earlier'), [
-    storyList(shown, open),
-    left > 0 ? moreToggle({ more: W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`), less: null, onToggle: () => ((state.shownPast = { ...state.shownPast, [region]: shown.length + 20 }), hooks.render()) }) : null
-  ]);
+  const rows = storyList(shown, open);
+  const pager = left > 0 ? moreToggle({ more: moreWords(left), less: null, onToggle: () => {
+    const from = state.shownPast?.[region] || 20;
+    state.shownPast = { ...state.shownPast, [region]: from + 20 };
+    pageOn(rows, pager, storyList(list.slice(from, from + 20), open), list.length - from - 20);
+  } }) : null;
+  return section(W('更早', 'Earlier'), [rows, pager]);
+}
+const moreWords = left => W(`再看 ${Math.min(20, left)} 則`, `${Math.min(20, left)} more`);
+// The next rows moved under a list's own, its 再看 then saying how many are
+// left, or gone (and what comes after a list's end, `after`, put in its place).
+function pageOn(list, pager, more, left, after) {
+  list.append(...more.children);
+  if (left > 0) return pager.set(false, moreWords(left), null);
+  const next = after?.();
+  next ? pager.replaceWith(next) : pager.remove();
 }
 
 // 單邊: the important stories one side carries widely and the other not or

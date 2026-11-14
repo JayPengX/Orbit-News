@@ -41,7 +41,14 @@ export function renderVideo(box, region, stories, { chips, foot }) {
   const shown = list.slice(0, shownOf[region]);
   const left = list.length - shown.length;
   const feed = h('div', { class: 'nw-vfeed' }, shown.map(s => videoCard(s, list)));
-  const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(PAGE, left)} 則`, `${Math.min(PAGE, left)} more`), less: null, onToggle: () => ((shownOf[region] += PAGE), hooks.render()) }) : null;
+  const pager = left > 0 ? moreToggle({ more: W(`再看 ${Math.min(PAGE, left)} 則`, `${Math.min(PAGE, left)} more`), less: null, onToggle: () => {
+    // (Put under the ones there, not the feed drawn again: Jay 11-14, 再看 "jump[ed] the UI".)
+    const from = shownOf[region];
+    shownOf[region] += PAGE;
+    feed.append(...list.slice(from, shownOf[region]).map(s => videoCard(s, list)));
+    const n = list.length - shownOf[region];
+    n > 0 ? pager.set(false, W(`再看 ${Math.min(PAGE, n)} 則`, `${Math.min(PAGE, n)} more`), null) : pager.remove();
+  } }) : null;
   box.replaceChildren(
     chips,
     h('div', { class: 'nw-region nw-video' }, [
