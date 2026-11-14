@@ -440,6 +440,8 @@ function aiPart(key, label, { kept, make, shape, draw }) {
   const button = (note = '') => {
     const btn = aiTap(label, go);
     if (kept()) btn.dataset.aiFree = '';
+    // (The box holds only the AI's button: gone with it for a pass with none, unless the answer is kept, free for all.)
+    box.toggleAttribute('data-ai-only', !kept());
     box.replaceChildren(...[btn, note ? h('small', { class: 'nw-ai-note', text: note }) : null].filter(Boolean));
   };
   async function go() {
