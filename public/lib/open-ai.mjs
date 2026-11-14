@@ -13,15 +13,21 @@ export const sidesAsked = s => (s?.topics || []).some(t => FRAMED.has(t)) && END
 // (Three outlets at least: builders/ai.js briefWanted.)
 export const briefAsked = s => (s?.n || 0) >= 3;
 
+// Asked with the reader's Pass session (the kit's workerJson): only a pass
+// with Orbit AI has one made (Orbit-Core eco.js levelOf); a kept one is
+// anyone's. (`fetchImpl`: the tests' own, unsigned.)
 const asked = new Map();
-export function openAi(f, id, { fetchImpl = globalThis.fetch, timeoutMs = 30_000 } = {}) {
+export function openAi(f, id, { fetchImpl = null, timeoutMs = 30_000 } = {}) {
   const k = `${f}|${id}`;
+  const query = `f=${encodeURIComponent(f)}&id=${encodeURIComponent(id)}`;
+  const ask = fetchImpl
+    ? () => fetchImpl(`${API}/ai/open?${query}`, { signal: AbortSignal.timeout?.(timeoutMs) }).then(r => (r.ok ? r.json() : null))
+    : () => import('#kit/orbit.mjs').then(kit => kit.workerJson('/ai/open', query, { timeout: timeoutMs }));
   if (!asked.has(k))
     asked.set(
       k,
       Promise.resolve()
-        .then(() => fetchImpl(`${API}/ai/open?f=${encodeURIComponent(f)}&id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout?.(timeoutMs) }))
-        .then(r => (r.ok ? r.json() : null))
+        .then(ask)
         .then(j => j?.out || null)
         .catch(() => null)
         // (A failure isn't kept: the next open asks again.)
