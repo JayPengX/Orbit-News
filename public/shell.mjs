@@ -33,8 +33,6 @@ export const state = {
   sport: null,
   // The AI's one lines and titles by story (lib/lines.mjs), an empty Map until read.
   lines: new Map(),
-  // Plain translations of the titles and top summaries the AI didn't write (lib/tr.mjs).
-  tr: new Map(),
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
   interests: [],
   // 新聞學單字: the words being learned in Orbit Words on this phone (lib/learn.mjs learnSet), null if none.

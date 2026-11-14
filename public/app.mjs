@@ -17,10 +17,10 @@ import * as kitUI from '#kit/ui.mjs';
 import * as orbitKit from '#kit/orbit.mjs';
 import { passSync } from '#kit/pass-sync.mjs';
 import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
-import { state, hooks, lang, W, today } from './shell.mjs';
+import { state, hooks, lang, en, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
-import { cleanTr } from './lib/tr.mjs';
+import { watchTitles } from './lib/tr.mjs';
 import { cleanSides } from './lib/sides.mjs';
 import { cleanMarkets } from './lib/markets.mjs';
 import { cleanBriefs } from './lib/briefs.mjs';
@@ -181,20 +181,6 @@ function loadLines(fresh) {
     })
     .catch(() => {});
 }
-// One language (lib/tr.mjs): every headline the AI didn't title, the top summaries, translated ahead.
-const TR = 'news/tr.json';
-let trBuilt = null;
-function loadTr(fresh) {
-  return packJson(TR, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === trBuilt) return;
-      trBuilt = raw?.built ?? null;
-      state.tr = cleanTr(raw);
-      stamp++;
-      quietRefresh();
-    })
-    .catch(() => {});
-}
 // 看法案: the laws Taiwan's stories name (Orbit-Core's builders/news-laws.js), read with the stories.
 const LAWS = 'news/laws.json';
 let lawsBuilt = null;
@@ -263,7 +249,6 @@ function loadInterests() {
 function load({ fresh = false } = {}) {
   if (reading) return reading;
   loadLines(fresh);
-  loadTr(fresh);
   loadInterests();
   loadLaws(fresh);
   loadSides(fresh);
@@ -375,14 +360,15 @@ watchUpdates({ current: VERSION, key: 'orbitNews', cachePrefix: 'orbit-news-' })
 topActions(q, { refresh: () => (state.held.clear(), load({ fresh: true })) });
 
 async function boot() {
+  // (One language, lib/tr.mjs: the titles drawn in the other one asked for as they show.)
+  watchTitles(document.body, en);
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
-  const [kept, keptLines, keptTr, keptMarkets] = await Promise.all([PAGE, LINES, TR, MARKETS].map(p => orbitKit.peekPack?.(p).catch(() => null)));
+  const [kept, keptLines, keptMarkets] = await Promise.all([PAGE, LINES, MARKETS].map(p => orbitKit.peekPack?.(p).catch(() => null)));
   if (kept?.data && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
   // (The AI's titles, the translations and the markets kept with them, so the
   // first draw is the whole one: the fresh ones redraw only if newer.)
   if (keptLines?.data && linesBuilt === null) ((state.lines = cleanLines(keptLines.data)), (linesBuilt = keptLines.data.built ?? null));
-  if (keptTr?.data && trBuilt === null) ((state.tr = cleanTr(keptTr.data)), (trBuilt = keptTr.data.built ?? null));
   if (keptMarkets?.data && marketsBuilt === null) ((state.markets = cleanMarkets(keptMarkets.data)), (marketsBuilt = keptMarkets.data.built ?? null));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
   if (mine) absorb(mine);

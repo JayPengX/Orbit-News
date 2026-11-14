@@ -104,13 +104,13 @@ const tapStory = (story, onOpen, list) => e => {
 // The headline as the reader sees it (a world story's in Chinese, by the
 // AI, from the outlets' own) and the AI's neutral one line under it, its
 // spark marking it the AI's (lib/lines.mjs).
-export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en, state.tr?.get?.(story.id));
+export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en, foreign(story.title, en) ? trCache.get(story.title) : null);
 // The outlet's summary as the reader sees it: in their language where it's
 // been translated (lib/tr.mjs), else as the outlet wrote it.
 export const shownSum = story => {
-  const t = state.tr?.get?.(story.id);
   const other = foreign(story.sum, en);
-  return other && t?.sum && t.s === story.sum ? { text: t.sum, lang: en ? 'en' : 'zh-Hant' } : { text: story.sum || '', lang: story.region === 'intl' ? 'en' : 'zh-Hant', wait: other };
+  const v = other ? trCache.get(story.sum) : null;
+  return v ? { text: v, lang: en ? 'en' : 'zh-Hant' } : { text: story.sum || '', lang: story.region === 'intl' ? 'en' : 'zh-Hant', wait: other };
 };
 // An outlet's own words in the reader's language: its translation where
 // it's had (lib/tr.mjs), else as written, marked to be swapped when the
@@ -126,7 +126,10 @@ export function said(tag, attrs, src, parts = [src]) {
 }
 const titleSpan = (story, cls) => {
   const t = shownTitle(story);
-  return h('span', { class: cls, lang: t.lang, text: t.text });
+  const el = h('span', { class: cls, lang: t.lang, text: t.text });
+  // (The outlet's own till its translation comes, lib/tr.mjs askTitles.)
+  if (!t.ai && t.text === story.title && foreign(story.title, en)) Object.assign(el.dataset, { tr: story.title, trid: story.id });
+  return el;
 };
 
 // 快訊: a breaking story's mark before its kicker (a red dot that pulses).
