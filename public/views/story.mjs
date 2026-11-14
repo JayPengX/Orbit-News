@@ -132,7 +132,7 @@ export function openStory(id, { clip = '', list = null, via = '', start = 0 } = 
   // (An older story, from a link: the past read first. A sports report Orbit
   // Sports' 相關新聞 opened, one outlet's, not on News' pages: the sports pack.)
   // (Gone from all, or the older ones unreadable: said, never a tap that does nothing.)
-  const gone = () => kitUI.toast?.(state.pastFailed ? W('暫時讀不到這則新聞，稍後再試。', 'Can’t get this story right now. Try again shortly.') : W('這則新聞已經不在了。', 'This story is no longer available.'), { ms: 2400 });
+  const gone = () => kitUI.toast(state.pastFailed ? W('暫時讀不到這則新聞，稍後再試。', 'Can’t get this story right now. Try again shortly.') : W('這則新聞已經不在了。', 'This story is no longer available.'), { ms: 2400 });
   const again = () => (find() ? openStory(id, { clip, list, via }) : gone());
   const past = () => (state.past ? gone() : hooks.past().then(again));
   if (!story) return void (!state.sport && hooks.sport ? hooks.sport().then(() => (find() ? again() : past())) : past());
@@ -181,7 +181,7 @@ export function openStory(id, { clip = '', list = null, via = '', start = 0 } = 
     return true;
   };
   draw(at, { clip, start });
-  kitUI.daySwipe?.(body, dir => step(dir));
+  kitUI.daySwipe(body, dir => step(dir));
   sh.el.addEventListener('keydown', e => {
     if (e.target.closest?.('input, textarea, iframe') || e.altKey || e.metaKey || e.ctrlKey) return;
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') step(e.key === 'ArrowRight' ? 1 : -1) && e.preventDefault();
@@ -434,7 +434,7 @@ function pointsOf(story, { ask = true } = {}) {
 // A part made on open: its shape (the kit's `waiting`) until the answer
 // comes, then what `draw` makes of it (nothing: the shape goes).
 function later(shape, made, draw) {
-  kitUI.waiting?.(shape);
+  kitUI.waiting(shape);
   made.then(out => {
     const real = out ? draw(out) : draw(null);
     if (real) shape.replaceWith(real);

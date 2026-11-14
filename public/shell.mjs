@@ -13,8 +13,8 @@ import { agoOf, isLive } from './lib/stories.mjs';
 export { lang, W };
 export const en = lang === 'en';
 
-// The phone's own day (kit localDay), Taiwan's on an older kit.
-export const today = () => (fmt.localDay || fmt.twDay)(Date.now());
+// The phone's own day (kit localDay).
+export const today = () => fmt.localDay(Date.now());
 export const state = {
   tab: 'top',
   // The builder's page (lib/stories.mjs cleanPage), null until read; `failed`: the
@@ -53,7 +53,7 @@ export const state = {
   followed: new Map(),
   // The lists' order as first drawn this opening (lib/stories.mjs steady), cleared on a pull.
   held: new Map(),
-  // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then or on an older kit).
+  // What the person opens, learnt (the kit's feedback.mjs, loaded on the side; null until then).
   fb: null,
   loaded: false
 };

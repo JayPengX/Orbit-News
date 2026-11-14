@@ -56,7 +56,7 @@ const SPORT = 'news/sport.json';
 
 const q = orbitSession('news', { lang });
 // 今天五則 learns from what's opened and passed over (the kit's feedback.mjs, the
-// family's one engine, kept on the Pass; loaded on the side: an older kit picks without it).
+// family's one engine, kept on the Pass; loaded on the side).
 import('#kit/feedback.mjs')
   .then(m => {
     m.keep?.(q, 'news');
@@ -436,7 +436,7 @@ window.addEventListener('hashchange', () => state.loaded && openFromHash());
 
 // A turn of the phone or a window resized: the page laid out again.
 let fitNow = '';
-orbitKit.onScreen?.(fit => {
+orbitKit.onScreen(fit => {
   const key = `${fit.w3}${fit.wide}${globalThis.innerHeight > 600}`;
   if (key === fitNow) return;
   fitNow = key;

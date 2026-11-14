@@ -45,7 +45,7 @@ export function openFollows() {
   const letGo = f => {
     hooks.follow(f.key, false);
     paint();
-    kitUI.toast?.(W(`已取消追蹤${followName(f)}`, `Unfollowed ${followName(f)}`), { action: { label: W('復原', 'Undo'), onTap: () => (hooks.follow(f.key, true), paint()) } });
+    kitUI.toast(W(`已取消追蹤${followName(f)}`, `Unfollowed ${followName(f)}`), { action: { label: W('復原', 'Undo'), onTap: () => (hooks.follow(f.key, true), paint()) } });
   };
   const row = (f, icon) =>
     h('div', { class: 'q-ritem nw-follow-row' }, [

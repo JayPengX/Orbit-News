@@ -64,7 +64,7 @@ function drawResults() {
   if (front) front.hidden = on;
   drawRecent();
   // (The front page back: its columns dealt again, as they're never dealt hidden.)
-  if (!on) return void (front && kitUI.flowColumns?.(front));
+  if (!on) return void (front && kitUI.flowColumns(front));
   // (The older stories kept: read once, the first time anything is searched.)
   if (!state.past && !pastAsked) {
     pastAsked = true;

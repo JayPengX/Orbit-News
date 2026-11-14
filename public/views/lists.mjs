@@ -51,7 +51,7 @@ function notYet(box) {
 // The way on to a whole tab, at a section's foot.
 const more = (words, to) => {
   const onTap = typeof to === 'function' ? to : goTab(to);
-  return kitUI.goBar?.(words, onTap) || h('button', { type: 'button', class: 'q-more', onclick: onTap, text: words });
+  return kitUI.goBar(words, onTap) || h('button', { type: 'button', class: 'q-more', onclick: onTap, text: words });
 };
 
 // The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
@@ -149,7 +149,7 @@ export function renderTop(box) {
   ];
   // (Under 搜尋's field, kept in place: views/search.mjs.)
   withSearch(box, [hero, h('div', { class: 'q-flow nw-flow' }, parts.filter(Boolean)), builtLine(state.page)]);
-  kitUI.flowColumns?.(box);
+  kitUI.flowColumns(box);
 }
 
 // 今天五則, the day's: the five kept since the first look after 7:00 (on
@@ -403,7 +403,7 @@ function showTab(chips) {
 function swipeTabs(box, key, tabsNow, reset) {
   if (box.dataset.swipe) return;
   box.dataset.swipe = '1';
-  kitUI.daySwipe?.(box, dir => {
+  kitUI.daySwipe(box, dir => {
     const tabs = tabsNow();
     const i = tabs.indexOf(tabs.includes(state.topic[key]) ? state.topic[key] : 'all') + dir;
     if (i < 0 || i >= tabs.length) return false;
@@ -485,7 +485,7 @@ export function renderSide(box) {
   const parts = byKind(shown, topicOrder()).map(([t, list]) => kindPart(t, list.map(s => asTopic(s, t)), region, !blind));
   box.replaceChildren(...[chips, h('div', { class: 'nw-oneside' }, [lede, tiles, h('div', { class: 'q-flow nw-flow' }, parts), builtLine(state.page)])].filter(Boolean));
   showTab(chips);
-  kitUI.flowColumns?.(box);
+  kitUI.flowColumns(box);
 }
 // Under a one-sided story's headline: who carried it and who didn't.
 const whoNote = s => (s.blind ? h('span', { class: 'nw-who', text: oneSideLine(s) }) : null);
@@ -494,7 +494,7 @@ function kindPart(t, list, region, side) {
   const rows = h('div');
   const draw = all => {
     rows.replaceChildren(storyList(all ? list : list.slice(0, 3), s => open(s, list), { side, note: whoNote }));
-    kitUI.flowColumns?.(rows.closest('.nw-oneside'));
+    kitUI.flowColumns(rows.closest('.nw-oneside'));
   };
   draw(false);
   const fold = list.length > 3 ? moreToggle({ more: W(`再看 ${list.length - 3} 則`, `${list.length - 3} more`), less: W('收起', 'Fewer'), onToggle: draw }) : null;

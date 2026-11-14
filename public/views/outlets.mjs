@@ -83,7 +83,7 @@ export function renderOutlets(box) {
     h('p', { class: 'nw-foot', text: W('點一家看它的擁有者、位置和依據。位置說的是一家媒體整體的傾向，不是每一篇報導。', 'Tap one for its owner, place and why. A place is an outlet’s lean as a whole, not each report’s.') })
   ];
   box.replaceChildren(h('div', { class: 'q-flow nw-flow' }, parts));
-  kitUI.flowColumns?.(box);
+  kitUI.flowColumns(box);
 }
 
 // One outlet's sheet.
