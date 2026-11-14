@@ -6,14 +6,16 @@
 
 <p align="center">
   <b>One story, every side.</b><br>
-  <a href="https://orbit.jaypengx.com/news/"><b>orbit.jaypengx.com/news</b></a>
+  <a href="https://orbit.jaypengx.com/app/"><b>Use it in Orbit</b></a> · on its own at <a href="https://orbit.jaypengx.com/news/">orbit.jaypengx.com/news</a>
 </p>
 
 <p align="center">
   <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-ES_modules-F7DF1E?logo=javascript&logoColor=000"> <img alt="PWA" src="https://img.shields.io/badge/PWA-works_offline-5A0FC8?logo=pwa&logoColor=fff"> <img alt="Cloudflare" src="https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=fff"> <img alt="Tests" src="https://img.shields.io/badge/Tests-node_--test-339933?logo=nodedotjs&logoColor=fff">
 </p>
 
-Taiwan's and the world's news (politics, cross-strait, defence, the economy, tech, energy, justice, society, and life, health, science, culture and sport), the same event from every outlet gathered into one story: how many outlets lean green, centre or blue (left, centre or right for English news) carry it, which side left it out, and every headline side by side. The most important stories lead and stay for weeks, growing as coverage comes; swipe through the lead stories, from topic to topic and from story to story; the outlets' own clips play in the app. A tap opens the outlet's own page. Part of **Orbit**, a family of apps for life in Taiwan that share one sign-in, the Orbit Pass. See them all at [orbit.jaypengx.com](https://orbit.jaypengx.com/pass/).
+Taiwan's and the world's news (politics, cross-strait, defence, the economy, tech, energy, justice, society, and life, health, science, culture and sport), the same event from every outlet gathered into one story: how many outlets lean green, centre or blue (left, centre or right for English news) carry it, which side left it out, and every headline side by side. The most important stories lead and stay for weeks, growing as coverage comes; swipe through the lead stories, from topic to topic and from story to story; the outlets' own clips play in the app. A tap opens the outlet's own page. Part of **Orbit**, a family of apps for life in Taiwan that share one sign-in, the Orbit Pass.
+
+> **Best in Orbit.** Add [Orbit](https://orbit.jaypengx.com/app/) to your home screen: every Orbit app in one, signed in once, switching between them without reloading. Orbit News also works on its own at [orbit.jaypengx.com/news](https://orbit.jaypengx.com/news/) if it's the only one you want.
 
 <p align="center">
   <img src="docs/screenshots/news-1.webp" width="30%" alt="Every story, as every outlet tells it">
