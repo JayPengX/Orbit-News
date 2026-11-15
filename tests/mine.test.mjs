@@ -33,3 +33,11 @@ test('stories found by any outlet’s headline, Taiwan’s first, at most a few'
   const busy = { tw: [1, 2, 3, 4].map(n => story(`t${n}`, `台積電 ${n}`)), intl: [story('l', 'Lakers win')] };
   assert.deepEqual(mineOf(busy, interestsOf(holds, follows)).map(x => x.story.id), ['t1', 't2', 'l']);
 });
+
+test('a story is about a holding by its title or enough of its headlines, never one in passing (Jay 11-15)', () => {
+  const heads = Array.from({ length: 40 }, (_, i) => `黃仁勳辭輝達執行長 ${i}`);
+  const huang = story('h', 'Why Jensen Huang’s Nvidia scandal has everyone quoting Warren Buffett', [...heads, '黃仁勳辭輝達執行長、台積電入股 Anthropic 本周大事回顧']);
+  assert.deepEqual(mineOf({ tw: [huang], intl: [] }, interestsOf(holds, [])), []);
+  const tsmc = story('t', '輝達換帥 供應鏈震盪', ['台積電股價跌', '台積電法說會', '供應鏈憂心']);
+  assert.deepEqual(mineOf({ tw: [tsmc], intl: [] }, interestsOf(holds, [])).map(x => x.story.id), ['t']);
+});

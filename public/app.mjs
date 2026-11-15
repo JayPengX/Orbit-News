@@ -26,7 +26,7 @@ import { cleanMarkets } from './lib/markets.mjs';
 import { cleanBriefs } from './lib/briefs.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { learnSet } from './lib/learn.mjs';
-import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, setFollow } from './lib/reading.mjs';
+import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide, keptLists } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
 import { openStory } from './views/story.mjs';
@@ -102,14 +102,24 @@ function sync({ soon = false } = {}) {
   if (!state.loaded) return Promise.resolve();
   return pass.sync();
 }
+// Back after a while away (AWAY_MS): the lists ranked anew, what was seen
+// since further down (Jay 11-15: "everytime you open the news it's about
+// what you haven't seen"); never under the reader while they're here.
+const AWAY_MS = 10 * 60_000;
+let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') sync();
-  else load();
+  if (document.visibilityState === 'hidden') return void ((hiddenAt = Date.now()), sync());
+  const anew = hiddenAt && Date.now() - hiddenAt > AWAY_MS && !document.querySelector('dialog.q-sheet[open]');
+  hiddenAt = 0;
+  if (anew) (state.held.clear(), stamp++);
+  Promise.resolve(load()).then(() => anew && state.loaded && render());
 });
 // A headline opened: counted for its outlet today (the page itself isn't
 // redrawn under the person; 我的閱讀 is when they're back).
 hooks.read = outlet => {
   addRead(state.log, outlet, today());
+  // (From a story's sheet: that story really read, lib/reading.mjs markDeep.)
+  if (sheetStory && document.querySelector('dialog.q-sheet[open]')) markDeep(state.log, sheetStory);
   readLater();
   pass.changed();
   keepLocal();
@@ -117,7 +127,9 @@ hooks.read = outlet => {
 };
 // A story opened in its sheet: marked read (its row dimmed once the sheet
 // closes), with how big it was, so big news since shows as 新進展.
+let sheetStory = null;
 hooks.opened = story => {
+  sheetStory = story;
   markRead(state.log, story);
   opened.add(story.id);
   readLater();

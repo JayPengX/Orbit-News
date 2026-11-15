@@ -27,3 +27,15 @@ export function interestsOf(holds = [], follows = []) {
 }
 
 export const textOf = story => (kitNews.storyText ? kitNews.storyText(story) : [story.title, story.zh].filter(Boolean).join('\n'));
+
+// Whether a story is about it: its title says so, or enough of its headlines
+// (two, and one in eight). One in passing is not (Jay 11-15: Jensen Huang's
+// scandal marked 持股 台積電 by one weekly round-up among its 120 headlines).
+export function about(story, re) {
+  if (!re) return false;
+  if (re.test([story?.title, story?.zh].filter(Boolean).join('\n'))) return true;
+  const heads = [...(story?.items || []), ...(story?.tw?.items || [])].map(it => it?.[1]).filter(Boolean);
+  if (!heads.length) return re.test(textOf(story));
+  const n = heads.filter(t => re.test(t)).length;
+  return n >= Math.min(2, heads.length) && n * 8 >= heads.length;
+}

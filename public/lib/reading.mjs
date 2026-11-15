@@ -44,7 +44,7 @@ export function cleanLog(x) {
   }
   const read = x?.read && typeof x.read === 'object' ? x.read : {};
   for (const [id, m] of Object.entries(read))
-    if (/^\w{1,16}$/.test(id) && Array.isArray(m) && isMinute(m[0])) log.read[id] = [m[0], count(m[1]), count(m[2])];
+    if (/^\w{1,16}$/.test(id) && Array.isArray(m) && isMinute(m[0])) log.read[id] = m[3] === 1 ? [m[0], count(m[1]), count(m[2]), 1] : [m[0], count(m[1]), count(m[2])];
   const follow = x?.follow && typeof x.follow === 'object' ? x.follow : {};
   for (const [k, t] of Object.entries(follow)) if (KEY.test(k) && (k[0] !== 'o' || outletOf(k.slice(2))) && isMinute(Math.abs(t))) log.follow[k] = t;
   return log;
@@ -68,7 +68,13 @@ export function mergeLogs(a, b) {
     for (const [o, n] of Object.entries(outlets)) mine[o] = Math.max(mine[o] || 0, n);
   }
   const theirs = cleanLog(b);
-  for (const [id, m] of Object.entries(theirs.read)) if (!out.read[id] || out.read[id][0] < m[0]) out.read[id] = m;
+  for (const [id, m] of Object.entries(theirs.read)) {
+    const was = out.read[id];
+    // (An article read on either phone stays read.)
+    const deep = was?.[3] === 1 || m[3] === 1;
+    if (!was || was[0] < m[0]) out.read[id] = m.slice(0, 3);
+    if (deep) out.read[id][3] = 1;
+  }
   for (const [k, t] of Object.entries(theirs.follow)) if (!(k in out.follow) || Math.abs(out.follow[k]) < Math.abs(t)) out.follow[k] = t;
   return out;
 }
@@ -91,8 +97,42 @@ export function trimLog(log, today, keep = KEEP_DAYS) {
 // A story opened (its sheet), at `now`: marked read with how big it was then.
 export function markRead(log, story, now = Date.now()) {
   if (!story?.id) return log;
-  log.read[story.id] = [Math.floor(now / MIN), count(story.m || story.items?.length || 0), count(story.n || 0)];
+  const deep = log.read[story.id]?.[3] === 1;
+  log.read[story.id] = [Math.floor(now / MIN), count(story.m || story.items?.length || 0), count(story.n || 0), ...(deep ? [1] : [])];
   return log;
+}
+// One of its articles opened from the story (its outlet's page, a clip):
+// really read, not just looked into.
+export function markDeep(log, story, now = Date.now()) {
+  if (!story?.id) return log;
+  if (!log.read[story.id]) markRead(log, story, now);
+  log.read[story.id][3] = 1;
+  return log;
+}
+
+// How far down a list a story goes for having been seen (Jay 11-15: "everytime
+// you open the news it's about what you haven't seen", seen judged by whether
+// an article was actually opened): never opened, where it was; its sheet
+// opened only, a little down, and back up as hours pass; an article read, far
+// down for a day and a half. A big development since (新進展) is news again.
+// → a factor on its place: 1 where it was, 4 four times as far down.
+export const SINK = { looked: 2, read: 5 };
+export function sinkOf(log, story, { now = Date.now(), live = false } = {}) {
+  const st = readState(log, story, { now, live: typeof live === 'function' ? live(story) : live });
+  if (st !== 'read') return 1;
+  const [t, , , deep] = log.read[story.id];
+  const hours = Math.max(0, (now - t * MIN) / 3_600_000);
+  // (Fading: a looked-at story halfway back in 12 hours; a read one holds, then fades after 36.)
+  return deep === 1 ? 1 + (SINK.read - 1) * (hours < 36 ? 1 : Math.pow(0.5, (hours - 36) / 12)) : 1 + (SINK.looked - 1) * Math.pow(0.5, hours / 12);
+}
+// A list with what's been seen further down (sinkOf), the rest in their order.
+export function sunk(list, log, opts = {}) {
+  if (!log?.read || !Object.keys(log.read).length) return list;
+  return list
+    // (Counted from a few places above, so even the first story goes down.)
+    .map((s, i) => [s, (i + 4) * sinkOf(log, s, opts) - 3, i])
+    .sort((a, b) => a[1] - b[1] || a[2] - b[2])
+    .map(([s]) => s);
 }
 // How far a story has come since it was read: '' never opened, 'read', or
 // 'new' (a big development since: half as many headlines again and 4 at

@@ -9,7 +9,7 @@
 import { h, moreToggle, empty } from '#kit/ui.mjs';
 import { state, hooks, W, en, ago, outletName, outletMark, topicName, openOut } from '../shell.mjs';
 import { isLive } from '../lib/stories.mjs';
-import { picture, playMark, shownTitle, shownSum, coverage, liveTag, newTag } from './parts.mjs';
+import { picture, playMark, shownTitle, shownSum, coverage, liveTag, newTag, clipAgo } from './parts.mjs';
 import { openStory, player, aiMark } from './story.mjs';
 
 const PAGE = 8;
@@ -91,7 +91,7 @@ function videoCard(story, list) {
     stage.replaceChildren(
       h('button', { type: 'button', class: 'nw-v-play', 'aria-label': W(`播放${outletName(clip[0])}的影片`, `Play ${outletName(clip[0])}’s clip`), onclick: () => play(clip) }, [
         still(clip, story),
-        h('span', { class: 'nw-v-by' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) })])
+        h('span', { class: 'nw-v-by' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), clipAgo(clip)])
       ])
     );
   const strip = clips.length + sites.length > 1 ? h('div', { class: 'q-rail small nw-v-strip', 'data-noswipe': '' }) : null;
@@ -164,14 +164,14 @@ function videoCard(story, list) {
       ...clips.map(c =>
         h('button', { type: 'button', class: 'nw-v-clip', 'data-clip': c[1], 'aria-label': W(`${outletName(c[0])}的影片`, `${outletName(c[0])}’s clip`), onclick: () => play(c) }, [
           still(c, story, { size: 's' }),
-          h('span', { class: 'nw-v-clip-by' }, [outletMark(c[0], 16), h('span', { text: outletName(c[0]) })])
+          h('span', { class: 'nw-v-clip-by' }, [outletMark(c[0], 16), h('span', { text: outletName(c[0]) }), clipAgo(c)])
         ])
       ),
       // (An outlet's own player: on its site.)
       ...sites.map(c =>
         h('button', { type: 'button', class: 'nw-v-clip is-out', onclick: () => (hooks.read(c[0]), openOut(c[2])) }, [
           still(c, story, { size: 's' }),
-          h('span', { class: 'nw-v-clip-by' }, [outletMark(c[0], 16), h('span', { text: outletName(c[0]) }), h('small', { 'aria-hidden': 'true', text: '↗' })])
+          h('span', { class: 'nw-v-clip-by' }, [outletMark(c[0], 16), h('span', { text: outletName(c[0]) }), clipAgo(c), h('small', { 'aria-hidden': 'true', text: '↗' })])
         ])
       )
     );

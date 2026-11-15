@@ -288,13 +288,16 @@ export const storyCards = (stories, onOpen) => h('div', { class: 'nw-cards q-row
 
 // A clip in the 影音 row: the outlet's YouTube picture with a play mark,
 // the outlet and its headline. `onPlay({ story, clip })`.
+// How long ago a clip came out, as an article's time (Jay 11-15: "add how
+// recent videos are like article does"); a build before 11-15 sent none.
+export const clipAgo = clip => (clip?.[5] > 0 ? h('small', { class: 'nw-clip-ago', text: `· ${ago(clip[5])}` }) : null);
 export function clipCard(entry, onPlay) {
   const { story, clip } = entry;
   const pic = picture(clip[4] || story.img, 'nw-clip-pic', { size: 'l' }) || h('span', { class: 'nw-clip-pic' });
   pic.append(playMark());
   return h('button', { type: 'button', class: 'nw-clip', 'data-story': story.id, onclick: () => onPlay(entry) }, [
     pic,
-    h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), followsOutlet(clip[0]) ? followMark() : null, clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
+    h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { text: outletName(clip[0]) }), followsOutlet(clip[0]) ? followMark() : null, clipAgo(clip), clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
     clip[3] ? said('span', { class: 'nw-clip-title', lang: story.region === 'intl' ? 'en' : 'zh-Hant' }, clip[3]) : h('span', { class: 'nw-clip-title', lang: shownTitle(story).lang, text: shownTitle(story).text })
   ]);
 }

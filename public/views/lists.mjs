@@ -10,7 +10,7 @@ import * as kitNews from '#kit/news-outlets.mjs';
 import * as kitSport from '../lib/leagues.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
 import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive, steady } from '../lib/stories.mjs';
-import { balanceOf, leanOf, followKey, followsOf } from '../lib/reading.mjs';
+import { balanceOf, leanOf, followKey, followsOf, sunk } from '../lib/reading.mjs';
 import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
 import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
@@ -103,8 +103,10 @@ export function renderTop(box) {
   // marks. What's followed, in a line under the date.
   const followed = followedNow();
   const theirs = [...followed].filter(([, f]) => f.why).map(([id, f]) => ({ story: byId(id), why: f.why })).filter(x => x.story);
-  const tw = steady(state.held, 'tw', lifted(state.page.tw, followed));
-  const intl = steady(state.held, 'intl', lifted(state.page.intl, followed));
+  // (What's been seen goes further down, what's been read furthest: lib/reading.mjs sunk.)
+  const unseen = list => sunk(list, state.log, { live: s => isLive(s, state.page.built) });
+  const tw = steady(state.held, 'tw', lifted(unseen(state.page.tw), followed));
+  const intl = steady(state.held, 'intl', lifted(unseen(state.page.intl), followed));
   const leads = leadsOf(tw, intl, liveOf(state.page));
   const seen = new Set(leads.map(s => s.id));
   const top = oneASaga(tw.filter(s => !seen.has(s.id)), leads, zhOf).slice(0, 6);
@@ -243,7 +245,7 @@ const sigOf = () => [hooks.stamp?.() ?? 0, en, state.past ? 1 : 0, state.pastFai
 let storiesKept = { sig: '', region: '', list: [] };
 function storiesOf(region) {
   const sig = sigOf(region);
-  if (storiesKept.sig !== sig || storiesKept.region !== region) storiesKept = { sig, region, list: steady(state.held, region, lifted(state.page[region], followedNow())) };
+  if (storiesKept.sig !== sig || storiesKept.region !== region) storiesKept = { sig, region, list: steady(state.held, region, lifted(sunk(state.page[region], state.log, { live: s => isLive(s, state.page.built) }), followedNow())) };
   return storiesKept.list;
 }
 function bodyOf(region, topic) {

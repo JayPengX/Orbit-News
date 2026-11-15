@@ -933,3 +933,7 @@ h1, h2, h3, p { margin: 0; }
 /* 單邊: who carried a story and who didn't, under its headline and in its sheet (Jay 11-14). */
 .nw-who { display: block; color: var(--q-label-2); font: var(--q-t-footnote); text-wrap: pretty; min-width: 0; }
 .nw-spec-note { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+/* A clip's age, after its outlet, as an article's (views/parts.mjs clipAgo). */
+.nw-clip-src small.nw-clip-ago,
+.nw-v-by .nw-clip-ago,
+.nw-v-clip-by small.nw-clip-ago { margin-left: 0; flex: none; color: var(--q-label-2); font: var(--q-t-caption); white-space: nowrap; }
