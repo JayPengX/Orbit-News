@@ -8,7 +8,7 @@
 import { REGIONS, ENDS } from './stories.mjs';
 import { findStories } from './search.mjs';
 import { followsOf, readState, leanOf, balanceOf } from './reading.mjs';
-import { about } from './mine.mjs';
+import { isAbout } from './mine.mjs';
 
 // What each follow finds: { label, kind: 'follow', key, has(story) }.
 // Words (a person, a company) as a search finds them, only where they're in
@@ -39,7 +39,7 @@ export function followFinds(log, page, ctx = {}) {
 const ORDER = { follow: 0, hold: 1, topic: 2, outlet: 3 };
 export function yourStories(page, { finds = [], interests = [], log = null, now = Date.now(), live = () => false, most = 5, each = 2, skip = new Set() } = {}) {
   if (!page) return [];
-  const all = [...finds, ...interests.map(i => ({ ...i, has: s => about(s, i.re) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
+  const all = [...finds, ...interests.map(i => ({ ...i, has: s => isAbout(s, i) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
   if (!all.length) return [];
   const stories = REGIONS.flatMap(r => page[r] || [])
     .filter(s => !skip.has(s.id))
@@ -75,7 +75,7 @@ export const CARRIES = 1.5;
 export function followedOf(page, { finds = [], interests = [], outlets = [], log = null, now = Date.now(), live = () => false } = {}) {
   const out = new Map();
   if (!page) return out;
-  const all = [...finds, ...interests.map(i => ({ ...i, has: s => about(s, i.re) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
+  const all = [...finds, ...interests.map(i => ({ ...i, has: s => isAbout(s, i) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
   if (!all.length && !outlets.length) return out;
   for (const s of REGIONS.flatMap(r => page[r] || [])) {
     const hit = all.find(i => i.has(s));

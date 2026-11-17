@@ -13,7 +13,7 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, r
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark, titleSpan } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { itemOf } from '../lib/brief.mjs';
 
@@ -194,8 +194,9 @@ function footOf(order, step) {
     paint(i) {
       prev.disabled = i <= 0;
       next.disabled = i >= order.length - 1;
-      prev.t.textContent = order[i - 1]?.title || '';
-      next.t.textContent = order[i + 1]?.title || '';
+      // (In the reader's language, as the lists have them.)
+      prev.t.replaceChildren(...(order[i - 1] ? [titleSpan(order[i - 1], '')] : []));
+      next.t.replaceChildren(...(order[i + 1] ? [titleSpan(order[i + 1], '')] : []));
       at.textContent = `${i + 1} / ${order.length}`;
     }
   });
@@ -205,12 +206,13 @@ function footOf(order, step) {
 // The sheet's headline: the AI's in the reader's language over the outlets'
 // own (a world story on a Chinese phone), the Orbit AI mark beside the line above it.
 function storyTitle(story) {
-  const t = shownTitle(story);
   return [
-    // (The AI's title alone, its mark in the line above: the outlets' own
-    // headlines are each side's, below. Jay 11-13: the English original and a
-    // note under it were text scattered over the story.)
-    h('h2', { class: 'nw-story-title', lang: t.lang, text: t.text })
+    // (The title alone: the outlets' own headlines are each side's, below.
+    // Jay 11-13: the English original and a note under it were text
+    // scattered over the story. Its translation swapped in as it comes: a
+    // story opened from a link or 相關新聞 before its row's had come kept
+    // the other language's, 11-17.)
+    titleSpan(story, 'nw-story-title', 'h2')
   ];
 }
 
@@ -366,7 +368,7 @@ function worldLink(story) {
   if (!w) return null;
   return h('button', { type: 'button', class: 'nw-world-go', onclick: () => openStory(w.id) }, [
     h('small', { text: W(`國際媒體也在報 · ${w.n} 家`, `World outlets carry it too · ${w.n}`) }),
-    h('span', { lang: shownTitle(w).lang, text: shownTitle(w).text }),
+    titleSpan(w, ''),
     h('b', { 'aria-hidden': 'true', text: '›' })
   ]);
 }

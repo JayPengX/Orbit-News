@@ -113,9 +113,9 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | --- | --- |
 | `app.mjs`, `shell.mjs` | Start, reading the page (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`); state, outlets' names and marks, `outletLink`, `openOut` (the kit's `openLink`) |
 | `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, topics, clips |
-| `lib/mine.mjs`, `brief.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`) |
+| `lib/mine.mjs`, `brief.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`; a team or player only in a sports story of its league, `isAbout`: the Nationals' 國民 is no 國民黨); 今天五則 (code only, kit `feedback.mjs` as `news`) |
 | `lib/lines.mjs` | The title a reader sees: the plain translation (lib/tr.mjs) once it's come, else the outlets' own |
-| `lib/tr.mjs` | One language: plain translation (Orbit-Core `translate.js`, Google), never the AI's: a list's waiting titles in one batch of 30 and a sheet's outlet words as they show (POST `/news-tr`), kept on the phone, the outlet's own till then; nothing ahead |
+| `lib/tr.mjs` | One language: plain translation (Orbit-Core `translate.js`, Google), never the AI's: the titles, leads' summaries, clips' titles and 影音's lines drawn waiting (`data-trid`, `parts.mjs ownWords`, a sheet's title too) in one batch of 30 and a sheet's outlet words as they show (POST `/news-tr`), kept on the phone, the outlet's own till then; nothing ahead |
 | `lib/search.mjs`, `views/search.mjs` | 搜尋, on the phone as each letter is typed (`findStories`, `fold`), recent searches |
 | `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log, the read marks (`markRead`, `readState`) and the follows (`setFollow`, keys `w:` words, `t:` topic, `o:` outlet), the Pass payload `{ v: 1, days, read, follow }`; an outlet's picture at the size shown (`sized`, `heavy`) |
 | `lib/follows.mjs`, `views/follows.mjs` | What's followed (`followFinds`, `followedOf`, `lifted`: News' follows and the family's, `lib/mine.mjs`; `yourStories` the five most important), 你可能錯過 (`missedOf`); 我的追蹤's sheet (`openFollows`) and the follow pill (kit `followButton`) |

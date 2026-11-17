@@ -123,13 +123,21 @@ export function said(tag, attrs, src) {
   if (other) el.dataset.tr = src;
   return el;
 }
-const titleSpan = (story, cls) => {
-  const t = shownTitle(story);
-  const el = h('span', { class: cls, lang: t.lang, text: t.text });
-  // (The outlet's own till its translation comes, lib/tr.mjs askTitles.)
-  if (t.text === story.title && foreign(story.title, en)) Object.assign(el.dataset, { tr: story.title, trid: story.id });
+// A story's own words (its title, summary or a clip's title) in the
+// reader's language: the translation the phone has, else as written and
+// marked (`data-trid` its story) so the list's batch asks for it, lib/tr.mjs
+// askTitles, and swaps it in place. (A clip's title and a lead's summary
+// were marked for a story's sheet alone, so on 頭條 an English reader read
+// them in Chinese for good, 11-17.)
+export function ownWords(tag, attrs, src, story) {
+  const other = foreign(src, en);
+  const v = other ? trCache.get(src) : null;
+  if (v) return h(tag, { ...attrs, lang: en ? 'en' : 'zh-Hant', text: v });
+  const el = h(tag, { ...attrs, lang: attrs.lang || (story?.region === 'intl' ? 'en' : 'zh-Hant'), text: src });
+  if (other && story?.id) Object.assign(el.dataset, { tr: src, trid: story.id });
   return el;
-};
+}
+export const titleSpan = (story, cls, tag = 'span') => ownWords(tag, { class: cls }, story.title, story);
 
 // 快訊: a breaking story's mark before its kicker (a red dot that pulses).
 export const liveTag = story => (isLive(story, state.page?.built) ? h('b', { class: 'nw-live-tag', text: W('快訊', 'Breaking') }) : null);
@@ -265,7 +273,7 @@ export function clipCard(entry, onPlay) {
   return h('button', { type: 'button', class: 'nw-clip', 'data-story': story.id, onclick: () => onPlay(entry) }, [
     pic,
     h('span', { class: 'nw-clip-src' }, [outletMark(clip[0], 18), h('span', { class: 'q-fit', text: outletName(clip[0]) }), followsOutlet(clip[0]) ? followMark() : null, clipAgo(clip), clip[1] ? null : h('small', { text: W('到網站看', 'On its site') })]),
-    clip[3] ? said('span', { class: 'nw-clip-title', lang: story.region === 'intl' ? 'en' : 'zh-Hant' }, clip[3]) : h('span', { class: 'nw-clip-title', lang: shownTitle(story).lang, text: shownTitle(story).text })
+    clip[3] ? ownWords('span', { class: 'nw-clip-title' }, clip[3], story) : titleSpan(story, 'nw-clip-title')
   ]);
 }
 
@@ -284,7 +292,7 @@ export function leadCard(story, onOpen, { list = null, eager = true } = {}) {
     h('span', { class: 'nw-lead-body' }, [
       kickerOf(story, about, mine ? mineTag(mine) : null),
       titleSpan(story, 'nw-lead-title'),
-      story.sum ? h('span', { class: 'nw-lead-sum', lang: shownSum(story).lang, text: shownSum(story).text }) : null,
+      story.sum ? ownWords('span', { class: 'nw-lead-sum' }, story.sum, story) : null,
       h('span', { class: 'nw-lead-gap', 'aria-hidden': 'true' }),
       sidesTaken(story) ? h('span', { class: 'nw-lead-bar' }, [bar(story, { big: true }), counts(story, { full: true })]) : null,
       coverage(story, { bar: false }),

@@ -59,3 +59,16 @@ test('a story’s texts asked for once a session, only those in the other langua
   await askTr('b', ['Small storm'], false, { fetchImpl });
   assert.equal(seen.length, 2);
 });
+
+test('a sheet’s texts past the Worker’s 60 are asked next time, never marked asked unsent (11-17)', async () => {
+  const texts = Array.from({ length: 70 }, (_, i) => `Outlet headline number ${i}`);
+  const sent = [];
+  const fetchImpl = async (u, init) => {
+    const b = JSON.parse(init.body);
+    sent.push(b.texts.length);
+    return new Response(JSON.stringify({ tr: {} }));
+  };
+  await askTr('big', texts, false, { fetchImpl });
+  await askTr('big', texts, false, { fetchImpl });
+  assert.deepEqual(sent, [60, 10]);
+});

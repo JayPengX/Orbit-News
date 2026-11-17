@@ -462,6 +462,8 @@ h1, h2, h3, p { margin: 0; }
 .nw-v-text { display: grid; gap: 4px; padding: 0; border: 0; background: none; text-align: left; color: inherit; min-width: 0; }
 .nw-v-title { font: 600 19px/25px var(--q-font); color: var(--q-label); text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .nw-v-line { color: var(--q-label-2); font: 400 15px/21px var(--q-font); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-wrap: pretty; }
+/* (Its translation not come yet: hidden, never the other language.) */
+.nw-v-line[data-tr] { display: none; }
 /* (Every outlet's clip on it: small stills, the one playing ringed.) */
 .nw-v-strip { --q-rail-w: 128px; margin: 0 calc(-1 * var(--q-margin, 16px)); padding: 0 var(--q-margin, 16px); scroll-padding: 0 var(--q-margin, 16px); }
 .nw-v .nw-v-strip { margin: 0; padding: 0; }

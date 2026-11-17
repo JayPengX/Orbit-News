@@ -42,11 +42,13 @@ const signedTr = async (url, init) => {
 
 // Asks for a story's texts not had yet (each once a session); → how many came.
 export async function askTr(id, texts, en, { fetchImpl = signedTr } = {}) {
-  const want = [...new Set(texts.filter(t => foreign(t, en) && !trCache.has(t) && !asked.has(`${id}\n${t}`)))];
+  // (The Worker takes 60 at a time: only those marked asked, the rest asked
+  // with the sheet's next change, never left in the other language for the session.)
+  const want = [...new Set(texts.filter(t => foreign(t, en) && !trCache.has(t) && !asked.has(`${id}\n${t}`)))].slice(0, 60);
   if (!want.length || !fetchImpl) return 0;
   for (const t of want) asked.add(`${id}\n${t}`);
   try {
-    const r = await fetchImpl(`${API}/news-tr`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, to: en ? 'en' : 'zh-TW', texts: want.slice(0, 60) }) });
+    const r = await fetchImpl(`${API}/news-tr`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, to: en ? 'en' : 'zh-TW', texts: want }) });
     if (!r.ok) return 0;
     const j = await r.json();
     let n = 0;

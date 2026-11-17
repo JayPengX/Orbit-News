@@ -9,7 +9,7 @@
 import { h, moreToggle, empty } from '#kit/ui.mjs';
 import { state, hooks, W, ago, outletName, outletMark, topicName, openOut } from '../shell.mjs';
 import { isLive } from '../lib/stories.mjs';
-import { picture, playMark, shownTitle, shownSum, coverage, liveTag, newTag, clipAgo } from './parts.mjs';
+import { picture, playMark, coverage, liveTag, newTag, clipAgo, ownWords, titleSpan } from './parts.mjs';
 import { openStory, player } from './story.mjs';
 
 const PAGE = 8;
@@ -60,10 +60,10 @@ export function renderVideo(box, region, stories, { chips, foot }) {
 }
 
 // The story's one line: the outlet's own summary in the reader's language;
-// none while it waits for its translation.
+// hidden while it waits for its translation (news.css), which the list's
+// batch asks for (it was never asked, so the line never came, 11-17).
 function lineOf(story) {
-  const t = shownSum(story);
-  return t.text && !t.wait ? h('span', { class: 'nw-v-line', lang: t.lang, text: t.text }) : null;
+  return story.sum ? ownWords('span', { class: 'nw-v-line' }, story.sum, story) : null;
 }
 
 // A clip's still: its own frame (what plays), the outlet over it, a play mark.
@@ -173,7 +173,6 @@ function videoCard(story, list) {
     );
   poster();
   mark();
-  const t = shownTitle(story);
   const topic = story.topics?.[0] ? topicName(story.topics[0], story.region) : '';
   const live = liveTag(story) || newTag(story);
   const when = isLive(story, state.page?.built) ? '' : ago(story.at);
@@ -182,7 +181,7 @@ function videoCard(story, list) {
     bar,
     h('button', { type: 'button', class: 'nw-v-text', onclick: openAll }, [
       h('small', { class: 'nw-kicker' }, [live, [topic, when].filter(Boolean).join(' · ')]),
-      h('span', { class: 'nw-v-title', lang: t.lang, text: t.text }),
+      titleSpan(story, 'nw-v-title'),
       lineOf(story)
     ]),
     strip,
