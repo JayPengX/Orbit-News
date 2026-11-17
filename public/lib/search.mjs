@@ -24,6 +24,26 @@ export const fold = s =>
 // The query's words; Chinese typed with no spaces is one word (found as written).
 export const wordsOf = q => [...new Set(fold(q).split(' ').filter(Boolean))];
 
+// Where a word is found. Chinese anywhere (it has no spaces); a word of
+// Latin letters or digits only where a word starts, and one of three or
+// fewer where it ends too (AI, US, UN, 16). Anywhere, 「AI」 found Ukraine,
+// said and again first (200 of the day's 497 stories), 「UN」 171, 「K-pop」
+// the Pope, 「F-16」 a fire on the 16th; a followed AI lifted them all.
+// Longer ones run on (tariff finds tariffs, Trump Trump's). → (text) => index or -1.
+const LATIN = /^[a-z0-9]+$/;
+export function finder(w) {
+  if (!LATIN.test(w)) return (text, from = 0) => text.indexOf(w, from);
+  const re = new RegExp(`(?<![a-z0-9])${w}${w.length <= 3 ? '(?![a-z0-9])' : ''}`, 'g');
+  return (text, from = 0) => {
+    re.lastIndex = from;
+    return re.exec(text)?.index ?? -1;
+  };
+}
+const finds = w => {
+  const at = finder(w);
+  return text => at(text) >= 0;
+};
+
 // One story's text by weight, folded once.
 const FIELDS = { title: 6, sum: 3, heads: 2, names: 2 };
 // (`tr`: the title's and summary's translations the phone has, as the reader
@@ -55,6 +75,7 @@ function indexOf(story, { outletName, topicName, tr }) {
 export function findStories(pages, q, ctx = {}, { most = 200, strong = false } = {}) {
   const words = wordsOf(q);
   if (!words.length) return [];
+  const has = new Map(words.map(w => [w, finds(w)]));
   const now = ctx.now ?? Date.now();
   const seen = new Set();
   const out = [];
@@ -73,9 +94,10 @@ export function findStories(pages, q, ctx = {}, { most = 200, strong = false } =
         let score = 0;
         let ok = true;
         for (const w of words) {
-          const inTitle = ix.title.includes(w);
-          const heads = ix.heads.filter(t => t.includes(w)).length;
-          const best = inTitle ? FIELDS.title : ix.sum.includes(w) ? FIELDS.sum : heads >= (strong ? 2 : 1) ? FIELDS.heads : !strong && ix.names.includes(w) ? FIELDS.names : 0;
+          const found = has.get(w);
+          const inTitle = found(ix.title);
+          const heads = ix.heads.filter(found).length;
+          const best = inTitle ? FIELDS.title : found(ix.sum) ? FIELDS.sum : heads >= (strong ? 2 : 1) ? FIELDS.heads : !strong && found(ix.names) ? FIELDS.names : 0;
           if (!best) {
             ok = false;
             break;
@@ -86,7 +108,7 @@ export function findStories(pages, q, ctx = {}, { most = 200, strong = false } =
         // (Importance and freshness: a near tie goes to the bigger, newer story.)
         const hours = Math.max(0, (now - (story.at || 0)) / 3_600_000);
         score += Math.min(story.imp || 0, 40) * 0.05 + 2 * Math.pow(0.5, hours / 48);
-        const hit = words.every(w => ix.title.includes(w)) ? null : (story.items || []).find(it => words.every(w => fold(it[1]).includes(w))) || (story.items || []).find(it => words.some(w => fold(it[1]).includes(w))) || null;
+        const hit = words.every(w => has.get(w)(ix.title)) ? null : (story.items || []).find(it => words.every(w => has.get(w)(fold(it[1])))) || (story.items || []).find(it => words.some(w => has.get(w)(fold(it[1])))) || null;
         out.push({ story, score, hit: hit ? [hit[0], hit[1]] : null });
       }
   return out.sort((a, b) => b.score - a.score || (b.story.at || 0) - (a.story.at || 0)).slice(0, most);
@@ -112,8 +134,10 @@ export function marked(text, q) {
   const low = s.normalize('NFKC').toLowerCase().replace(/臺/g, '台');
   if (low.length !== s.length) return [[s, false]];
   const on = new Array(s.length).fill(false);
-  for (const w of words)
-    for (let i = low.indexOf(w); i >= 0 && w; i = low.indexOf(w, i + 1)) for (let k = i; k < i + w.length; k++) on[k] = true;
+  for (const w of words) {
+    const at = finder(w);
+    for (let i = at(low); i >= 0 && w; i = at(low, i + 1)) for (let k = i; k < i + w.length; k++) on[k] = true;
+  }
   const out = [];
   for (let i = 0; i < s.length; i++) {
     if (out.length && out.at(-1)[1] === on[i]) out.at(-1)[0] += s[i];

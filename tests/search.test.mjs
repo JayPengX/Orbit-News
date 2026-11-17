@@ -73,3 +73,23 @@ test('an English reader’s search finds the words of the title they see (the tr
   // The outlets' own words still found.
   assert.deepEqual(findStories([page], '總預算', ctx).map(f => f.story.id), ['t1']);
 });
+
+// Latin words inside other words (proven 11-18 on the day's 497 stories:
+// 「AI」 found Ukraine, said and again first, 200 of them; 「UN」 171; 「K-pop」
+// the Pope; 「F-16」 a fire on the 16th; a followed AI lifted them all).
+test('a Latin word is found where a word starts, a short one only whole; Chinese anywhere', () => {
+  const w = (id, title) => s(id, title, { region: 'intl' });
+  const pg = {
+    tw: [s('tw', 'AI股全面重挫 台積電ADR跌逾5%')],
+    intl: [w('ukr', 'Ukraine says Russia struck again'), w('ai', 'US moves to block AI chips'), w('pope', 'Pope wraps up Peru visit'), w('kpop', 'BTS tops K-pop awards'), w('fire', 'Fire kills 11 on the 16th'), w('jet', 'Ukraine gets more F-16 jets'), w('tar', 'Tariffs rise again'), w('un', 'UN agency presses on flights'), w('fun', 'A fun run in Taipei')]
+  };
+  const ids = q => findStories([pg], q, ctx).map(f => f.story.id).sort();
+  assert.deepEqual(ids('AI'), ['ai', 'tw']);
+  assert.deepEqual(ids('K-pop'), ['kpop']);
+  assert.deepEqual(ids('F-16'), ['jet']);
+  assert.deepEqual(ids('UN'), ['un']);
+  // (A longer word runs on: tariff finds tariffs; Chinese as ever.)
+  assert.deepEqual(ids('tariff'), ['tar']);
+  assert.deepEqual(ids('台積'), ['tw']);
+  assert.deepEqual(marked('Ukraine and AI said', 'ai'), [['Ukraine and ', false], ['AI', true], [' said', false]]);
+});
