@@ -1,12 +1,12 @@
 // The pieces every list draws: a story's coverage (the outlets' marks, how
 // many, and the bar of each side's count), its row, its card, the lead
 // stories' carousel, and the line under a list.
-import { h, tag } from '#kit/ui.mjs';
+import { h } from '#kit/ui.mjs';
 import { W, en, hooks, state, sideText, sideFull, ago, outletName, outletMark, topicName, readMark, isFollowing } from '../shell.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
 import { foreign, trCache } from '../lib/tr.mjs';
-import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive, oneSideOf } from '../lib/stories.mjs';
+import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
 import { sized } from '../lib/pics.mjs';
 
 // An outlet's picture, hotlinked (never kept), asked at the size it's shown
@@ -184,44 +184,13 @@ export function marks(story, most = 4) {
   const ids = [...all.filter(id => isFollowing(`o:${id}`)), ...all.filter(id => !isFollowing(`o:${id}`))].slice(0, most);
   return h('span', { class: 'nw-marks', 'aria-hidden': 'true' }, ids.map(id => outletMark(id, 18)));
 }
-// 單邊's mark on a story wherever it's listed: words in the colour of the
-// side that left it out, saying so in words (偏藍沒報, or 偏藍少報 where one
-// or two carried it); never the counts (Jay 11-14: "using number to
-// indicate is such a bad design"; the bar beside it shows the split, the
-// sheet's line counts it).
-export function oneSideTag(story) {
-  const o = oneSideOf(story);
-  if (!o) return null;
-  // (Coloured words, not a capsule: the family's tags, docs/DESIGN.md §6.)
-  return tag(o.L ? W(`${sideFull(o.light)}少報`, `Few ${LEANING[o.light].toLowerCase()}`) : W(`${sideFull(o.light)}沒報`, `None ${LEANING[o.light].toLowerCase()}`), 'tint', `var(--nw-${o.light})`);
-}
-// Who carried it and who didn't, in a line, by code (Jay 11-14): in the
-// sheet with the counts, 偏左 20 家在報（CNN、衛報、NPR 等），偏右只有 2 家
-// （福斯新聞、紐約郵報）; in a list by name only, no numbers on a card:
-// 偏右只有福斯新聞、紐約郵報在報, or 只有偏綠的自由時報、三立新聞等在報.
-const LEANING = { g: 'Green-leaning', b: 'Blue-leaning', l: 'Left-leaning', r: 'Right-leaning' };
-export function oneSideLine(story, { full = false } = {}) {
-  const o = oneSideOf(story);
-  if (!o) return '';
-  const names = (ids, most) => ids.slice(0, most).map(outletName).join(W('、', ', ')) + (ids.length > most ? W('等', ' and more') : '');
-  if (!full)
-    return o.L
-      ? W(`${sideFull(o.light)}只有${names(o.few, 2)}在報`, `Of the ${LEANING[o.light].toLowerCase()}, only ${names(o.few, 2)}`)
-      : W(`只有${sideFull(o.heavy)}的${names(o.carried, 2)}在報`, `Only the ${LEANING[o.heavy].toLowerCase()}: ${names(o.carried, 2)}`);
-  const few = o.L ? W(`只有 ${o.L} 家（${names(o.few, 2)}）`, `only ${o.L} (${names(o.few, 2)})`) : W('一家都沒報', 'none');
-  const many = W(`${o.H} 家在報（${names(o.carried, 3)}）`, `${o.H} (${names(o.carried, 3)})`);
-  return W(`${sideFull(o.heavy)} ${many}，${sideFull(o.light)}${few}`, `${LEANING[o.heavy]}: ${many}; ${LEANING[o.light].toLowerCase()}: ${few}`);
-}
 // A story's coverage in a line: the marks, how many outlets, the bar (only
-// for a kind sides take: the spectrum is one feature, Jay 11-10), and its
-// 單邊 mark when one side left it out, or all but.
-export function coverage(story, { side = true, bar: withBar = true } = {}) {
-  const tail = side ? oneSideTag(story) : null;
+// for a kind sides take: the spectrum is one feature, Jay 11-10).
+export function coverage(story, { bar: withBar = true } = {}) {
   return h('span', { class: 'nw-cover' }, [
     marks(story),
     h('span', { class: 'nw-n', text: W(`${story.n} 家媒體`, `${story.n} outlets`) }),
-    withBar && sidesTaken(story) ? bar(story) : null,
-    tail
+    withBar && sidesTaken(story) ? bar(story) : null
   ]);
 }
 
@@ -229,7 +198,7 @@ export function coverage(story, { side = true, bar: withBar = true } = {}) {
 // coverage; its picture beside it, a play mark on it when it has a clip.
 // `onOpen(story, list)`: the list it's in goes along (the sheet swipes through it).
 // `why(story)`: what of the person's it's about (持股 台積電, 追蹤 湖人), before the kicker; else what's followed (state.followed).
-export function storyRow(story, onOpen, { side = true, list = null, why = null, mark = null, note = null } = {}) {
+export function storyRow(story, onOpen, { list = null, why = null, mark = null, note = null } = {}) {
   const pic = withClip(storyPicture(story, 'nw-thumb'), story);
   const mine = why ? why(story) : followedWhy(story);
   // (What of theirs it's about stands for its topic: one line at 320, Jay's 11-12 rule.)
@@ -240,7 +209,7 @@ export function storyRow(story, onOpen, { side = true, list = null, why = null, 
   // (In one inline run: a clamped title's own children each take a line.)
   if (pieces) title.replaceChildren(h('span', {}, pieces));
   return h('button', { type: 'button', class: `nw-row${pic ? ' has-pic' : ''}${readCls(story)}`, 'data-story': story.id, onclick: tapStory(story, onOpen, list) }, [
-    h('span', { class: 'nw-row-main' }, [kicker, title, note?.(story) || null, coverage(story, { side })]),
+    h('span', { class: 'nw-row-main' }, [kicker, title, note?.(story) || null, coverage(story)]),
     pic
   ]);
 }

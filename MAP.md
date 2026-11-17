@@ -10,7 +10,7 @@ Live: https://orbit.jaypengx.com/news/
 
 Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in Orbit-Core `docs/RULEBOOK.md`.
 
-- 11-10 Taiwan's and English news grouped into stories, each outlet's side shown (藍綠 and 統獨 for Taiwan, US left/right for English). "Like Ground News but for Taiwan" is the idea only, never its name, look or words (its "Blindspot" is our 單邊).
+- 11-10 Taiwan's and English news grouped into stories, each outlet's side shown (藍綠 and 統獨 for Taiwan, US left/right for English). "Like Ground News but for Taiwan" is the idea only, never its name, look or words.
 - 11-10 An outlet's place comes from a published source (`kit/news-outlets.mjs` `BASIS`), or its owner's stated stance marked weaker; never our own reading of its stories. No outlet placed 白: stories name the parties instead. Every outlet has a place (AllSides, else Media Bias/Fact Check).
 - 11-10 Headlines, links, the outlet's short summary and feed picture only, each credited; every tap opens the outlet; never a whole article, never a picture or clip kept. No AI in the builder's grouping or placing.
 - 11-10 Cloudflare goes out from Orbit-Core: News's site is published by Orbit-Core's `news-site.yml` with Orbit-Core's token.
@@ -21,7 +21,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-10 (22:51) A world story shows how Taiwan's outlets put it (their bar and headlines, `tw`, joined by a word list `builders/news-words.js`, never AI); the big world outlets are in, each placed by AllSides. A site that refuses non-browsers is read through Bing News' feed of it (Google News refuses Cloudflare); 民視 through its YouTube channel.
 - 11-10 (22:53) A story's first topic is what most of its headlines name, a second only where 40% name it; in a topic's tab a story's tag is that topic; a tab needs 3 stories; each topic keeps its best 12 past the front's cap; a kind past the sides forms from 2 outlets.
 - 11-10 (22:57) YouTube Shorts are left out; a clip YouTube won't play here says so and opens YouTube; a channel is read only if its clips play elsewhere and aren't mostly Shorts.
-- 11-10 (22:58) A story's sheet keeps ‹ 上一則 · n / N · 下一則 › at its foot; each outlet once a side (its other headlines folded), four a side at first; 單邊 by 台灣 / 國際, each side's count a tap filter, its kinds as sections; one company's monthly report is never another's story.
+- 11-10 (22:58) A story's sheet keeps ‹ 上一則 · n / N · 下一則 › at its foot; each outlet once a side (its other headlines folded), four a side at first; one company's monthly report is never another's story.
 - 11-10 No one-line AI summary under a headline (it only said the headline again). 11-11 News isn't passive: a search heads 頭條.
 - 11-13 More outlets, Taiwan's and the world's (Jay: "adding even more news outlet from Taiwan and international"), each placed by a source like the rest; Taiwan's places checked against the studies (Jay: "Taiwan news outlet sit majority in middle, that's probably not so true"): TVBS and 東森 moved to 偏藍, 民視 and 三立 to 深綠 by how TEDS 2019's voters see each channel (`teds2019`), 關鍵評論網 to 偏綠 by Media Bias/Fact Check's Taiwan ratings (`mbfc-tw`: its Left-Center is 偏綠, Right-Center 偏藍); an outlet no study has rated stays 中間 marked 依據較弱, never placed by our reading.
 - 11-13 A story's picture is an outlet's photo, never a video's thumbnail while any outlet gave one (Jay: "don't use thumbnail with text"; a channel's frame carries its words burned in): Orbit-Core `THUMB_PIC`.
@@ -34,7 +34,6 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-13 A kind with no sides (a game, a storm) lists its outlets in one card, those that wrote most first, never under 偏綠 · 中間 · 偏藍 (Jay: "if this kind of news has no spectrum then don't list them like spectrum"). The world's sports stories are 運動 by their teams and players (the Curry injury was 科技), and Taiwan's sports story finds the world's by the English names Sports' AI already gave it (`news/sport-who.json`, no new AI call), a game only a game (Jay: "why is this Taiwan outlet only"). A foreign person in Chinese only by the name Taiwan's press fixes (translate.js `KNOWN`), anyone else in English (Scott Colom, never 史考特科洛姆).
 - 11-13 What's on screen never moves by itself (Jay: opening News "get stuck a few seconds then reshuffle"): lists hold their first-drawn order for the opening (`steady`), new stories slotting in; only a pull, a follow or the next opening ranks anew. Reads that land together are drawn once.
 - 11-14 影音 is the news told by its clips, not a list of videos (Jay: "Video is basically a list of video super unhelpful … improve it significantly so it's actually about using video to look for news"): a story a card, its best clip playing in place, its title and one line, every outlet's clip on it beside, the whole story a tap away at the same second; one ends, the next story's begins. No second row of kinds under the tabs (it said the tabs again).
-- 11-14 單邊 is the important stories one side all but leaves out, not the ones it has none of (Jay: "most news there is just less notable news"; "if just one of the other side report it it's not in 單邊?"): 8 outlets or more, 4 or more on one end and on the other a token one or two (one in 8 of a big story's), the lead 4 times past each end's usual share of the day's front, as important as the front's middle story or more (Orbit-Core `oneSidedOf`); the most important first; every one marked wherever it's listed by words in the colour of the side that left it out (偏藍沒報, 偏右少報; Jay 11-14: "using number to indicate is such a bad design": no counts on a card, the bar beside it shows the split), who carried it by name under it in 單邊, the counts only in its sheet; by code, never AI. By outlets, not readers: no published figures place each outlet's reach.
 - 11-15 Headlines are one story only where they share two words or more apart, or name the same game, never one word (Jay: piano pianos and a councillor quitting the KMT joined by 鄭朝方; an engineer's affair, a building firm's win and OpenAI's tools by 工程師; San Antonio's and Tottenham's Spurs): Orbit-Core `twoWords`, a place's name no word of it. A story's title is the news, never a question, an essay or a column (`ANGLE`).
 - 11-15 What you haven't seen comes first (Jay: "everytime you open the news it's about what you haven't seen … whether the user actually clicked in any of the article"): back after a while away, a story whose sheet was only opened sits a little lower and rises again with the hours; one whose article was opened goes far down for a day and a half (`lib/reading.mjs` `sinkOf`); never reordered while reading. A story is about a holding or a follow by its title or enough of its headlines, never one in passing (`lib/mine.mjs` `about`).
 - 11-14 No Chinese state media (環球時報, CGTN, 新華社), not read, listed or counted (Jay: "remove 中國官媒 we don't need dictatorship to tell us what news is"). Stories about China come from everyone else's reporting.
@@ -43,6 +42,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-14 A row's coverage is its marks, its outlets and its bar, never how many of Taiwan's outlets carry a world story (Jay: "no need to tell me how many Taiwan outlet is reporting this"); the sheet's 台灣媒體怎麼報 shows them.
 - 11-17 No Orbit Words in News (Jay: "Remove Orbit Words from Orbit News"): no words picked from stories, underlined or linked into Words; the family's notebook's `vocab.learning` isn't read.
 - 11-17 No 重點整理 or 各方怎麼說 (Jay: "Remove 各方怎麼說、重點整理 AI from Orbit News"): a story's sheet has no AI part to tap; who covers it (each side's count, bar and outlets, 報導的媒體) is code's; the AI's titles and plain translation stay.
+- 11-17 No 單邊 (Jay: "Remove 單邊 tab as it's really useless"): no tab, no 頭條 section, no 偏藍沒報 mark on a row and no line of who carried it in a story's sheet; the other tabs keep their order and 頭條 still opens first. The builder's `blind` is read only by 你可能錯過.
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
@@ -86,7 +86,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   `blind` is the side that left it out, or all but (`blindOf`, `oneSidedOf`:
   a topic sides take, 2 hours or more, 8 outlets or more, 4 or more on one
   end and a token one or two on the other, the lead past the day's front's,
-  as important as the front's middle story or more).
+  as important as the front's middle story or more; read by 你可能錯過).
   Also `news/sport.json` (Jay 11-13, for Orbit Sports' 相關新聞): the sports
   stories of 3 days, one outlet's report too (never on News' own pages), each
   with its kind (`k`: injury, ban, coach, move; kit `news-sport.mjs`) and the
@@ -115,7 +115,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | File | What |
 | --- | --- |
 | `app.mjs`, `shell.mjs` | Start, reading the page (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`); state, outlets' names and marks, `outletLink`, `openOut` (the kit's `openLink`) |
-| `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, one-sided groups (`oneSided`, `blindAll`, `oneSideOf`), topics, clips |
+| `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, topics, clips |
 | `lib/mine.mjs`, `brief.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`) |
 | `lib/markets.mjs` | 預測市場: Polymarket's chances on a story's question (Orbit-Core `builders/news-markets.js` → `news/markets.json`, every 30 minutes; nothing shown past 3 hours old), drawn in the sheet's `oddsPart` |
 | `lib/lines.mjs` | The AI made once by Orbit-Core `builders/ai.js`: world stories' Chinese titles and Taiwan's English ones (`news/lines.json`) |
@@ -124,8 +124,8 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | `lib/reading.mjs`, `pics.mjs` | 我的閱讀's log, the read marks (`markRead`, `readState`) and the follows (`setFollow`, keys `w:` words, `t:` topic, `o:` outlet), the Pass payload `{ v: 1, days, read, follow }`; an outlet's picture at the size shown (`sized`, `heavy`) |
 | `lib/follows.mjs`, `views/follows.mjs` | What's followed (`followFinds`, `followedOf`, `lifted`: News' follows and the family's, `lib/mine.mjs`; `yourStories` the five most important), 你可能錯過 (`missedOf`); 我的追蹤's sheet (`openFollows`) and the follow pill (kit `followButton`) |
 | `views/video.mjs` | 影音: the region's stories with clips, a card each (best clip playing in place, title and one line, every outlet's clip, coverage, 完整報導 at the same second), 下一則 and on at a clip's end; `stopVideo`, `videoPlaying` (app.mjs holds redraws while one plays) |
-| `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際 (each topic's list kept as drawn, the ones beside drawn ahead when idle: a switch moves kept rows, never draws or fades pictures again), 單邊; a story's sheet (看全文, player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, 來龍去脈 and 相關新聞 from `lib/stories.mjs` `timelineOf`, `relatedOf`, the foot); 媒體 |
-| `lib/testing.mjs` | The 測試工具's News switches (kit `testtools.mjs`, unlocked on the Pass): `newsEmpty`, `newsFail`, `oneSided`, `badClip`; applied in `app.mjs load` to what's drawn only |
+| `views/parts.mjs`, `lists.mjs`, `story.mjs`, `outlets.mjs` | Rows, cards, the carousel; 頭條, 台灣 / 國際 (each topic's list kept as drawn, the ones beside drawn ahead when idle: a switch moves kept rows, never draws or fades pictures again); a story's sheet (看全文, player, coverage, sides, 台灣媒體怎麼報, 看法案 from `news/laws.json`, 來龍去脈 and 相關新聞 from `lib/stories.mjs` `timelineOf`, `relatedOf`, the foot); 媒體 |
+| `lib/testing.mjs` | The 測試工具's News switches (kit `testtools.mjs`, unlocked on the Pass): `newsEmpty`, `newsFail`, `badClip`; applied in `app.mjs load` to what's drawn only |
 | `news.css`, `look.css`, `sw.js` | The look; the kit's service worker (no `sw-images.js`: outlets' pictures are theirs, hotlinked) |
 
 ## Terms

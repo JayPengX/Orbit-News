@@ -1,6 +1,6 @@
 // A story's sheet: its picture and summary (credited to their outlets), its
-// coverage (how many outlets of each side, which side left it out, which
-// parties its headlines name, a bar a day), the outlets' clips, and every
+// coverage (how many outlets of each side, which parties its headlines
+// name, a bar a day), the outlets' clips, and every
 // outlet's headlines side by side: one column a side (偏綠 · 中間 · 偏藍, or
 // left · centre · right, China's state media apart), one over the other on a
 // phone. A headline opens the outlet's own page. A swipe sideways (or ‹ ›,
@@ -13,7 +13,7 @@ import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, r
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
-import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark, oneSideTag, oneSideLine } from './parts.mjs';
+import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
 import { pcts, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
@@ -340,9 +340,9 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
 }
 
 // Who carries it: the bar with each side's count under it (and China's
-// state media apart), the side that left it out, the parties its headlines
-// name, how coverage grew a day at a time. For a kind sides don't take (a
-// game, a storm), only the outlets and the days.
+// state media apart), the parties its headlines name, how coverage grew a
+// day at a time. For a kind sides don't take (a game, a storm), only the
+// outlets and the days.
 function spectrum(story) {
   const { parts } = barOf(story);
   const sm = stateMedia(story);
@@ -359,7 +359,6 @@ function spectrum(story) {
     h('div', { class: 'nw-spec-head' }, [h('b', { text: W('各邊的報導', 'Coverage by side') }), h('small', { text: W(`${story.n} 家`, `${story.n} outlets`) })]),
     bar(story, { big: true }),
     legend,
-    story.blind ? h('p', { class: 'nw-spec-note' }, [oneSideTag(story), h('span', { class: 'nw-who', text: oneSideLine(story, { full: true }) })]) : null,
     parties ? h('p', { class: 'nw-spec-say', text: parties }) : null
   ]);
 }

@@ -1,20 +1,18 @@
 // The story tabs: 頭條 (a front page: the lead stories swiped sideways, the
-// top stories in pictures, the day's clips, the world's, each topic's, the
-// one-sided ones, your reading in a line), 台灣 and 國際 (every story, most
-// important first, by topic, a swipe to the next topic, then the older ones
-// kept), 單邊 (stories only one side carries, Taiwan's or the world's, by
-// the side that left them out, then by kind).
+// top stories in pictures, the day's clips, the world's, each topic's, your
+// reading in a line), 台灣 and 國際 (every story, most important first, by
+// topic, a swipe to the next topic, then the older ones kept).
 import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import * as kitSport from '../lib/leagues.mjs';
 import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
-import { liveOf, oneASaga, oneSided, onTopic, topicsIn, clipsOf, blindAll, byKind, asTopic, TAB_MIN, ENDS, isLive, steady } from '../lib/stories.mjs';
+import { liveOf, oneASaga, onTopic, topicsIn, clipsOf, asTopic, TAB_MIN, isLive, steady } from '../lib/stories.mjs';
 import { balanceOf, leanOf, followKey, followsOf, sunk } from '../lib/reading.mjs';
 import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
 import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
-import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle, oneSideLine } from './parts.mjs';
+import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle } from './parts.mjs';
 import { openStory } from './story.mjs';
 import { withSearch } from './search.mjs';
 import { renderVideo, videoStories } from './video.mjs';
@@ -126,11 +124,8 @@ export function renderTop(box) {
   const topics = topicLists.map(([t, list]) =>
       section(topicName(t, 'tw'), [storyList(list.slice(0, 3), s => open(s, list)), more(W(`更多${topicName(t, 'tw')}新聞`, `More ${topicName(t, 'tw').toLowerCase()}`), go('tw', t))], { cls: 'nw-topic-sec' })
     );
-  const sides = oneSided(state.page);
-  const one = sides.flatMap(g => g.stories).sort((a, b) => (b.imp || 0) - (a.imp || 0)).slice(0, 3);
   const mine = balanceOf(state.log, 'tw', today());
   for (const [, list] of topicLists) for (const s of list.slice(0, 3)) seen.add(s.id);
-  for (const s of one) seen.add(s.id);
   // 你可能錯過: what the side they mostly read leaves out (lib/follows.mjs missedOf).
   const missed = missedOf(state.page, state.log, today(), { skip: seen });
   const hero = h('div', { class: 'nw-front' }, [
@@ -146,7 +141,6 @@ export function renderTop(box) {
       : null,
     world.length ? section(regionName('intl'), [storyList(world, s => open(s, intl)), more(W(`國際全部 ${intl.length} 則`, `All ${intl.length} world stories`), 'intl')]) : null,
     ...topics,
-    one.length ? section(W('單邊', 'One side'), [h('p', { class: 'nw-lede', text: W('一邊報得多、另一邊幾乎沒報的重要新聞。', 'Important stories one side carries and the other all but leaves out.') }), storyList(one, open, { note: whoNote }), more(W('看全部單邊新聞', 'All one-sided stories'), 'side')]) : null,
     section(W('我的閱讀', 'Your reading'), [readingLine(mine), missed ? missedPart(missed) : null, more(W('看各家媒體的位置', 'Where each outlet stands'), 'outlets')])
   ];
   // (Under 搜尋's field, kept in place: views/search.mjs.)
@@ -399,7 +393,7 @@ function showTab(chips) {
     if (on && chips.scrollWidth > chips.clientWidth) chips.scrollTo({ left: Math.max(0, on.offsetLeft - chips.clientWidth / 2 + on.offsetWidth / 2), behavior: 'smooth' });
   });
 }
-// A swipe across 台灣, 國際 or 單邊 goes to the tab beside (the kit's
+// A swipe across 台灣 or 國際 goes to the tab beside (the kit's
 // daySwipe: the list follows the finger and slides in; the title and tabs
 // stay). `key`: the tab's place in state.topic.
 function swipeTabs(box, key, tabsNow, reset) {
@@ -448,57 +442,3 @@ function pageOn(list, pager, more, left, after) {
   next ? pager.replaceWith(next) : pager.remove();
 }
 
-// 單邊: the important stories one side carries widely and the other not or
-// only once or twice (Jay 11-14, Orbit-Core builders/news.js oneSidedOf),
-// Taiwan's or the world's (a text tab each, a swipe between), the most
-// important first, each with who carried it and who didn't; how many each
-// side left out, a tap on one shows only those; then by kind (政治, 兩岸,
-// 經濟…), three a kind and the rest folded under it (Jay 11-10: hard to get around).
-const sideRegions = () => ['tw', 'intl'].filter(r => blindAll(state.page).some(s => s.region === r));
-export function renderSide(box) {
-  if (notYet(box)) return;
-  const lede = h('p', { class: 'nw-lede', text: W('夠重要、一邊報得多，另一邊卻沒報或只有一兩家的新聞，重要的在前。不一定是刻意不報，但另一邊的讀者可能沒看到。', 'Important stories one side carries widely and the other not at all or only once or twice, the most important first. Not always a choice, but the other side’s readers may not have seen them.') });
-  const tabs = sideRegions();
-  if (!tabs.length) {
-    box.replaceChildren(h('div', { class: 'nw-oneside' }, [lede, empty({ icon: 'check', title: W('現在沒有單邊的新聞', 'No one-sided stories now'), body: W('今天重要的新聞，兩邊都有好幾家在報。', 'Today’s important stories have both sides on them.') }), builtLine(state.page)]));
-    return;
-  }
-  const region = tabs.includes(state.topic.side) ? state.topic.side : tabs[0];
-  const pick = r => () => ((state.topic.side = r), (state.blind = ''), hooks.render());
-  const chips = tabs.length > 1 ? textTabs(tabs, region, regionName, pick) : null;
-  swipeTabs(box, 'side', sideRegions, () => (state.blind = ''));
-  const mine = blindAll(state.page).filter(s => s.region === region);
-  const blind = ENDS[region].includes(state.blind) ? state.blind : '';
-  // (Each end's count, a tap shows only the stories it left out; again, all.)
-  const tiles = h(
-    'div',
-    { class: 'nw-blind-tiles', role: 'group', 'aria-label': W('各邊沒報的新聞', 'Stories each side left out') },
-    ENDS[region].map(side => {
-      const n = mine.filter(s => s.blind === side).length;
-      const on = blind === side;
-      return h('button', { type: 'button', class: `nw-blind-tile${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !n, onclick: () => ((state.blind = on ? '' : side), hooks.render()) }, [
-        h('small', {}, [h('i', { class: `nw-dot nw-s-${side}`, 'aria-hidden': 'true' }), W(`${sideFull(side)}少報`, `Missed ${sideFull(side).toLowerCase()}`)]),
-        h('b', { text: String(n) })
-      ]);
-    })
-  );
-  const shown = blind ? mine.filter(s => s.blind === blind) : mine;
-  // (Each kind's stories in blindAll's order, the most important first.)
-  const parts = byKind(shown, topicOrder()).map(([t, list]) => kindPart(t, list.map(s => asTopic(s, t)), region, !blind));
-  box.replaceChildren(...[chips, h('div', { class: 'nw-oneside' }, [lede, tiles, h('div', { class: 'q-flow nw-flow' }, parts), builtLine(state.page)])].filter(Boolean));
-  showTab(chips);
-  kitUI.flowColumns(box);
-}
-// Under a one-sided story's headline: who carried it and who didn't.
-const whoNote = s => (s.blind ? h('span', { class: 'nw-who', text: oneSideLine(s) }) : null);
-// One kind's one-sided stories: three, the rest folded under them.
-function kindPart(t, list, region, side) {
-  const rows = h('div');
-  const draw = all => {
-    rows.replaceChildren(storyList(all ? list : list.slice(0, 3), s => open(s, list), { side, note: whoNote }));
-    kitUI.flowColumns(rows.closest('.nw-oneside'));
-  };
-  draw(false);
-  const fold = list.length > 3 ? moreToggle({ more: W(`再看 ${list.length - 3} 則`, `${list.length - 3} more`), less: W('收起', 'Fewer'), onToggle: draw }) : null;
-  return section(topicName(t, region), [rows, fold], { count: list.length, shd: true });
-}

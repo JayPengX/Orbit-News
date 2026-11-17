@@ -1,8 +1,8 @@
 // The builder's page as the screens read it (lib/stories.mjs): checked on
-// the way in, each story's bar, its headlines by side, the one-sided ones.
+// the way in, each story's bar, its headlines by side.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanPage, barOf, bySide, oneSided, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf, picturesOf } from '../public/lib/stories.mjs';
+import { cleanPage, barOf, bySide, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf, picturesOf } from '../public/lib/stories.mjs';
 
 const T = Date.parse('2026-11-10T03:00:00Z');
 const H = 3_600_000;
@@ -57,9 +57,8 @@ test('no story counts state media (none read, Jay 11-14); the sides\' bar only f
   assert.equal(sidesTaken({ topics: [] }), true);
 });
 
-test('one-sided stories by the side that left them out; orders; an outlet\'s stories', () => {
+test('an outlet\'s stories', () => {
   const page = cleanPage(raw);
-  assert.deepEqual(oneSided(page).map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'g', ['b']]]);
   assert.deepEqual(storiesWith(page, 'cna').map(s => s.id), ['a', 'b']);
   assert.deepEqual(storiesWith(page, 'fox').map(s => s.id), ['c']);
 });
@@ -92,30 +91,6 @@ test('topics, clips, how long a story ran, and the past', () => {
   assert.equal(storyById(page, 'sp', null, sport).region, 'intl');
 });
 
-test('單邊 by kind: each one-sided story once, under its first kind; each side’s count', async () => {
-  const { byKind, blindAll, oneSided } = await import('../public/lib/stories.mjs');
-  const st = (id, region, blind, topics, n = 3) => ({ id, region, blind, topics, n, at: 0, items: [] });
-  const page = { tw: [st('a', 'tw', 'b', ['pol', 'cs'], 5), st('b', 'tw', 'g', ['eco']), st('c', 'tw', '', ['pol'])], intl: [st('d', 'intl', 'r', ['cs', 'world'], 4)] };
-  const all = blindAll(page);
-  assert.deepEqual(all.map(s => s.id), ['a', 'd', 'b']);
-  assert.deepEqual(byKind(all, ['pol', 'cs', 'eco']).map(([t, l]) => [t, l.map(s => s.id)]), [['pol', ['a']], ['cs', ['d']], ['eco', ['b']]]);
-  assert.deepEqual(oneSided(page, 'cs').map(g => [g.region, g.missing, g.stories.map(s => s.id)]), [['tw', 'b', ['a']], ['intl', 'r', ['d']]]);
-  // The most important first, not the widest (Jay 11-14: 單邊 had been small news).
-  const imp = { tw: [{ ...st('w', 'tw', 'b', ['pol'], 9), imp: 10 }, { ...st('i', 'tw', 'b', ['pol'], 8), imp: 30 }] };
-  assert.deepEqual(blindAll(imp).map(s => s.id), ['i', 'w']);
-});
-
-test('單邊: who carried it and who didn’t (a token one of the other side’s)', async () => {
-  const { oneSideOf } = await import('../public/lib/stories.mjs');
-  const s = { region: 'intl', blind: 'r', sides: { l: 3, c: 1, r: 1 }, items: [['cnn', 'a', '', 3], ['nyt', 'b', '', 2], ['guardian', 'c', '', 1], ['fox', 'd', '', 1], ['bbc', 'e', '', 1]] };
-  const o = oneSideOf(s);
-  assert.deepEqual([o.heavy, o.light, o.H, o.L], ['l', 'r', 3, 1]);
-  assert.deepEqual(o.few, ['fox']);
-  assert.equal(o.carried.length, 3);
-  assert.equal(oneSideOf({ ...s, blind: '' }), null);
-});
-
-
 test('a picture that won’t load gives way to the other outlets’ (Jay 11-11: 圖：日本時報 over an empty space, 32 outlets more)', () => {
   const raw = {
     intl: [
@@ -144,11 +119,10 @@ test('測試工具: no switch, the same page; each switch a copy', async () => {
   delete globalThis.ORBIT_TEST;
   assert.equal(testPage(page), page);
   try {
-    globalThis.ORBIT_TEST = { flags: { oneSided: true, badClip: true } };
+    globalThis.ORBIT_TEST = { flags: { badClip: true } };
     const g = testPage(page);
-    assert.ok(['g', 'b'].includes(g.tw[0].blind));
     assert.equal(g.tw[0].clips[0][1], 'xxxxxxxxxxx');
-    assert.equal(page.tw[0].blind, undefined, 'the page read untouched');
+    assert.equal(page.tw[0].clips[0][1], 'abcdefghijk', 'the page read untouched');
     globalThis.ORBIT_TEST = { flags: { newsEmpty: true } };
     assert.deepEqual(testPage(page).tw, []);
   } finally {
