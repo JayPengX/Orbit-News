@@ -31,9 +31,17 @@ const keep = () => {
   } catch {}
 };
 const asked = new Set();
+// (Signed with the reader's session, the kit's workerJson: sent bare, the Worker
+// saw no Pass and gave only translations already kept, and none were, so an
+// English reader read every headline in Chinese; 11-17.)
+const signedTr = async (url, init) => {
+  const { workerJson } = await import('#kit/orbit.mjs');
+  const j = await workerJson('/news-tr', '', { body: init.body, timeout: 12_000 });
+  return j ? { ok: true, json: async () => j } : { ok: false };
+};
 
 // Asks for a story's texts not had yet (each once a session); → how many came.
-export async function askTr(id, texts, en, { fetchImpl = globalThis.fetch } = {}) {
+export async function askTr(id, texts, en, { fetchImpl = signedTr } = {}) {
   const want = [...new Set(texts.filter(t => foreign(t, en) && !trCache.has(t) && !asked.has(`${id}\n${t}`)))];
   if (!want.length || !fetchImpl) return 0;
   for (const t of want) asked.add(`${id}\n${t}`);
@@ -71,7 +79,7 @@ export const trWaiting = root => [...(root?.querySelectorAll?.('[data-tr]:not([d
 
 // A list's titles drawn waiting (`data-trid` the story, `data-tr` its title): asked in one batch,
 // each once a session (asked again only if the ask failed); → how many came.
-export async function askTitles(root, en, { fetchImpl = globalThis.fetch } = {}) {
+export async function askTitles(root, en, { fetchImpl = signedTr } = {}) {
   const items = new Map();
   for (const el of root?.querySelectorAll?.('[data-trid]') || []) {
     const t = el.dataset.tr;
