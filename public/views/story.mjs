@@ -24,6 +24,21 @@ import { itemOf } from '../lib/brief.mjs';
 // won't play).
 // `start`: the second to start at; `onTime(seconds)` as it plays, `onEnd()`
 // once it has played to its end (views/video.mjs: on to the next story).
+// Out of sight (another app shown in Orbit, whose frame keeps running and
+// sounding; a locked phone pauses it anyway): a clip playing is paused, and
+// goes on from that second once News is back (2026-11-17: it played on
+// behind the other app, as 拼字比賽 in Words kept talking over it).
+const players = new Set();
+const command = (frame, func) => frame.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*');
+document.addEventListener('visibilitychange', () => {
+  const away = document.visibilityState === 'hidden';
+  for (const p of [...players]) {
+    if (!p.box.isConnected) players.delete(p);
+    // (Paused or played out by the person: left as it is, never started on return.)
+    else if (away && p.state !== 0 && p.state !== 2) (command(p.frame, 'pauseVideo'), (p.held = true));
+    else if (!away && p.held) (command(p.frame, 'playVideo'), (p.held = false));
+  }
+});
 export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
   hooks.read(clip[0]);
   const from = start > 0 ? `&start=${Math.floor(start)}` : '';
@@ -35,6 +50,8 @@ export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
     referrerpolicy: 'strict-origin-when-cross-origin'
   });
   const box = h('div', { class: 'nw-player' }, [frame]);
+  const me = { box, frame, state: -1, held: false };
+  players.add(me);
   const refused = () =>
     box.replaceChildren(
       h('a', { class: 'nw-player-out', href: `https://www.youtube.com/watch?v=${clip[1]}`, target: '_blank', rel: 'noopener' }, [
@@ -54,6 +71,8 @@ export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
     }
     if (m?.event === 'onError' && [2, 5, 100, 101, 150, 153].includes(Number(m.info))) (removeEventListener('message', hear), refused());
     // (Where it is, and its end: state 0.)
+    if (m?.event === 'onStateChange' && Number.isFinite(Number(m.info))) me.state = Number(m.info);
+    if (m?.event === 'infoDelivery' && Number.isFinite(m.info?.playerState)) me.state = m.info.playerState;
     const t = Number(m?.info?.currentTime);
     if (onTime && m?.event === 'infoDelivery' && Number.isFinite(t)) onTime(t);
     const ended = (m?.event === 'onStateChange' && Number(m.info) === 0) || (m?.event === 'infoDelivery' && m.info?.playerState === 0);
