@@ -2,7 +2,7 @@
 // the way in, each story's bar, its headlines by side.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanPage, barOf, bySide, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf, picturesOf } from '../public/lib/stories.mjs';
+import { cleanPage, hasStories, barOf, bySide, storiesWith, agoOf, storyById, onTopic, topicsIn, clipsOf, daysOf, picturesOf } from '../public/lib/stories.mjs';
 
 const T = Date.parse('2026-11-10T03:00:00Z');
 const H = 3_600_000;
@@ -27,6 +27,11 @@ test('a page as read: broken stories and unknown outlets left out, each story kn
   assert.equal(page.tw[0].items.length, 4);
   assert.equal(storyById(page, 'c').region, 'intl');
   assert.deepEqual(cleanPage(null), { built: 0, tw: [], intl: [] });
+});
+
+test('a front with no stories (an empty answer, an error, a changed shape) is a failed read, never drawn over the kept one', () => {
+  assert.equal(hasStories(raw), true);
+  for (const bad of [null, {}, [], { error: 'upstream' }, { built: T, tw: [], intl: [] }, { stories: raw.tw }]) assert.equal(hasStories(bad), false, JSON.stringify(bad)?.slice(0, 40));
 });
 
 test("a story's bar: each side's count and share of the outlets with a side", () => {

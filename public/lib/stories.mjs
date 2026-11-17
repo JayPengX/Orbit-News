@@ -19,6 +19,9 @@ export const ENDS = { tw: ['g', 'b'], intl: ['l', 'r'] };
 const web = u => /^https?:\/\//.test(u || '');
 // A page as read: anything not a story list left out, each story checked
 // (its headlines and clips from known outlets, a clip's id YouTube's shape).
+// A front with stories in it: an empty answer, an error's JSON or a changed
+// shape is a failed read (the kit's `valid`), the stories kept stay up.
+export const hasStories = x => REGIONS.some(r => Array.isArray(x?.[r]) && x[r].length > 0);
 export function cleanPage(x) {
   const page = { built: Number(x?.built) || 0, tw: [], intl: [] };
   for (const r of REGIONS) {

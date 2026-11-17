@@ -17,7 +17,7 @@ import * as orbitKit from '#kit/orbit.mjs';
 import { passSync } from '#kit/pass-sync.mjs';
 import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
 import { state, hooks, lang, en, W, today } from './shell.mjs';
-import { cleanPage } from './lib/stories.mjs';
+import { cleanPage, hasStories } from './lib/stories.mjs';
 import { watchTitles } from './lib/tr.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
@@ -200,9 +200,12 @@ function load({ fresh = false } = {}) {
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');
   if (button) button.disabled = true;
-  reading = (testFlags().newsFail ? Promise.reject(new Error('test: news failing')) : packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000 }))
+  reading = (testFlags().newsFail ? Promise.reject(new Error('test: news failing')) : packJson(PAGE, { ttl: fresh ? 0 : 120_000, timeout: 20_000, valid: hasStories }))
     .then(raw => {
-      const page = testPage(cleanPage(raw));
+      const clean = cleanPage(raw);
+      // (Nothing to show is a failed read: the stories already up stay.)
+      if (!clean.tw.length && !clean.intl.length) throw new Error('no stories');
+      const page = testPage(clean);
       const changed = page.built !== state.page?.built;
       state.page = page;
       state.failed = false;
@@ -301,7 +304,7 @@ async function boot() {
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
   const kept = await orbitKit.peekPack?.(PAGE).catch(() => null);
-  if (kept?.data && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
+  if (hasStories(kept?.data) && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
   if (mine) absorb(mine);
   const first = load();
