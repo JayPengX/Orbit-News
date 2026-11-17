@@ -6,15 +6,15 @@ import { h, section, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import * as kitSport from '../lib/leagues.mjs';
-import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName } from '../shell.mjs';
-import { liveOf, oneASaga, onTopic, topicsIn, clipsOf, asTopic, TAB_MIN, isLive, steady } from '../lib/stories.mjs';
+import { state, hooks, W, en, sideFull, regionName, today, topicName, openOut, outletName, wordName } from '../shell.mjs';
+import { liveOf, oneASaga, worldZh, onTopic, topicsIn, clipsOf, asTopic, TAB_MIN, isLive, steady } from '../lib/stories.mjs';
 import { balanceOf, leanOf, followKey, followsOf, sunk } from '../lib/reading.mjs';
 import { followFinds, followedOf, lifted, missedOf } from '../lib/follows.mjs';
 import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle } from './parts.mjs';
 import { openStory } from './story.mjs';
-import { trCache } from '../lib/tr.mjs';
+import { trCache, askStoryTitles } from '../lib/tr.mjs';
 import { withSearch } from './search.mjs';
 import { renderVideo, videoStories } from './video.mjs';
 
@@ -62,8 +62,8 @@ const more = (words, to) => {
 // The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
 // (快訊 first, two at most, a Taiwan story before its world one: what's
 // breaking now leads, then the day's usual five; each saga once.)
-// (A world story's Chinese title: its translation, once it's come.)
-const zhOf = s => (s.region === 'intl' && trCache.get(s.title)) || '';
+// (A world story's Chinese words: lib/stories.mjs worldZh.)
+const zhOf = s => worldZh(s, t => trCache.get(t));
 const leadsOf = (tw, intl, live = []) => {
   const first = oneASaga([...live].sort((a, b) => (a.region === 'tw' ? 0 : 1) - (b.region === 'tw' ? 0 : 1)), [], zhOf).slice(0, 2);
   // (The usual five: Taiwan's two, the world's, Taiwan's, the world's; then on in turn should a saga be skipped.)
@@ -79,7 +79,7 @@ const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { m
 export function followedNow() {
   const outlets = followsOf(state.log).filter(f => f.kind === 'o').map(f => f.id);
   state.followed = followedOf(state.page, {
-    finds: followFinds(state.log, state.page, { outletName, topicName }),
+    finds: followFinds(state.log, state.page, { outletName, topicName, wordName, tr: t => trCache.get(t) }),
     interests: state.interests,
     outlets,
     log: state.log,
@@ -96,6 +96,11 @@ function bothSides(tw, intl, ok) {
   // (On a Chinese page, the world's once in Chinese: a story the
   // translation hasn't reached yet waits, never an English title here.)
   const b = intl.filter(s => ok(s) && (en || shownTitle(s).lang === 'zh-Hant'));
+  // (Those waiting asked for here, then drawn: only titles on the page were
+  // ever asked, and these never are, so 運動 showed Taiwan's alone unless
+  // 國際 › 運動 had been opened first.)
+  const waiting = en ? [] : intl.filter(s => ok(s) && shownTitle(s).lang !== 'zh-Hant').slice(0, 8);
+  if (waiting.length) askStoryTitles(waiting, en).then(n => n && hooks.render());
   const out = [];
   for (let i = 0; i < Math.max(a.length, b.length); i++) out.push(...[a[i], b[i]].filter(Boolean));
   return out;

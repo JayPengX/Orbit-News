@@ -113,23 +113,25 @@ function videoCard(story, list) {
     bar.hidden = false;
   };
   // (The next story's card in view, its clip playing.)
-  const goOn = after => {
+  // (`auto`: on at the last one's end, not chosen: not counted as a read.)
+  const goOn = (after, auto = false) => {
     stopVideo();
     after.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    after.__play();
+    after.__play({ auto });
   };
-  function play(c, { start = 0 } = {}) {
+  function play(c, { start = 0, auto = false } = {}) {
     if (now?.card !== card) stopVideo();
     clip = c;
     at = start;
     stage.replaceChildren(
       player(c, {
         start,
+        count: !auto,
         onTime: t => (at = t),
         // (Played to its end: on to the next story's, as a feed goes.)
         onEnd: () => {
           const after = next();
-          if (after && now?.card === card) goOn(after);
+          if (after && now?.card === card) goOn(after, true);
         }
       })
     );
@@ -146,14 +148,14 @@ function videoCard(story, list) {
       }
     };
   }
-  card.__play = () => play(clips[0]);
+  card.__play = o => play(clips[0], o);
   // (The whole story: its sheet, the clip on at the same second.)
   const openAll = () => {
     const playing = now?.card === card;
     const c = clip;
     const t = Math.floor(at);
     stopVideo();
-    openStory(story.id, { list, ...(playing ? { clip: c[1], start: t } : {}) });
+    openStory(story.id, { list, ...(playing ? { clip: c[1], start: t, goesOn: true } : {}) });
   };
   if (strip)
     strip.replaceChildren(

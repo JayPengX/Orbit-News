@@ -16,7 +16,7 @@ import * as kitUI from '#kit/ui.mjs';
 import * as orbitKit from '#kit/orbit.mjs';
 import { passSync } from '#kit/pass-sync.mjs';
 import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
-import { state, hooks, lang, en, W, today } from './shell.mjs';
+import { state, hooks, lang, en, W, today, pastOld } from './shell.mjs';
 import { cleanPage, hasStories } from './lib/stories.mjs';
 import { watchTitles } from './lib/tr.mjs';
 import { interestsOf } from './lib/mine.mjs';
@@ -103,7 +103,9 @@ document.addEventListener('visibilitychange', () => {
   const anew = hiddenAt && Date.now() - hiddenAt > AWAY_MS && !document.querySelector('dialog.q-sheet[open]');
   hiddenAt = 0;
   if (anew) (state.held.clear(), stamp++);
-  Promise.resolve(load()).then(() => anew && state.loaded && render());
+  // (A clip in 影音, paused while away, goes on from its second: the lists
+  // drawn once it stops. Drawn at once, the feed was rebuilt and the clip gone.)
+  Promise.resolve(load()).then(() => anew && state.loaded && (videoPlaying() ? quietRefresh() : render()));
 });
 // A headline opened: counted for its outlet today (the page itself isn't
 // redrawn under the person; 我的閱讀 is when they're back).
@@ -162,7 +164,11 @@ hooks.render = () => render();
 hooks.stamp = () => stamp;
 hooks.tab = tab => showTab(tab, { top: true });
 hooks.law = hash => q.go('law', hash);
-hooks.reload = () => (state.held.clear(), load({ fresh: true }));
+// A pull (or the refresh button, or a list's own 重新整理): read again, and the
+// lists ranked anew now, a new build or not (only drawn with a new one, the
+// pull did nothing to see and the lists reshuffled later on their own).
+const pulled = () => (state.held.clear(), Promise.resolve(load({ fresh: true })).then(() => (stamp++, quietRefresh())));
+hooks.reload = pulled;
 
 // ---- The stories ----------------------------------------------------------------------
 
@@ -224,9 +230,10 @@ function load({ fresh = false } = {}) {
 // The older stories kept, read only when asked (a list's end, an old link).
 let pastReading = null;
 hooks.past = () =>
-  (pastReading ||= packJson(PAST, { ttl: 30 * 60_000, timeout: 20_000 })
+  (pastReading ||= packJson(PAST, { ttl: pastOld() ? 0 : 30 * 60_000, timeout: 20_000 })
     .then(raw => {
       state.past = cleanPage(raw);
+      state.pastFor = state.page?.built ?? null;
       state.pastFailed = false;
       stamp++;
     })
@@ -305,7 +312,7 @@ const gated = installGate('news', lang);
 watchUpdates({ current: VERSION, key: 'orbitNews', cachePrefix: 'orbit-news-' });
 // A pull down on a phone, the refresh button on a computer (the kit's; it
 // spins while a read runs, and runs when the connection comes back).
-topActions(q, { refresh: () => (state.held.clear(), load({ fresh: true })) });
+topActions(q, { refresh: pulled });
 
 async function boot() {
   // (One language, lib/tr.mjs: the titles drawn in the other one asked for as they show.)
@@ -334,6 +341,10 @@ async function boot() {
   const logWas = encodeLog(state.log);
   await pass.first(signed, { local: Boolean(mine) });
   for (const item of signed?.inbox || []) absorb(decodeLog(item.payload) || {});
+  // (A pass merged into this one: its reading and follows sent up as this
+  // copy's, before its inbox is let go. Absorbed alone they reached no other
+  // device, and were lost if this phone's storage went first.)
+  if (signed?.inbox?.length) pass.changed();
   keepLocal();
   pass.watch();
   // (The Pass's reading log drawn only if it changed what the page shows.)

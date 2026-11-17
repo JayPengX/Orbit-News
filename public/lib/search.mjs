@@ -26,13 +26,19 @@ export const wordsOf = q => [...new Set(fold(q).split(' ').filter(Boolean))];
 
 // One story's text by weight, folded once.
 const FIELDS = { title: 6, sum: 3, heads: 2, names: 2 };
-function indexOf(story, { outletName, topicName }) {
+// (`tr`: the title's and summary's translations the phone has, as the reader
+// sees them: an English reader's "budget" never found the Taiwan story whose
+// row says it, searched in the outlets' Chinese alone.)
+const shownOf = (story, tr) => (tr ? [tr(story.title) || '', story.sum ? tr(story.sum) || '' : ''] : ['', '']);
+function indexOf(story, { outletName, topicName, tr }) {
   const heads = (story.items || []).map(it => fold(it[1]));
   const world = (story.tw?.items || []).map(it => fold(it[1]));
   const outlets = [...new Set((story.items || []).map(it => it[0]))];
+  const [title, sum] = shownOf(story, tr);
   return {
-    title: fold(story.title),
-    sum: fold(story.sum),
+    shown: `${title}\n${sum}`,
+    title: fold(`${story.title} ${title}`),
+    sum: fold(`${story.sum ?? ''} ${sum}`),
     heads: [...heads, ...world],
     names: fold([...outlets.flatMap(o => outletName?.(o) || []), ...(story.topics || []).map(t => topicName?.(t, story.region) || ''), ...(story.parties || [])].join(' '))
   };
@@ -59,7 +65,8 @@ export function findStories(pages, q, ctx = {}, { most = 200, strong = false } =
         seen.add(story.id);
         // (`ctx.cache`, a WeakMap: each story folded once while its page lasts.)
         let ix = ctx.cache?.get(story);
-        if (!ix) {
+        // (Folded again once a translation has come.)
+        if (!ix || (ctx.tr && ix.shown !== shownOf(story, ctx.tr).join('\n'))) {
           ix = indexOf(story, ctx);
           ctx.cache?.set(story, ix);
         }

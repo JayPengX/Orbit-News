@@ -129,3 +129,21 @@ test('what you follow rises through each list, tagged; a big story your outlet i
   assert.equal(order.indexOf('s6'), 5, 'your outlet on it: 7th to 6th');
   assert.deepEqual(lifted(tw, new Map()), tw);
 });
+
+// 11-17: in English, the sheet's "Follow the KMT" follows the words 國民黨,
+// and the page then said 國民黨 under the date and on each story's tag.
+test('a party followed from the sheet is named the page’s way', async () => {
+  const { readFileSync } = await import('node:fs');
+  const log = emptyLog();
+  setFollow(log, 'w:國民黨', true, T);
+  const pg = { tw: [story('k1', '國民黨團提案凍結預算')], intl: [] };
+  const wordName = w => ({ 國民黨: 'KMT' })[w] || w;
+  assert.deepEqual(followFinds(log, pg, { wordName }).map(f => f.label), ['KMT']);
+  assert.deepEqual(followFinds(log, pg, {}).map(f => f.label), ['國民黨']);
+  const shell = readFileSync(new URL('../public/shell.mjs', import.meta.url), 'utf8');
+  const follows = readFileSync(new URL('../public/views/follows.mjs', import.meta.url), 'utf8');
+  const lists = readFileSync(new URL('../public/views/lists.mjs', import.meta.url), 'utf8');
+  assert.match(shell, /export const wordName = w => \(en && Object\.values\(kitNews\.PARTY_WORDS \|\| \{\}\)\.find\(p => p\[0\] === w\)\?\.\[1\]\) \|\| w;/);
+  assert.match(follows, /: wordName\(f\.id\)\);/);
+  assert.match(lists, /followFinds\(state\.log, state\.page, \{ outletName, topicName, wordName,/);
+});

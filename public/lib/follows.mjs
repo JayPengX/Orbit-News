@@ -14,13 +14,14 @@ import { isAbout } from './mine.mjs';
 // Words (a person, a company) as a search finds them, only where they're in
 // a headline or summary (`strong`: not a passing word in one outlet's line);
 // a topic, its stories; an outlet, the stories it leads or is one of a few on.
-// `ctx`: findStories' ({ outletName, topicName }).
+// `ctx`: findStories' ({ outletName, topicName }), and wordName (words' name
+// on the page: a party's in English).
 export function followFinds(log, page, ctx = {}) {
   const out = [];
   for (const f of followsOf(log)) {
     if (f.kind === 'w') {
       const ids = new Set(findStories([page], f.id, ctx, { strong: true }).map(x => x.story.id));
-      out.push({ label: f.id, kind: 'follow', key: f.key, has: s => ids.has(s.id) });
+      out.push({ label: ctx.wordName?.(f.id) || f.id, kind: 'follow', key: f.key, has: s => ids.has(s.id) });
     } else if (f.kind === 't') out.push({ label: ctx.topicName?.(f.id, 'tw') || f.id, kind: 'topic', key: f.key, has: s => s.topics?.[0] === f.id });
     // (An outlet's own: its headline leads the story, or it's one of the few
     // on it; every big story has nearly every outlet, and isn't theirs.)

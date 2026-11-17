@@ -8,7 +8,7 @@
 import { h, sheet, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
-import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
+import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut, pastOld } from '../shell.mjs';
 import { storyById, bySide, barOf, stateMedia, sidesTaken, daysOf, picturesOf, relatedOf, timelineOf } from '../lib/stories.mjs';
 import { followKey } from '../lib/reading.mjs';
 import { followPill, wordsKey } from './follows.mjs';
@@ -39,8 +39,10 @@ document.addEventListener('visibilitychange', () => {
     else if (!away && p.held) (command(p.frame, 'playVideo'), (p.held = false));
   }
 });
-export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
-  hooks.read(clip[0]);
+// `count`: a clip the person chose, counted in 我的閱讀 (not one that plays
+// on by itself at the last one's end, or goes on in the story's sheet).
+export function player(clip, { start = 0, onTime = null, onEnd = null, count = true } = {}) {
+  if (count) hooks.read(clip[0]);
   const from = start > 0 ? `&start=${Math.floor(start)}` : '';
   const frame = h('iframe', {
     src: `https://www.youtube-nocookie.com/embed/${clip[1]}?autoplay=1&playsinline=1&rel=0&enablejsapi=1${from}&origin=${encodeURIComponent(location.origin)}`,
@@ -114,14 +116,16 @@ function translateIn(body, story) {
 let shown = null;
 // A story's sheet. `clip`: a YouTube id to play at its head at once; `list`:
 // the stories it was opened from, in their order (else its region's page).
-export function openStory(id, { clip = '', list = null, via = '', start = 0 } = {}) {
+export function openStory(id, { clip = '', list = null, via = '', start = 0, goesOn = false } = {}) {
   const find = () => storyById(state.page, id, state.past);
   const story = find();
   // (An older story, from a link: the past read first.)
   // (Gone from all, or the older ones unreadable: said, never a tap that does nothing.)
   const gone = () => kitUI.toast(state.pastFailed ? W('暫時讀不到這則新聞，稍後再試。', 'Can’t get this story right now. Try again shortly.') : W('這則新聞已經不在了。', 'This story is no longer available.'), { ms: 2400 });
-  const again = () => (find() ? openStory(id, { clip, list, via }) : gone());
-  const past = () => (state.past ? gone() : hooks.past().then(again));
+  const again = () => (find() ? openStory(id, { clip, list, via, start, goesOn }) : gone());
+  // (Read again when it was read beside an older front: the story may have
+  // left the front since. Not found then, gone.)
+  const past = () => (state.past && !pastOld() ? gone() : hooks.past().then(again));
   if (!story) return void past();
   // (What's opened teaches 今天五則: from it, or from anywhere else.)
   state.fb?.picked?.('news', itemOf(story), Date.now(), { from: via === 'brief' ? 'list' : 'elsewhere' });
@@ -167,7 +171,7 @@ export function openStory(id, { clip = '', list = null, via = '', start = 0 } = 
     else if (top) sh.el.scrollTo?.(0, 0);
     return true;
   };
-  draw(at, { clip, start });
+  draw(at, { clip, start, goesOn });
   // (The sheet's own: never the page's touches under it, page: false.)
   kitUI.daySwipe(body, dir => step(dir), { page: false });
   sh.el.addEventListener('keydown', e => {
@@ -235,7 +239,7 @@ function storyTitle(story) {
   ];
 }
 
-function storyParts(story, { clip = '', start = 0 } = {}) {
+function storyParts(story, { clip = '', start = 0, goesOn = false } = {}) {
   const groups = bySide(story);
   const sides = [...Object.keys(groups).filter(k => k !== 'none' && k !== 'free'), 'none'];
   // (A kind sides don't take, a game or a storm: one list of every outlet, never
@@ -276,7 +280,7 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
   const pics = picturesOf(story);
   const still = pics[0]?.[0] || yt[0]?.[4];
   const atHead = (clip && yt.find(c => c[1] === clip)) || yt[0] || null;
-  if (clip && atHead?.[1] === clip) media.replaceChildren(player(atHead, { start }), credit(atHead));
+  if (clip && atHead?.[1] === clip) media.replaceChildren(player(atHead, { start, count: !goesOn }), credit(atHead));
   else if (still) {
     // (One that won't load gives way to another outlet's, then the clip's
     // own still; the credit follows it. Each asked at a sheet's size first,
@@ -448,7 +452,8 @@ function lawPart(story) {
   if (!laws.length) return null;
   const sub = l => (!l.bill ? W('法規全文', 'The law') : l.open > 0 || !l.passed ? W('法案 · 審議中', 'Bill · before the Legislative Yuan') : W(`法案 · ${l.passed} 三讀`, `Bill · passed ${l.passed}`));
   return list(
-    laws.map(l => cell({ title: l.n, sub: sub(l), chevron: true, onClick: () => hooks.law(l.bill ? `item=${l.k.replace(':', '-')}` : `law=${l.p}`) })),
+    // (In English the ministry's English name where it has one: `ne`.)
+    laws.map(l => cell({ title: (en && typeof l.ne === 'string' && l.ne) || l.n, sub: sub(l), chevron: true, onClick: () => hooks.law(l.bill ? `item=${l.k.replace(':', '-')}` : `law=${l.p}`) })),
     { head: W('提到的法律', 'Laws it names'), big: true, foot: W('在 Orbit Law 打開', 'Opens in Orbit Law') }
   );
 }

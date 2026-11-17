@@ -195,3 +195,18 @@ test('the bar weighs the two ends by their outlets on the page (Jay 11-17: more 
   // No pool (a reading's own count): as counted.
   assert.deepEqual(barOf({ region: 'tw', sides: { g: 3, c: 1, b: 1 } }).parts.map(p => p.share), [0.6, 0.2, 0.2]);
 });
+
+test('one saga once on an English phone too: a world story is matched by Taiwan’s headlines on it until its title’s Chinese has come (黃仁勳 led twice in English)', async () => {
+  const { sameSaga, oneASaga, worldZh } = await import('../public/lib/stories.mjs');
+  const t1 = { id: 't1', region: 'tw', title: '黃仁勳宣布卸任輝達執行長 董事會將選新人', world: 'w1' };
+  const t2 = { id: 't2', region: 'tw', title: '立法院三讀通過明年度總預算' };
+  const w1 = { id: 'w1', region: 'intl', title: 'Jensen Huang to step down as Nvidia chief executive', tw: { items: [['ltn', '黃仁勳卸任輝達執行長 震撼科技業', 'https://x.tw/1', 1]] } };
+  // An English phone: nothing kept for the world's English title.
+  const none = () => undefined;
+  assert.match(worldZh(w1, none), /黃仁勳/);
+  assert.equal(sameSaga(t1, w1, s => worldZh(s, none)), true);
+  assert.deepEqual(oneASaga([t1, t2, w1], [], s => worldZh(s, none)).map(s => s.id), ['t1', 't2']);
+  // Its translation, once come, first; a Taiwan story has none.
+  assert.equal(worldZh(w1, t => (t === w1.title ? '黃仁勳將卸任輝達執行長' : undefined)), '黃仁勳將卸任輝達執行長');
+  assert.equal(worldZh(t1, none), '');
+});

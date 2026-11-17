@@ -25,7 +25,14 @@ try {
   for (const [k, v] of JSON.parse(globalThis.localStorage?.getItem(TR_KEY) || '[]')) if (typeof k === 'string' && typeof v === 'string') trCache.set(k, v);
 } catch {}
 const keep = () => {
-  while (trCache.size > KEEP) trCache.delete(trCache.keys().next().value);
+  // (A text let go is asked again when it's drawn: it stayed marked asked, so
+  // a title translated early in a long session went back to the outlet's
+  // words for the rest of it.)
+  while (trCache.size > KEEP) {
+    const k = trCache.keys().next().value;
+    trCache.delete(k);
+    for (const a of asked) if (a.endsWith(`\n${k}`)) asked.delete(a);
+  }
   try {
     globalThis.localStorage?.setItem(TR_KEY, JSON.stringify([...trCache]));
   } catch {}
@@ -49,7 +56,13 @@ export async function askTr(id, texts, en, { fetchImpl = signedTr } = {}) {
   for (const t of want) asked.add(`${id}\n${t}`);
   try {
     const r = await fetchImpl(`${API}/news-tr`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, to: en ? 'en' : 'zh-TW', texts: want }) });
-    if (!r.ok) return 0;
+    // (No answer, offline or timed out: asked again. The kit's workerJson gives
+    // null rather than failing, so the catch below never ran and the texts
+    // stayed in the other language for the session, back online or not.)
+    if (!r.ok) {
+      for (const t of want) asked.delete(`${id}\n${t}`);
+      return 0;
+    }
     const j = await r.json();
     let n = 0;
     for (const [src, v] of Object.entries(j?.tr || {})) if (typeof v === 'string' && v.trim() && !foreign(v, en)) trCache.set(src, v.trim()), n++;
@@ -92,7 +105,10 @@ export async function askTitles(root, en, { fetchImpl = signedTr } = {}) {
   for (const t of items.keys()) asked.add(`title\n${t}`);
   try {
     const r = await fetchImpl(`${API}/news-tr`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: en ? 'en' : 'zh-TW', items: [...items].map(([t, id]) => ({ id, texts: [t] })) }) });
-    if (!r.ok) return 0;
+    if (!r.ok) {
+      for (const t of items.keys()) asked.delete(`title\n${t}`);
+      return 0;
+    }
     const j = await r.json();
     let n = 0;
     for (const [src, v] of Object.entries(j?.tr || {})) if (typeof v === 'string' && v.trim() && !foreign(v, en)) trCache.set(src, v.trim()), n++;
@@ -104,12 +120,18 @@ export async function askTitles(root, en, { fetchImpl = signedTr } = {}) {
   }
 }
 
+// Stories' titles not drawn (held back till they're in the reader's
+// language): asked as a list's are, each by its own story.
+export const askStoryTitles = (stories, en, opts) => askTitles({ querySelectorAll: () => stories.map(s => ({ dataset: { tr: s.title, trid: s.id } })) }, en, opts);
+
 // Titles waiting are asked for a moment after the page last changed, and swapped in place when they come.
 export function watchTitles(root, en) {
   let t = 0;
   const go = () => {
     clearTimeout(t);
-    t = setTimeout(() => askTitles(root, en).then(n => n && trPaint(root, en)), 400);
+    // (Painted whatever came: a list drawn ahead before its titles were in,
+    // put back on the page, had nothing new to ask and stayed in the other language.)
+    t = setTimeout(() => askTitles(root, en).then(() => trPaint(root, en)), 400);
   };
   new MutationObserver(go).observe(root, { childList: true, subtree: true });
   go();

@@ -59,3 +59,17 @@ test('recent searches: newest first, each once, eight at most', () => {
   assert.deepEqual(keepFind(['a'], '  '), ['a']);
   assert.equal(keepFind(Array.from({ length: 8 }, (_, i) => `x${i}`), 'new').length, 8);
 });
+
+test('an English reader’s search finds the words of the title they see (the translation), and again once it has come', () => {
+  const tw = { id: 't1', region: 'tw', title: '立法院三讀通過明年度總預算', sum: '', items: [['ltn', '立法院三讀通過明年度總預算', 'https://x.tw/1', 1]], at: 1, imp: 5 };
+  const page = { tw: [tw], intl: [] };
+  const tr = new Map();
+  const cache = new WeakMap();
+  const ctx = { cache, tr: t => tr.get(t) };
+  assert.deepEqual(findStories([page], 'budget', ctx), []);
+  tr.set(tw.title, 'Legislative Yuan passes next year’s budget');
+  assert.deepEqual(findStories([page], 'budget', ctx).map(f => f.story.id), ['t1']);
+  assert.deepEqual(findStories([page], 'Legislative Yuan', ctx).map(f => f.story.id), ['t1']);
+  // The outlets' own words still found.
+  assert.deepEqual(findStories([page], '總預算', ctx).map(f => f.story.id), ['t1']);
+});

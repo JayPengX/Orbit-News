@@ -24,8 +24,10 @@ export const state = {
   // 台灣 and 國際's topic ('all', a topic's id, or 'video'); how many shown.
   topic: { tw: 'all', intl: 'all' },
   shown: { tw: 20, intl: 20 },
-  // The past's page (older stories kept, news/past.json), read when asked.
+  // The past's page (older stories kept, news/past.json), read when asked;
+  // `pastFor`: the front's build it was read beside (see pastOld).
   past: null,
+  pastFor: null,
   pastFailed: false,
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
   interests: [],
@@ -42,6 +44,10 @@ export const state = {
   loaded: false
 };
 
+// The past read beside an older front: a story that left the front since
+// (News kept open in Orbit for hours) is in neither, though past.json has it.
+export const pastOld = () => Boolean(state.past) && state.pastFor !== (state.page?.built ?? null);
+
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
 // reads the older stories (a promise); law(hash) opens a law or bill in Orbit Law.
@@ -54,6 +60,9 @@ export const readMark = story => readState(state.log, story, { live: isLive(stor
 export const isFollowing = key => following(state.log, key);
 
 // A topic's name (政治, 兩岸…; abroad 中國); '' on a kit without topics.
+// Words followed, by their name in the page's language: a party's Chinese
+// name (the sheet's 「追蹤國民黨」 follows its words) as the English page calls it.
+export const wordName = w => (en && Object.values(kitNews.PARTY_WORDS || {}).find(p => p[0] === w)?.[1]) || w;
 export const topicName = (id, region = 'tw') => (id === 'video' ? W('影音', 'Video') : kitNews.topicWord?.(id, lang, region) || '');
 
 // An outlet's name in the page's language, short.

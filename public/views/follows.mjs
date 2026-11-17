@@ -7,7 +7,7 @@
 import { h, sheet, empty } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
-import { state, hooks, W, isFollowing, outletName, outletMark, topicName } from '../shell.mjs';
+import { state, hooks, W, isFollowing, outletName, outletMark, topicName, wordName } from '../shell.mjs';
 import { followKey, followsOf } from '../lib/reading.mjs';
 import { fold } from '../lib/search.mjs';
 
@@ -36,7 +36,7 @@ export function wordsKey(q) {
 }
 
 // A follow's name, in the page's language.
-export const followName = f => (f.kind === 't' ? topicName(f.id, 'tw') : f.kind === 'o' ? outletName(f.id) : f.id);
+export const followName = f => (f.kind === 't' ? topicName(f.id, 'tw') : f.kind === 'o' ? outletName(f.id) : wordName(f.id));
 
 const TOPICS = () => (kitNews.TOPICS || []).filter(t => t.on !== false).map(t => t.id);
 

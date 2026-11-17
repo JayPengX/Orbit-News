@@ -108,6 +108,11 @@ const grams = t => {
   for (const run of String(t || '').match(/[\u4e00-\u9fff]{3,}/g) || []) for (let i = 0; i + 3 <= run.length; i++) out.add(run.slice(i, i + 3));
   return out;
 };
+// A world story's Chinese words, for sameSaga: its title's translation once
+// it's come (`tr`), else Taiwan's outlets' headlines on it. (An English phone
+// keeps only Chinese to English, so it had none: a Taiwan story and its world
+// one led 頭條 side by side, as 黃仁勳's did on 11-12.)
+export const worldZh = (s, tr = () => '') => (s?.region === 'intl' && (tr(s.title) || (s.tw?.items || []).map(it => it[1]).join(' '))) || '';
 export function sameSaga(a, b, zhOf = () => '') {
   if (!a || !b || a.id === b.id) return Boolean(a && b);
   const tw = a.region === 'tw' ? a : b;

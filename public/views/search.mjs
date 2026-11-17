@@ -10,8 +10,9 @@
 import { h, empty, moreToggle } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { OUTLETS } from '#kit/news-outlets.mjs';
-import { state, hooks, W, outletName, outletMark, topicName } from '../shell.mjs';
+import { state, hooks, W, outletName, outletMark, topicName, pastOld } from '../shell.mjs';
 import { findStories, findOutlets, marked, keepFind, wordsOf } from '../lib/search.mjs';
+import { trCache } from '../lib/tr.mjs';
 import { storyRow } from './parts.mjs';
 import { openStory } from './story.mjs';
 import { openOutlet } from './outlets.mjs';
@@ -65,14 +66,15 @@ function drawResults() {
   drawRecent();
   // (The front page back: its columns dealt again, as they're never dealt hidden.)
   if (!on) return void (front && kitUI.flowColumns(front));
-  // (The older stories kept: read once, the first time anything is searched.)
-  if (!state.past && !pastAsked) {
+  // (The older stories kept: read the first time anything is searched, and
+  // again once the front has moved on since: a story off the front is there.)
+  if ((!state.past || pastOld()) && !pastAsked) {
     pastAsked = true;
     // (A failed read asked again at the next search, never in a loop.)
     // (Failed, the search says it looked at the last days alone.)
-    hooks.past()?.then?.(() => (state.past ? query.trim() && drawResults() : (query.trim() && drawResults(), (pastAsked = false))));
+    hooks.past()?.then?.(() => (query.trim() && drawResults(), (pastAsked = false)));
   }
-  const found = findStories([state.page, state.past], q, { outletName, topicName, cache });
+  const found = findStories([state.page, state.past], q, { outletName, topicName, cache, tr: t => trCache.get(t) });
   const outlets = findOutlets(OUTLETS, q);
   const list = found.map(f => f.story);
   const hits = new Map(found.map(f => [f.story.id, f.hit]));
