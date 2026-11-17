@@ -35,8 +35,6 @@ export const state = {
   lines: new Map(),
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
   interests: [],
-  // 新聞學單字: the words being learned in Orbit Words on this phone (lib/learn.mjs learnSet), null if none.
-  learn: null,
   // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
   laws: {},
   // 各方怎麼說: how each side framed a story, by id (news/sides.json, lib/sides.mjs), empty until read.
@@ -58,9 +56,9 @@ export const state = {
 
 // Filled in by app.mjs: read(outlet) counts a headline opened; render() redraws;
 // tab(id) opens a tab at its top; reload() reads the stories again; past()
-// reads the older stories (a promise); word(w) opens a word's card in Orbit Words; law(hash) a law or bill in Orbit Law.
+// reads the older stories (a promise); law(hash) opens a law or bill in Orbit Law.
 // follow(key, on) follows or lets go (lib/reading.mjs keys); opened(story) marks a story read.
-export const hooks = { read() {}, render() {}, stamp: () => 0, tab() {}, reload() {}, play() {}, word() {}, law() {}, follow() {}, opened() {}, past: async () => {} };
+export const hooks = { read() {}, render() {}, stamp: () => 0, tab() {}, reload() {}, play() {}, law() {}, follow() {}, opened() {}, past: async () => {} };
 
 // A story as far as this person has read it: '' not opened, 'read', or 'new'
 // (a big development since they read it: lib/reading.mjs readState).

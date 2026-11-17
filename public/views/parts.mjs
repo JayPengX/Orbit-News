@@ -114,13 +114,12 @@ export const shownSum = story => {
 };
 // An outlet's own words in the reader's language: its translation where
 // it's had (lib/tr.mjs), else as written, marked to be swapped when the
-// story's translations come (views/story.mjs asks). `parts`: how it's
-// drawn as written (a world story's learned words underlined).
-export function said(tag, attrs, src, parts = [src]) {
+// story's translations come (views/story.mjs asks).
+export function said(tag, attrs, src) {
   const other = foreign(src, en);
   const v = other ? trCache.get(src) : null;
   if (v) return h(tag, { ...attrs, lang: en ? 'en' : 'zh-Hant', text: v });
-  const el = h(tag, attrs, parts);
+  const el = h(tag, attrs, [src]);
   if (other) el.dataset.tr = src;
   return el;
 }

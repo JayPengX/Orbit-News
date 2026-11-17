@@ -41,6 +41,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-14 AI only for what someone asks for (Jay: "only spend it as I use it but kept fast enough"; later: "make AI feature like this a button to click like we do in orbit law, never spend a penny on AI on things user didn't interact with"): 重點整理 and 各方怎麼說 each sit behind the kit's quiet AI button (`aiPart`); the first tap anyone makes has it made (Orbit-Core `/ai/open`, `lib/open-ai.mjs`) and kept for everyone, whose taps then show it at once, free, on any pass (`data-ai-free`); nothing is made ahead, on opening a story or on a finger touching it. Titles nobody had made stay the outlets' own (Google's plain translation for the other language); 預測市場's new pairs and the sports stories' AI-read names wait (those made before stay).
 - 11-14 Nothing is drawn anew under a finger or while the page still moves (Jay: "I can't hold the side bar to scroll … it's refusing my hold"): `quietRefresh` waits till the page has been still 0.7 s; a story sheet's swipe listens on the sheet alone (`page: false`).
 - 11-14 A row's coverage is its marks, its outlets and its bar, never how many of Taiwan's outlets carry a world story (Jay: "no need to tell me how many Taiwan outlet is reporting this"); the sheet's 台灣媒體怎麼報 shows them.
+- 11-17 No Orbit Words in News (Jay: "Remove Orbit Words from Orbit News"): no words picked from stories, underlined or linked into Words; the family's notebook's `vocab.learning` isn't read.
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
@@ -114,7 +115,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 | --- | --- |
 | `app.mjs`, `shell.mjs` | Start, reading the page (and the past when asked), the Pass sync, tabs and the address (`#tw`, `#s=<story id>`, `#q=<words>`); state, outlets' names and marks, `outletLink`, `openOut` (the kit's `openLink`) |
 | `lib/stories.mjs` | The page as read (`cleanPage`), a story's bar, headlines by side, 官媒, one-sided groups (`oneSided`, `blindAll`, `oneSideOf`), topics, clips |
-| `lib/mine.mjs`, `brief.mjs`, `learn.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`); 新聞學單字 (Words' `vocab.learning`) |
+| `lib/mine.mjs`, `brief.mjs` | The family's links: 你關心的 (Securities' holdings, Sports' follows; `namesRe`); 今天五則 (code only, kit `feedback.mjs` as `news`) |
 | `lib/markets.mjs` | 預測市場: Polymarket's chances on a story's question (Orbit-Core `builders/news-markets.js` → `news/markets.json`, every 30 minutes; nothing shown past 3 hours old), drawn in the sheet's `oddsPart` |
 | `lib/lines.mjs`, `sides.mjs` | The AI made once by Orbit-Core `builders/ai.js`: world stories' Chinese titles and Taiwan's English ones (`news/lines.json`); 各方怎麼說 (`news/sides.json`) |
 | `lib/tr.mjs` | One language: plain translation (Orbit-Core `translate.js`, Google), never the AI's: a list's waiting titles in one batch of 30 and a sheet's outlet words as they show (POST `/news-tr`), kept on the phone, the outlet's own till then; nothing ahead |

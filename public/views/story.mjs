@@ -16,29 +16,11 @@ import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark, oneSideTag, oneSideLine } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
-import { learnParts, wordsIn } from '../lib/learn.mjs';
 import { sidesOf, cleanSides } from '../lib/sides.mjs';
 import { cleanBriefs } from '../lib/briefs.mjs';
 import { openAi, briefAsked, sidesAsked } from '../lib/open-ai.mjs';
 import { pcts, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
-
-// 新聞學單字: on a world story, the words being learned in Orbit Words
-// underlined in its English lines (lib/learn.mjs; the notebook's, nothing
-// sent), and listed under its headlines, each opening its card in Words.
-const learning = story => (story.region === 'intl' && state.learn) || null;
-const marked = (text, story) =>
-  learning(story) ? learnParts(text, state.learn).map(p => (typeof p === 'string' ? p : h('u', { class: 'nw-learn', title: p.zh, text: p.t }))) : [text];
-function learnPart(story) {
-  const set = learning(story);
-  const words = set ? wordsIn([story.title, story.sum, ...(story.items || []).map(it => it[1])], set, 8) : [];
-  if (!words.length) return null;
-  return h('section', { class: 'nw-learn-sec' }, [
-    h('h3', { class: 'nw-story-h', text: W('學單字', 'Words you’re learning') }),
-    h('p', { class: 'nw-learn-note', text: W('這則用到你在 Orbit Words 學的字，點一下看單字卡。', 'This story uses words you’re learning in Orbit Words. Tap one for its card.') }),
-    h('div', { class: 'q-chips nw-learn-words' }, words.map(w => h('button', { type: 'button', class: 'q-chip nw-learn-word', onclick: () => hooks.word(w.w) }, [h('b', { lang: 'en', text: w.w }), w.zh ? h('small', { lang: 'zh-Hant', text: w.zh }) : null].filter(Boolean))))
-  ]);
-}
 
 // A YouTube clip in YouTube's own player (its privacy-enhanced address:
 // no cookie until it plays); counted for 我的閱讀 as its outlet's. Should
@@ -93,7 +75,7 @@ export function player(clip, { start = 0, onTime = null, onEnd = null } = {}) {
 // when it comes; as written till then, or when none can be had.
 const sumSaid = story => {
   const t = shownSum(story);
-  return t.wait ? said('span', { lang: t.lang }, story.sum, marked(story.sum, story)) : h('span', { lang: t.lang, text: t.text });
+  return t.wait ? said('span', { lang: t.lang }, story.sum) : h('span', { lang: t.lang, text: t.text });
 };
 function translateIn(body, story) {
   const ask = () => {
@@ -352,7 +334,6 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
     ]),
-    learnPart(story),
     lawPart(story),
     taiwanPart(story),
     worldLink(story),
@@ -685,7 +666,7 @@ function sideCard(side, items, story, { most = 4 } = {}) {
   const line = (it, first) =>
     outletLink(it, [
       first ? h('span', { class: 'nw-hl-src' }, [outletMark(it[0], 20), h('span', { text: outletName(it[0]) }), followsOutlet(it[0]) ? followMark() : null, h('small', { text: ago(it[3]) })]) : h('small', { class: 'nw-hl-when', text: ago(it[3]) }),
-      said('span', { class: 'nw-hl-t', lang }, it[1], marked(it[1], story))
+      said('span', { class: 'nw-hl-t', lang }, it[1])
     ], first ? 'nw-hl' : 'nw-hl nw-hl-also');
   const group = ([o, [first, ...also]]) => {
     const box = h('div', { class: 'nw-hl-group' }, [line(first, true)]);

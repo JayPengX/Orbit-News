@@ -731,15 +731,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-follow-line-v { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .nw-follow-line-go { flex: none; color: var(--q-label-3); }
 
-/* 新聞學單字: the words being learned in Orbit Words, underlined in a world
-   story's English lines, then listed under its headlines (views/story.mjs). */
-.nw-learn { text-decoration: underline; text-decoration-color: var(--q-accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.nw-learn-sec { display: grid; gap: 8px; }
-.nw-learn-note { color: var(--q-label-2); font: var(--q-t-footnote); margin: 0 2px; }
-.nw-learn-words { display: flex; flex-wrap: wrap; gap: 8px; }
-.nw-learn-word { display: inline-flex; align-items: center; gap: 6px; line-height: 1.2; }
-.nw-learn-word small { color: var(--q-label-2); font: var(--q-t-caption); }
-
 /* 各方怎麼說: each side's angle in a line (the AI's, from their headlines),
    the difference that matters most on top; side by side on a wide sheet. */
 .nw-say { display: grid; gap: 10px; }

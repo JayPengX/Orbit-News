@@ -46,7 +46,7 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 
 </details>
 
-**Beyond the headlines.** 各方怎麼說: on big political and world stories, each side's angle in a line and the one difference that matters, written by AI from their own headlines only, never who's right. 今天五則: five stories past the headlines, picked for you each morning. 你關心的: stories about what you hold in Orbit Securities and follow in Orbit Sports lead, marked 持股 or 追蹤 (read on the phone, nothing sent). 看法案: the laws a Taiwan story names open in Orbit Law; on world stories, the words you're learning in Orbit Words are underlined (新聞學單字).
+**Beyond the headlines.** 各方怎麼說: on big political and world stories, each side's angle in a line and the one difference that matters, written by AI from their own headlines only, never who's right. 今天五則: five stories past the headlines, picked for you each morning. 你關心的: stories about what you hold in Orbit Securities and follow in Orbit Sports lead, marked 持股 or 追蹤 (read on the phone, nothing sent). 看法案: the laws a Taiwan story names open in Orbit Law.
 
 **Where the places come from.** Taiwanese outlets by published research (Chiang & Shih 2013, TEDS; Chang & Fang 2023; Kao, APSR), newer web outlets by owner and stated stance (marked weaker). English outlets by AllSides Media Bias Ratings™ (CC BY-NC 4.0), and by Media Bias/Fact Check where AllSides has none; only China's state media stand apart. Each outlet's sheet in the app says why.
 

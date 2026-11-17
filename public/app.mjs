@@ -25,7 +25,6 @@ import { cleanSides } from './lib/sides.mjs';
 import { cleanMarkets } from './lib/markets.mjs';
 import { cleanBriefs } from './lib/briefs.mjs';
 import { interestsOf } from './lib/mine.mjs';
-import { learnSet } from './lib/learn.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide, keptLists } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
@@ -170,7 +169,6 @@ hooks.render = () => render();
 // (What the lists were drawn from: views/lists.mjs keeps each topic's list till it changes.)
 hooks.stamp = () => stamp;
 hooks.tab = tab => showTab(tab, { top: true });
-hooks.word = w => q.go('vocab', `word=${encodeURIComponent(w)}`);
 hooks.law = hash => q.go('law', hash);
 hooks.reload = () => (state.held.clear(), load({ fresh: true }));
 
@@ -248,11 +246,8 @@ function loadInterests() {
   return import('#kit/family.mjs')
     .then(f => {
       const next = interestsOf(f.heard?.('stock', 'holds') || [], f.heard?.('sports', 'follows') || []);
-      const learn = learnSet(f.heard?.('vocab', 'learning', { maxAge: 30 * 86_400_000 }));
-      const sig = l => (l ? [...l.byForm.keys()].join() : '');
-      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join() && sig(learn) === sig(state.learn)) return;
+      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join()) return;
       state.interests = next;
-      state.learn = learn;
       stamp++;
       quietRefresh();
     })
