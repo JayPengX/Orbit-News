@@ -82,7 +82,7 @@ export const liveOf = (page, now = Date.now()) =>
 // Taiwan story on a world story (its `world`), or two Taiwan stories on the same
 // one, and their headlines share a name (three Chinese characters running: 黃仁勳).
 // (The builder's join to a world story is loose, so the shared words decide.)
-// `zhOf(story)`: a world story's Chinese title (the AI's), '' when none.
+// `zhOf(story)`: a world story's Chinese title (its translation), '' when none.
 const grams = t => {
   const out = new Set();
   for (const run of String(t || '').match(/[\u4e00-\u9fff]{3,}/g) || []) for (let i = 0; i + 3 <= run.length; i++) out.add(run.slice(i, i + 3));

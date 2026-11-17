@@ -72,7 +72,7 @@ function drawResults() {
     // (Failed, the search says it looked at the last days alone.)
     hooks.past()?.then?.(() => (state.past ? query.trim() && drawResults() : (query.trim() && drawResults(), (pastAsked = false))));
   }
-  const found = findStories([state.page, state.past], q, { lines: state.lines, outletName, topicName, cache });
+  const found = findStories([state.page, state.past], q, { outletName, topicName, cache });
   const outlets = findOutlets(OUTLETS, q);
   const list = found.map(f => f.story);
   const hits = new Map(found.map(f => [f.story.id, f.hit]));

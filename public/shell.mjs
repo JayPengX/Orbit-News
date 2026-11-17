@@ -27,14 +27,10 @@ export const state = {
   // The past's page (older stories kept, news/past.json), read when asked.
   past: null,
   pastFailed: false,
-  // The AI's one lines and titles by story (lib/lines.mjs), an empty Map until read.
-  lines: new Map(),
   // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
   interests: [],
   // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
   laws: {},
-  // 預測市場: Polymarket's markets on a story's question, by id (news/markets.json, lib/markets.mjs), empty until read.
-  markets: new Map(),
   // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.
   log: emptyLog(),
   // What's followed on the page: id → { why, lift } (lib/follows.mjs followedOf), made each 頭條, 台灣 or 國際 draw.

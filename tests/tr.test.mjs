@@ -10,11 +10,10 @@ test('which texts are the other language’s, and what a title shows', () => {
   assert.equal(foreign('颱風來襲', false), false);
   assert.equal(foreign('颱風來襲', true), true);
   assert.equal(foreign('', true), false);
-  // (The AI's title first, the translation after it, the outlet's own till it comes.)
+  // (The translation once it has come, the outlet's own till then.)
   const w = { region: 'intl', title: 'Storm hits coast' };
-  assert.deepEqual(titleOf(w, { zh: 'AI 標題' }, false, '暴風襲擊海岸'), { text: 'AI 標題', ai: true, lang: 'zh-Hant' });
-  assert.deepEqual(titleOf(w, null, false, '暴風襲擊海岸'), { text: '暴風襲擊海岸', ai: false, lang: 'zh-Hant' });
-  assert.deepEqual(titleOf(w, null, false, null), { text: 'Storm hits coast', ai: false, lang: 'en' });
+  assert.deepEqual(titleOf(w, false, '暴風襲擊海岸'), { text: '暴風襲擊海岸', lang: 'zh-Hant' });
+  assert.deepEqual(titleOf(w, false, null), { text: 'Storm hits coast', lang: 'en' });
 });
 
 test('a list’s waiting titles go in one capped batch, each once; the answers are painted in place', async () => {

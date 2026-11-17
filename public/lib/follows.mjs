@@ -14,7 +14,7 @@ import { about } from './mine.mjs';
 // Words (a person, a company) as a search finds them, only where they're in
 // a headline or summary (`strong`: not a passing word in one outlet's line);
 // a topic, its stories; an outlet, the stories it leads or is one of a few on.
-// `ctx`: findStories' ({ lines, outletName, topicName }).
+// `ctx`: findStories' ({ outletName, topicName }).
 export function followFinds(log, page, ctx = {}) {
   const out = [];
   for (const f of followsOf(log)) {

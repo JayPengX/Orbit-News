@@ -15,7 +15,6 @@ import { followPill, wordsKey } from './follows.mjs';
 import { sized } from '../lib/pics.mjs';
 import { bar, marks, clipCard, playMark, shownTitle, shownSum, said, storyList, followedFirst, followsOutlet, followMark } from './parts.mjs';
 import { askTr, trPaint, trWaiting } from '../lib/tr.mjs';
-import { pcts, move, sourceUrl } from '../lib/markets.mjs';
 import { itemOf } from '../lib/brief.mjs';
 
 // A YouTube clip in YouTube's own player (its privacy-enhanced address:
@@ -308,7 +307,7 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
   const head = h('div', { class: 'nw-story-head' }, [
     pic,
     h('div', { class: 'nw-story-text' }, [
-      about || shownTitle(story).ai ? h('small', { class: 'nw-kicker' }, [about, shownTitle(story).ai ? aiMark(W('標題由 AI 依各家標題寫成', 'Headline written by AI from the outlets’ own')) : null]) : null,
+      about ? h('small', { class: 'nw-kicker', text: about }) : null,
       ...storyTitle(story),
       story.sum ? h('p', { class: 'nw-sum' }, [sumSaid(story), story.sumBy ? h('small', { text: ` — ${outletName(story.sumBy)}` }) : null]) : null,
       h('p', { class: 'nw-story-line' }, [marks(story, 6), h('span', { text: [W(`${story.n} 家`, `${story.n} outlets`), W(`${story.m || story.items.length} 則`, `${story.m || story.items.length} reports`), ago(story.at)].join(' · ') })]),
@@ -323,7 +322,6 @@ function storyParts(story, { clip = '', start = 0 } = {}) {
     fullLink(story),
     clipRow,
     spectrum(story),
-    oddsPart(story),
     h('section', { class: 'nw-sides-sec' }, [
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
@@ -420,61 +418,6 @@ function relatedPart(story) {
   const near = relatedOf(story, [state.page, state.past]).map(x => x.story);
   if (!near.length) return null;
   return h('section', { class: 'nw-related' }, [h('h3', { class: 'nw-story-h', text: W('相關新聞', 'Related stories') }), storyList(near, s => openStory(s.id, { list: near }))]);
-}
-
-// The Orbit AI mark beside a part the AI had a hand in (the family's, never a sparkle).
-export function aiMark(label = 'Orbit AI') {
-  const mark = h('i', { class: 'nw-ai-mark', 'aria-label': label, title: label });
-  mark.innerHTML = kitUI.icons?.ai || kitUI.icons?.spark || '';
-  return mark;
-}
-
-// 預測市場: the question the story raises as Polymarket's traders price it
-// (lib/markets.mjs; the pair confirmed by the AI, the chances Polymarket's):
-// one chance, the chances by deadline, or a race's leaders, each a bar with
-// its day's move; the source a tap away. Two markets at most.
-const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function byWhen(md) {
-  const [a, b, c] = md.split('/').map(Number);
-  const [y, m, d] = c ? [a, b, c] : [0, a, b];
-  return W(`${y ? `${y}/` : ''}${m}/${d} 前`, `By ${MONTHS_EN[m - 1]} ${d}${y ? `, ${y}` : ''}`);
-}
-function oddsPart(story) {
-  const ms = state.markets?.get?.(story.id);
-  if (!ms?.length) return null;
-  // (A long person's name by its last name alone, never cut: the long-name rule; anything else as written.)
-  const fit = n => (n.length > 16 && /^\p{Lu}[\p{L}'-]+(?: \p{Lu}[\p{L}'.-]+)+$/u.test(n) ? n.split(' ').pop() : n);
-  const row = (r, kind, zh, p) => {
-    const name = kind === 'dates' ? byWhen(r.md) : kind === 'pick' ? (zh ? r.zh : fit(r.en)) : '';
-    const mv = move(r.d);
-    return h('div', { class: `nw-odds-row${name ? '' : ' one'}` }, [
-      name ? h('span', { class: 'nw-odds-name', lang: kind === 'pick' && !zh ? 'en' : null, text: name }) : null,
-      h('span', { class: 'nw-odds-bar', 'aria-hidden': 'true' }, [h('i', { style: { width: `${Math.max(1, Math.round(r.p * 100))}%` } })]),
-      h('b', { class: 'nw-odds-p', text: p }),
-      h('small', { class: 'nw-odds-move', 'aria-label': mv ? W(`一天${r.d > 0 ? '上升' : '下降'} ${mv.slice(1)} 個百分點`, `${r.d > 0 ? 'Up' : 'Down'} ${mv.slice(1)} points in a day`) : null, text: mv })
-    ].filter(Boolean));
-  };
-  const rowsOf = m => {
-    const ps = pcts(m.rows, m.one);
-    // (Each row in Chinese where it has it: a person without a Chinese name the headlines use keeps the name as written.)
-    return m.rows.map((r, i) => row(r, m.kind, !en && !!r.zh, ps[i]));
-  };
-  // (What ▲▼ means, once, beside the heading: a day's move in percentage points.)
-  const moved = ms.some(m => m.rows.some(r => move(r.d)));
-  return h('section', { class: 'nw-odds' }, [
-    h('h3', { class: 'nw-story-h' }, [W('預測市場', 'Market odds'), aiMark(), moved ? h('small', { class: 'nw-odds-key', text: W('▲▼ 一天漲跌（百分點）', '▲▼ points moved in a day') }) : null].filter(Boolean)),
-    h(
-      'div',
-      { class: 'nw-odds-cards' },
-      ms.map(m =>
-        h('div', { class: 'nw-odds-card' }, [
-          h('p', { class: 'nw-odds-q', lang: en ? 'en' : 'zh-Hant', text: en ? m.en : m.zh }),
-          h('div', { class: 'nw-odds-rows' }, rowsOf(m)),
-          h('a', { class: 'nw-odds-src', href: sourceUrl(m), target: '_blank', rel: 'noopener', onclick: e => (e.preventDefault(), openOut(sourceUrl(m))) }, [W('Polymarket 交易者估的機率', 'Chances as Polymarket traders price them'), h('span', { 'aria-hidden': 'true', text: ' ›' })])
-        ])
-      )
-    )
-  ]);
 }
 
 // 看法案: the laws its headlines name, each opening in Orbit Law: its bill

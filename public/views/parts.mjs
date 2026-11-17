@@ -104,7 +104,7 @@ const tapStory = (story, onOpen, list) => e => {
 // The headline as the reader sees it (a world story's in Chinese, by the
 // AI, from the outlets' own) and the AI's neutral one line under it, its
 // spark marking it the AI's (lib/lines.mjs).
-export const shownTitle = story => titleOf(story, state.lines?.get?.(story.id), en, foreign(story.title, en) ? trCache.get(story.title) : null);
+export const shownTitle = story => titleOf(story, en, foreign(story.title, en) ? trCache.get(story.title) : null);
 // The outlet's summary as the reader sees it: in their language where it's
 // been translated (lib/tr.mjs), else as the outlet wrote it.
 export const shownSum = story => {
@@ -127,7 +127,7 @@ const titleSpan = (story, cls) => {
   const t = shownTitle(story);
   const el = h('span', { class: cls, lang: t.lang, text: t.text });
   // (The outlet's own till its translation comes, lib/tr.mjs askTitles.)
-  if (!t.ai && t.text === story.title && foreign(story.title, en)) Object.assign(el.dataset, { tr: story.title, trid: story.id });
+  if (t.text === story.title && foreign(story.title, en)) Object.assign(el.dataset, { tr: story.title, trid: story.id });
   return el;
 };
 
@@ -148,13 +148,11 @@ const followedWhy = story => state.followed?.get?.(story.id)?.why || null;
 
 // What a story is about and how long it has run: 政治 · 報導 3 天; `when`
 // adds how long ago it was last heard of.
-export function aboutLine(story, { days = true, when = false, topic: withTopic = true, odds: withOdds = withTopic } = {}) {
+export function aboutLine(story, { days = true, when = false, topic: withTopic = true } = {}) {
   const topic = withTopic && story.topics?.[0] ? topicName(story.topics[0], story.region) : '';
   const d = daysOf(story);
   const run = days && d > 1 ? W(`報導 ${d} 天`, `${d} days`) : '';
-  // (預測市場: a story with a market's chances in its sheet says so.)
-  const odds = withOdds && state.markets?.has?.(story.id) ? W('預測市場', 'Market odds') : '';
-  return [topic, run, odds, when ? ago(story.at) : ''].filter(Boolean).join(' · ');
+  return [topic, run, when ? ago(story.at) : ''].filter(Boolean).join(' · ');
 }
 
 // The bar: a segment for each side that carries the story, as long as its

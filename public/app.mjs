@@ -18,9 +18,7 @@ import { passSync } from '#kit/pass-sync.mjs';
 import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOffline, storedAccount, cachedPayload, packJson } from '#kit/orbit.mjs';
 import { state, hooks, lang, en, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
-import { cleanLines } from './lib/lines.mjs';
 import { watchTitles } from './lib/tr.mjs';
-import { cleanMarkets } from './lib/markets.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, keptLists } from './views/lists.mjs';
@@ -171,20 +169,6 @@ hooks.reload = () => (state.held.clear(), load({ fresh: true }));
 // Read through the kit (memory, the phone's copy, then /data/): a copy two
 // minutes old is used as is; a failed read keeps the last one.
 let reading = null;
-// (一句話講清楚: the AI's lines beside them, read the same way; none read, the outlets' own titles only.)
-const LINES = 'news/lines.json';
-let linesBuilt = null;
-function loadLines(fresh) {
-  return packJson(LINES, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === linesBuilt) return;
-      linesBuilt = raw?.built ?? null;
-      state.lines = cleanLines(raw);
-      stamp++;
-      quietRefresh();
-    })
-    .catch(() => {});
-}
 // 看法案: the laws Taiwan's stories name (Orbit-Core's builders/news-laws.js), read with the stories.
 const LAWS = 'news/laws.json';
 let lawsBuilt = null;
@@ -194,20 +178,6 @@ function loadLaws(fresh) {
       if (raw?.built === lawsBuilt) return;
       lawsBuilt = raw?.built ?? null;
       state.laws = raw?.stories && typeof raw.stories === 'object' ? raw.stories : {};
-    })
-    .catch(() => {});
-}
-// 預測市場: Polymarket's markets beside the stories they're about (Orbit-Core's builders/news-markets.js), read with the stories.
-const MARKETS = 'news/markets.json';
-let marketsBuilt = null;
-function loadMarkets(fresh) {
-  return packJson(MARKETS, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === marketsBuilt) return;
-      marketsBuilt = raw?.built ?? null;
-      state.markets = cleanMarkets(raw);
-      stamp++;
-      quietRefresh();
     })
     .catch(() => {});
 }
@@ -225,10 +195,8 @@ function loadInterests() {
 }
 function load({ fresh = false } = {}) {
   if (reading) return reading;
-  loadLines(fresh);
   loadInterests();
   loadLaws(fresh);
-  loadMarkets(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');
   if (button) button.disabled = true;
@@ -292,8 +260,8 @@ function showTab(tab, { top = false } = {}) {
   tabNav.select(tab, top ? { top: true } : undefined);
   render({ ifChanged: true });
 }
-// (Many reads land together as News opens: the stories, the AI's titles, the
-// translations, the markets. One draw for them all, not a whole page each:
+// (Many reads land together as News opens: the stories, the translations,
+// the laws. One draw for them all, not a whole page each:
 // the page froze two seconds on a phone, Jay 11-13.)
 let redraw = 0;
 // (Never drawn under a finger or while the page still moves: a list drawn
@@ -332,12 +300,8 @@ async function boot() {
   watchTitles(document.body, en);
   const starting = q.start();
   // The stories this phone kept, drawn at once; the fresh ones as they come.
-  const [kept, keptLines, keptMarkets] = await Promise.all([PAGE, LINES, MARKETS].map(p => orbitKit.peekPack?.(p).catch(() => null)));
+  const kept = await orbitKit.peekPack?.(PAGE).catch(() => null);
   if (kept?.data && !testFlags().newsFail) state.page = testPage(cleanPage(kept.data));
-  // (The AI's titles, the translations and the markets kept with them, so the
-  // first draw is the whole one: the fresh ones redraw only if newer.)
-  if (keptLines?.data && linesBuilt === null) ((state.lines = cleanLines(keptLines.data)), (linesBuilt = keptLines.data.built ?? null));
-  if (keptMarkets?.data && marketsBuilt === null) ((state.markets = cleanMarkets(keptMarkets.data)), (marketsBuilt = keptMarkets.data.built ?? null));
   const mine = decodeLog(localCopy() || cachedPayload('news'));
   if (mine) absorb(mine);
   const first = load();

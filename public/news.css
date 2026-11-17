@@ -138,8 +138,6 @@ h1, h2, h3, p { margin: 0; }
   text-wrap: pretty;
 }
 /* The Orbit AI mark (an AI title's kicker, 預測市場's head). */
-.nw-ai-mark { flex: none; display: inline-flex; width: 13px; height: 13px; margin-top: 3px; color: var(--q-label-3); }
-.nw-ai-mark svg { width: 100%; height: 100%; fill: currentColor; }
 @media (hover: hover) {
   .nw-row:hover { background: var(--q-fill-4); }
 }
@@ -708,36 +706,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-follow-line-v { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .nw-follow-line-go { flex: none; color: var(--q-label-3); }
 
-/* 預測市場: the story's question as Polymarket prices it, a bar a chance,
-   two cards side by side on a wide sheet. */
-.nw-odds { display: grid; gap: 10px; }
-.nw-odds .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-odds .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
-.nw-odds-key { margin-inline-start: auto; color: var(--q-label-2); font: var(--q-t-caption); white-space: nowrap; }
-.nw-odds-cards { display: grid; gap: 12px; }
-.nw-odds-card {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
-  border-radius: var(--q-r-card);
-  box-shadow: var(--nv-edge, none);
-}
-.nw-odds-q { font: 600 17px/24px var(--q-font); text-wrap: pretty; }
-.nw-odds-rows { display: grid; grid-template-columns: fit-content(50%) minmax(0, 1fr) auto auto; align-items: center; align-content: start; gap: 8px 10px; font: var(--q-t-subhead); }
-.nw-odds-row { display: contents; }
-.nw-odds-row.one .nw-odds-bar { grid-column: 1 / 3; }
-.nw-odds-name { overflow: hidden; white-space: nowrap; color: var(--q-label-2); }
-.nw-odds-bar { display: block; height: 8px; border-radius: 4px; background: var(--q-fill-2); overflow: hidden; }
-.nw-odds-bar i { display: block; height: 100%; border-radius: 4px; background: var(--q-accent); }
-.nw-odds-p { text-align: end; font-weight: 600; font-variant-numeric: tabular-nums; }
-.nw-odds-move { min-width: 2.2em; color: var(--q-label-2); font: var(--q-t-caption); font-variant-numeric: tabular-nums; }
-.nw-odds-src { justify-self: start; color: var(--q-label-2); font: var(--q-t-footnote); text-decoration: none; }
-@container q-sheet (min-width: 620px) {
-  .nw-odds-cards { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 16px; }
-}
-
 /* ---- 今天五則: five numbered lines in one card ---- */
 .nw-brief {
   list-style: none;
@@ -811,7 +779,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-missed .nw-story-h { font: 600 15px/20px var(--q-font); color: var(--q-label-2); padding: 0 2px; }
 
 /* The way to the whole report on the outlet's site. */
-.nw-kicker .nw-ai-mark { display: inline-block; width: 13px; height: 13px; margin-left: 6px; vertical-align: -2px; color: var(--q-ai, var(--q-accent)); }
 .nw-full-row { display: flex; }
 .nw-full { display: inline-flex; align-items: center; justify-self: start; min-height: 36px; padding: 0 16px; border-radius: 999px; background: var(--q-fill-3); color: var(--q-label); font: 600 15px/20px var(--q-font); text-decoration: none; white-space: nowrap; }
 .nw-full b { color: var(--q-label-3); font-weight: 400; }

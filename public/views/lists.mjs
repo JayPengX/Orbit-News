@@ -14,6 +14,7 @@ import { followPill, openFollows, followName } from './follows.mjs';
 import { dayBrief, itemOf } from '../lib/brief.mjs';
 import { storyList, briefList, storyCards, clipCard, leadCard, carousel, builtLine, bar, shownTitle } from './parts.mjs';
 import { openStory } from './story.mjs';
+import { trCache } from '../lib/tr.mjs';
 import { withSearch } from './search.mjs';
 import { renderVideo, videoStories } from './video.mjs';
 
@@ -55,7 +56,8 @@ const more = (words, to) => {
 // The lead stories: Taiwan's top three and the world's top two, Taiwan's first.
 // (快訊 first, two at most, a Taiwan story before its world one: what's
 // breaking now leads, then the day's usual five; each saga once.)
-const zhOf = s => state.lines?.get?.(s.id)?.zh || '';
+// (A world story's Chinese title: its translation, once it's come.)
+const zhOf = s => (s.region === 'intl' && trCache.get(s.title)) || '';
 const leadsOf = (tw, intl, live = []) => {
   const first = oneASaga([...live].sort((a, b) => (a.region === 'tw' ? 0 : 1) - (b.region === 'tw' ? 0 : 1)), [], zhOf).slice(0, 2);
   // (The usual five: Taiwan's two, the world's, Taiwan's, the world's; then on in turn should a saga be skipped.)
@@ -71,7 +73,7 @@ const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { m
 export function followedNow() {
   const outlets = followsOf(state.log).filter(f => f.kind === 'o').map(f => f.id);
   state.followed = followedOf(state.page, {
-    finds: followFinds(state.log, state.page, { lines: state.lines, outletName, topicName }),
+    finds: followFinds(state.log, state.page, { outletName, topicName }),
     interests: state.interests,
     outlets,
     log: state.log,

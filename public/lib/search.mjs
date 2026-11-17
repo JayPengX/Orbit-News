@@ -26,13 +26,12 @@ export const wordsOf = q => [...new Set(fold(q).split(' ').filter(Boolean))];
 
 // One story's text by weight, folded once.
 const FIELDS = { title: 6, sum: 3, heads: 2, names: 2 };
-function indexOf(story, { lines, outletName, topicName }) {
-  const l = lines?.get?.(story.id);
+function indexOf(story, { outletName, topicName }) {
   const heads = (story.items || []).map(it => fold(it[1]));
   const world = (story.tw?.items || []).map(it => fold(it[1]));
   const outlets = [...new Set((story.items || []).map(it => it[0]))];
   return {
-    title: fold([story.title, l?.zh, l?.en].filter(Boolean).join(' ')),
+    title: fold(story.title),
     sum: fold(story.sum),
     heads: [...heads, ...world],
     names: fold([...outlets.flatMap(o => outletName?.(o) || []), ...(story.topics || []).map(t => topicName?.(t, story.region) || ''), ...(story.parties || [])].join(' '))
@@ -42,7 +41,7 @@ function indexOf(story, { lines, outletName, topicName }) {
 // The stories matching `q`, best first: [{ story, score, hit }] where `hit`
 // is the outlet's headline [outlet, headline] that has the words when the
 // headline shown doesn't (to say why it was found). `pages`: the page and
-// the past (either may be null). `ctx`: { lines, outletName, topicName }
+// the past (either may be null). `ctx`: { outletName, topicName }
 // (the names in the page's language), `now`. `strong`: a word counts only
 // in the headline, the summary or two outlets' headlines (a followed name,
 // lib/follows.mjs: never one outlet's passing mention, an outlet's or a

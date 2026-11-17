@@ -15,7 +15,7 @@ const page = {
   intl: [s('d', 'Republicans elect Jim Jordan as House minority leader', { region: 'intl', items: [['nyt', 'Jordan wins vote', 'u', T]] })]
 };
 const past = { tw: [s('e', '舊聞：賴清德就職', { at: T - 300 * H, imp: 5 })], intl: [] };
-const ctx = { now: T, lines: new Map([['d', { zh: '美眾院共和黨選喬丹任少數黨領袖', en: '' }]]), outletName: id => ({ ltn: '自由時報', udn: '聯合報', cna: '中央社', pts: '公視', nyt: 'New York Times' })[id] || id, topicName: () => '' };
+const ctx = { now: T, outletName: id => ({ ltn: '自由時報', udn: '聯合報', cna: '中央社', pts: '公視', nyt: 'New York Times' })[id] || id, topicName: () => '' };
 
 test('folding: full width, case, 臺 and punctuation alike', () => {
   assert.equal(fold('ＴＳＭＣ　臺積電！'), 'tsmc 台積電');
@@ -32,10 +32,9 @@ test('found by headline first, then by an outlet’s own headline; the past too'
   assert.equal(found[0].hit, null);
 });
 
-test('every word must be found; the summary, 臺/台 and the AI’s Chinese title count', () => {
+test('every word must be found; the summary and 臺/台 count', () => {
   assert.deepEqual(findStories([page], '賴清德 花費', ctx).map(f => f.story.id), ['a']);
   assert.deepEqual(findStories([page], '臺積電 5868', ctx).map(f => f.story.id), ['b']);
-  assert.deepEqual(findStories([page], '少數黨', ctx).map(f => f.story.id), ['d']);
   assert.deepEqual(findStories([page], 'jordan', ctx).map(f => f.story.id), ['d']);
   assert.deepEqual(findStories([page], '自由時報', ctx).map(f => f.story.id), ['a']);
   assert.deepEqual(findStories([page], '沒有這則', ctx), []);
