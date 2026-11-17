@@ -24,7 +24,7 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.webp" width="30%" alt="World news, and how Taiwan reports it">
+  <img src="docs/screenshots/news-4.webp" width="30%" alt="Search any company or person, across every outlet">
   <img src="docs/screenshots/news-5.webp" width="30%" alt="118 outlets, each place sourced">
   <img src="docs/screenshots/news-6.webp" width="30%" alt="14 topics, ranked by importance">
 </p>
@@ -39,7 +39,7 @@ Taiwan's and the world's news (politics, cross-strait, defence, the economy, tec
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="國際大事，台灣媒體怎麼報">
+  <img src="docs/screenshots/news-4.zh.webp" width="30%" alt="搜尋任何公司、人物，所有媒體一起找">
   <img src="docs/screenshots/news-5.zh.webp" width="30%" alt="118 家媒體，立場都有出處">
   <img src="docs/screenshots/news-6.zh.webp" width="30%" alt="14 個主題，照重要程度排">
 </p>
