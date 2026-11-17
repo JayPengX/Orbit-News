@@ -43,6 +43,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-17 No Orbit Words in News (Jay: "Remove Orbit Words from Orbit News"): no words picked from stories, underlined or linked into Words; the family's notebook's `vocab.learning` isn't read.
 - 11-17 No 重點整理 or 各方怎麼說 (Jay: "Remove 各方怎麼說、重點整理 AI from Orbit News"): a story's sheet has no AI part to tap; who covers it (each side's count, bar and outlets, 報導的媒體) is code's; the AI's titles and plain translation stay.
 - 11-17 No 單邊 (Jay: "Remove 單邊 tab as it's really useless"): no tab, no 頭條 section, no 偏藍沒報 mark on a row and no line of who carried it in a story's sheet; the other tabs keep their order and 頭條 still opens first. The builder's `blind` is read only by 你可能錯過.
+- 11-17 Orbit Sports' 相關新聞 no longer opens here: News reads no `news/sport.json`; a story still opens by `#s=<id>` (Securities' and Law's links).
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from
@@ -87,11 +88,6 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
   a topic sides take, 2 hours or more, 8 outlets or more, 4 or more on one
   end and a token one or two on the other, the lead past the day's front's,
   as important as the front's middle story or more; read by 你可能錯過).
-  Also `news/sport.json` (Jay 11-13, for Orbit Sports' 相關新聞): the sports
-  stories of 3 days, one outlet's report too (never on News' own pages), each
-  with its kind (`k`: injury, ban, coach, move; kit `news-sport.mjs`) and the
-  AI's reading of its names (`who`, `builders/ai.js` news-sport). Sports
-  links one as `#s=<id>`; `hooks.sport` reads the pack only for such a link.
 - **The outlets** (Orbit-Core `kit/news-outlets.mjs`, one table for the
   builder and the app): each outlet's name, site, owner, kind, its place on
   藍綠 (`tw`), 統獨 (`cs`) or left–right (`lr`: AllSides', else Media

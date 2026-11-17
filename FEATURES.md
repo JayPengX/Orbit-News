@@ -46,7 +46,6 @@ remove a feature on purpose, delete its line in the same commit.
 - The older stories kept (a month), asked for at a list's end or by an old link — `public/views/lists.mjs`, `public/app.mjs`, `public/views/story.mjs`: `function pastPart`, `hooks.past =`, `news/past.json`, `state.past`
 - 媒體: your reading by side (Taiwan's and the world's), every outlet on its line — `public/views/outlets.mjs`: `export function renderOutlets`, `TW_PLACES`, `INTL_PLACES`
 - A tab or a story from the address (#intl, #s=<id>) — `public/app.mjs`: `function openFromHash`, `s=(\w+)`
-- A sports report Orbit Sports' 相關新聞 opens (#s=<id>), one outlet's too, which News' pages leave out: read from the builder's sports pack only for such a link — `public/app.mjs`, `public/views/story.mjs`: `hooks.sport`, `state.sport`
 
 ## The sheets
 

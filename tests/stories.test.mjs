@@ -86,9 +86,6 @@ test('topics, clips, how long a story ran, and the past', () => {
   const past = cleanPage({ tw: [story('old', 'tw', { g: 1, c: 0, b: 0 }, [['ltn', 'Old', 'https://ltn.com.tw/9', T - 200 * H]])] });
   assert.equal(storyById(page, 'old'), null);
   assert.equal(storyById(page, 'old', past).title, 'old');
-  // (A sports report from Orbit Sports' 相關新聞: the sports pack, after the past.)
-  const sport = cleanPage({ intl: [story('sp', 'intl', null, [['bbc', 'Curry out', 'https://www.bbc.com/sport/1', T]])] });
-  assert.equal(storyById(page, 'sp', null, sport).region, 'intl');
 });
 
 test('a picture that won’t load gives way to the other outlets’ (Jay 11-11: 圖：日本時報 over an empty space, 32 outlets more)', () => {
