@@ -217,7 +217,6 @@ function storyTitle(story) {
 }
 
 function storyParts(story, { clip = '', start = 0 } = {}) {
-  const lang = story.region === 'intl' ? 'en' : 'zh-Hant';
   const groups = bySide(story);
   const sides = [...Object.keys(groups).filter(k => k !== 'none' && k !== 'free'), 'none'];
   // (A kind sides don't take, a game or a storm: one list of every outlet, never

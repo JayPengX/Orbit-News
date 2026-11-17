@@ -3,7 +3,6 @@
 // stories' carousel, and the line under a list.
 import { h } from '#kit/ui.mjs';
 import { W, en, hooks, state, sideText, sideFull, ago, agoBrief, outletName, outletMark, topicName, readMark, isFollowing } from '../shell.mjs';
-import * as kitUI from '#kit/ui.mjs';
 import { titleOf } from '../lib/lines.mjs';
 import { foreign, trCache } from '../lib/tr.mjs';
 import { barOf, daysOf, outletsOf, sidesTaken, stateMedia, picturesOf, isLive } from '../lib/stories.mjs';
