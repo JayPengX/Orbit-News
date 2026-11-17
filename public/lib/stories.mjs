@@ -213,6 +213,17 @@ export function agoOf(at, now, en = false) {
   return en ? `${d} day${d === 1 ? '' : 's'} ago` : `${d} 天前`;
 }
 
+// The same, short, for a clip's narrow card (its outlet's name was cut to
+// "Lib…" beside "· 36 min ago"): 36m, 3h, 2d; 36 分, 3 時, 2 天.
+export function agoShort(at, now, en = false) {
+  const m = Math.max(0, Math.round((now - at) / 60_000));
+  if (m < 2) return en ? 'now' : '剛剛';
+  if (m < 60) return en ? `${m}m` : `${m} 分`;
+  const h = Math.round(m / 60);
+  if (h < 24) return en ? `${h}h` : `${h} 時`;
+  return en ? `${Math.round(h / 24)}d` : `${Math.round(h / 24)} 天`;
+}
+
 // ---- 相關新聞 and 來龍去脈 (Jay 11-13: "make it more in app") ----
 
 // A line's terms: Chinese as two-character pieces, English as words of four

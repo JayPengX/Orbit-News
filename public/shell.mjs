@@ -8,7 +8,7 @@ import { h, logoTile } from '#kit/ui.mjs';
 import { outletOf, outletIcon, sideName, sideWord } from '#kit/news-outlets.mjs';
 import * as kitNews from '#kit/news-outlets.mjs';
 import { emptyLog, readState, following } from './lib/reading.mjs';
-import { agoOf, isLive } from './lib/stories.mjs';
+import { agoOf, agoShort, isLive } from './lib/stories.mjs';
 
 export { lang, W };
 export const en = lang === 'en';
@@ -67,6 +67,7 @@ export const outletMark = (id, size = 24) => logoTile(outletIcon(id, size > 32 ?
 export const sideText = side => sideWord(side, lang);
 export const sideFull = side => sideName(side, lang);
 export const ago = at => agoOf(at, Date.now(), en);
+export const agoBrief = at => agoShort(at, Date.now(), en);
 export const regionName = r => (r === 'tw' ? W('台灣', 'Taiwan') : W('國際', 'World'));
 
 // A page out of the app, opened by code: the way the person chose on the Pass
