@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { emptyLog, markRead, readState, setFollow, followsOf, following, mergeLogs, decodeLog, encodeLog, trimLog, addRead } from '../public/lib/reading.mjs';
 import { followFinds, yourStories, missedOf, followedOf, lifted } from '../public/lib/follows.mjs';
 import { relatedOf, timelineOf } from '../public/lib/stories.mjs';
-import { cleanBriefs } from '../public/lib/briefs.mjs';
 
 const T = Date.parse('2026-11-12T12:00:00Z');
 const it = (o, t, at = T) => [o, t, `https://x/${o}/${encodeURIComponent(t)}`, at];
@@ -108,13 +107,6 @@ test('相關新聞 by shared rare words; 來龍去脈 a line a turn, the first r
   assert.equal(turns[0].title, '寶林茶室案一審宣判');
   assert.ok(turns.length >= 3 && turns.at(-1).at > turns[0].at);
   assert.deepEqual(timelineOf(story('one', 'x')), [], 'a story that never moved on has none');
-});
-
-test('重點整理 as read: two to four points, each in both languages', () => {
-  const b = cleanBriefs({ briefs: { a: { points: [{ zh: '一', en: 'one' }, { zh: '二', en: 'two' }, { zh: '', en: 'x' }] }, b: { points: [{ zh: '一', en: 'one' }] }, c: 'junk' } });
-  assert.deepEqual([...b.keys()], ['a']);
-  assert.equal(b.get('a').points.length, 2);
-  assert.equal(cleanBriefs(null).size, 0);
 });
 
 test('what you follow rises through each list, tagged; a big story your outlet is on a little, untagged; one read stays put', () => {

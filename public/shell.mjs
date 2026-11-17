@@ -37,12 +37,8 @@ export const state = {
   interests: [],
   // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
   laws: {},
-  // 各方怎麼說: how each side framed a story, by id (news/sides.json, lib/sides.mjs), empty until read.
-  sides: new Map(),
   // 預測市場: Polymarket's markets on a story's question, by id (news/markets.json, lib/markets.mjs), empty until read.
   markets: new Map(),
-  // 重點整理: a story's points in our words, by id (news/briefs.json, Orbit-Core builders/ai.js newsBriefs), empty until read.
-  briefs: new Map(),
   // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.
   log: emptyLog(),
   // What's followed on the page: id → { why, lift } (lib/follows.mjs followedOf), made each 頭條, 台灣 or 國際 draw.

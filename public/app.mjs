@@ -21,9 +21,7 @@ import { state, hooks, lang, en, W, today } from './shell.mjs';
 import { cleanPage } from './lib/stories.mjs';
 import { cleanLines } from './lib/lines.mjs';
 import { watchTitles } from './lib/tr.mjs';
-import { cleanSides } from './lib/sides.mjs';
 import { cleanMarkets } from './lib/markets.mjs';
-import { cleanBriefs } from './lib/briefs.mjs';
 import { interestsOf } from './lib/mine.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, renderSide, keptLists } from './views/lists.mjs';
@@ -203,30 +201,6 @@ function loadLaws(fresh) {
     })
     .catch(() => {});
 }
-// 各方怎麼說: how each side framed the top stories (Orbit-Core's builders/ai.js newsSides), read with the stories.
-const SIDES = 'news/sides.json';
-let sidesBuilt = null;
-function loadSides(fresh) {
-  return packJson(SIDES, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === sidesBuilt) return;
-      sidesBuilt = raw?.built ?? null;
-      state.sides = cleanSides(raw);
-    })
-    .catch(() => {});
-}
-// 重點整理: our few points on the top stories (Orbit-Core's builders/ai.js newsBriefs), read with the stories.
-const BRIEFS = 'news/briefs.json';
-let briefsBuilt = null;
-function loadBriefs(fresh) {
-  return packJson(BRIEFS, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === briefsBuilt) return;
-      briefsBuilt = raw?.built ?? null;
-      state.briefs = cleanBriefs(raw);
-    })
-    .catch(() => {});
-}
 // 預測市場: Polymarket's markets beside the stories they're about (Orbit-Core's builders/news-markets.js), read with the stories.
 const MARKETS = 'news/markets.json';
 let marketsBuilt = null;
@@ -258,9 +232,7 @@ function load({ fresh = false } = {}) {
   loadLines(fresh);
   loadInterests();
   loadLaws(fresh);
-  loadSides(fresh);
   loadMarkets(fresh);
-  loadBriefs(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');
   if (button) button.disabled = true;

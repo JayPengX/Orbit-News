@@ -138,10 +138,9 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
   text-wrap: pretty;
 }
-/* The AI's spark (各方怎麼說's head). */
+/* The Orbit AI mark (an AI title's kicker, 預測市場's head). */
 .nw-ai-mark { flex: none; display: inline-flex; width: 13px; height: 13px; margin-top: 3px; color: var(--q-label-3); }
 .nw-ai-mark svg { width: 100%; height: 100%; fill: currentColor; }
-.nw-ai-note { display: block; color: var(--q-label-3); font: var(--q-t-caption); }
 @media (hover: hover) {
   .nw-row:hover { background: var(--q-fill-4); }
 }
@@ -485,7 +484,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-v-text { display: grid; gap: 4px; padding: 0; border: 0; background: none; text-align: left; color: inherit; min-width: 0; }
 .nw-v-title { font: 600 19px/25px var(--q-font); color: var(--q-label); text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .nw-v-line { color: var(--q-label-2); font: 400 15px/21px var(--q-font); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-wrap: pretty; }
-.nw-v-line .nw-ai-mark { display: inline-flex; vertical-align: -1px; margin: 0; }
 /* (Every outlet's clip on it: small stills, the one playing ringed.) */
 .nw-v-strip { --q-rail-w: 128px; margin: 0 calc(-1 * var(--q-margin, 16px)); padding: 0 var(--q-margin, 16px); scroll-padding: 0 var(--q-margin, 16px); }
 .nw-v .nw-v-strip { margin: 0; padding: 0; }
@@ -731,31 +729,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-follow-line-v { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .nw-follow-line-go { flex: none; color: var(--q-label-3); }
 
-/* 各方怎麼說: each side's angle in a line (the AI's, from their headlines),
-   the difference that matters most on top; side by side on a wide sheet. */
-.nw-say { display: grid; gap: 10px; }
-.nw-say-in .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-say-in .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
-.nw-say .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-say .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
-.nw-say-card {
-  display: grid;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
-  border-radius: var(--q-r-card);
-  box-shadow: var(--nv-edge, none);
-}
-.nw-say-diff { font: 600 17px/24px var(--q-font); text-wrap: pretty; max-width: 40em; }
-.nw-say-rows { display: grid; gap: 12px; }
-.nw-say-row { display: grid; gap: 3px; }
-.nw-say-who { display: inline-flex; align-items: center; gap: 6px; color: var(--q-label-2); font: var(--q-t-footnote); }
-.nw-say-who b { font-weight: 600; }
-.nw-say-row p { font: var(--q-t-subhead); text-wrap: pretty; }
-@container q-sheet (min-width: 620px) {
-  .nw-say-rows { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 16px; }
-}
-
 /* 預測市場: the story's question as Polymarket prices it, a bar a chance,
    two cards side by side on a wide sheet. */
 .nw-odds { display: grid; gap: 10px; }
@@ -858,42 +831,7 @@ h1, h2, h3, p { margin: 0; }
 .nw-missed { display: grid; gap: 4px; margin-top: 8px; }
 .nw-missed .nw-story-h { font: 600 15px/20px var(--q-font); color: var(--q-label-2); padding: 0 2px; }
 
-/* 重點整理: our few points (the AI's), then the way to the whole report on the outlet's site. */
-.nw-points, .nw-points-in, .nw-say-in, .nw-ai-part { display: grid; gap: 10px; }
-.nw-ai-part { justify-items: start; }
-.nw-points-in .nw-story-h { display: flex; align-items: center; gap: 6px; }
-.nw-points-in .nw-ai-mark { width: 15px; height: 15px; margin: 0; color: var(--q-ai, var(--q-accent)); }
-.nw-points-list {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 14px 16px 14px 34px;
-  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
-  border-radius: var(--q-r-card);
-  box-shadow: var(--nv-edge, none);
-}
-.nw-points-list li { font: 400 16px/23px var(--q-font); text-wrap: pretty; padding-left: 2px; }
-.nw-points-list li::marker { color: var(--q-label-3); }
-.nw-points-rows {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px 14px;
-  margin: 0;
-  padding: 14px 16px;
-  background: var(--nv-card-up, var(--nv-card, var(--q-grouped-2)));
-  border-radius: var(--q-r-card);
-  box-shadow: var(--nv-edge, none);
-}
-.nw-points-rows dt { color: var(--q-label-2); font: 600 13px/23px var(--q-font); white-space: nowrap; }
-.nw-points-rows dd { margin: 0; font: 400 16px/23px var(--q-font); text-wrap: pretty; min-width: 0; }
-@media (max-width: 359px) {
-  /* (A small phone: each kind's name over its points, the text the width.) */
-  .nw-points-rows { grid-template-columns: 1fr; row-gap: 2px; }
-  .nw-points-rows dt.nw-points-same { display: none; }
-  .nw-points-rows dd + dt { margin-top: 8px; }
-  .nw-points-rows dt { line-height: 18px; }
-  .nw-points-rows .nw-points-same + dd { margin-top: 6px; }
-}
+/* The way to the whole report on the outlet's site. */
 .nw-kicker .nw-ai-mark { display: inline-block; width: 13px; height: 13px; margin-left: 6px; vertical-align: -2px; color: var(--q-ai, var(--q-accent)); }
 .nw-full-row { display: flex; }
 .nw-full { display: inline-flex; align-items: center; justify-self: start; min-height: 36px; padding: 0 16px; border-radius: 999px; background: var(--q-fill-3); color: var(--q-label); font: 600 15px/20px var(--q-font); text-decoration: none; white-space: nowrap; }

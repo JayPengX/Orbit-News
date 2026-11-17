@@ -7,10 +7,10 @@
 // opening the sheet at the same second. A clip played to its end goes on to
 // the next story's; 下一則 skips there.
 import { h, moreToggle, empty } from '#kit/ui.mjs';
-import { state, hooks, W, en, ago, outletName, outletMark, topicName, openOut } from '../shell.mjs';
+import { state, hooks, W, ago, outletName, outletMark, topicName, openOut } from '../shell.mjs';
 import { isLive } from '../lib/stories.mjs';
 import { picture, playMark, shownTitle, shownSum, coverage, liveTag, newTag, clipAgo } from './parts.mjs';
-import { openStory, player, aiMark } from './story.mjs';
+import { openStory, player } from './story.mjs';
 
 const PAGE = 8;
 // How many each region's feed shows.
@@ -59,13 +59,9 @@ export function renderVideo(box, region, stories, { chips, foot }) {
   );
 }
 
-// The story's one line: our 重點整理's "what happened" (the AI's, marked),
-// else the outlet's own summary in the reader's language; none while it
-// waits for its translation.
+// The story's one line: the outlet's own summary in the reader's language;
+// none while it waits for its translation.
 function lineOf(story) {
-  const b = state.briefs?.get?.(story.id);
-  const p = b?.points?.find(x => x.k === 'what') || b?.points?.[0];
-  if (p) return h('span', { class: 'nw-v-line', lang: en ? 'en' : 'zh-Hant' }, [en ? p.en : p.zh, ' ', aiMark(W('重點由 AI 依各家報導寫成', 'Written by AI from the outlets’ reports'))]);
   const t = shownSum(story);
   return t.text && !t.wait ? h('span', { class: 'nw-v-line', lang: t.lang, text: t.text }) : null;
 }
