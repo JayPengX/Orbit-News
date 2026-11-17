@@ -213,7 +213,7 @@ function load({ fresh = false } = {}) {
     })
     .catch(() => {
       state.failed = !state.page;
-      if (!state.page) (stamp++, quietRefresh());
+      if (!state.page) (stamp++, quietRefresh(), again());
     })
     .finally(() => {
       reading = null;
@@ -232,6 +232,15 @@ hooks.past = () =>
     })
     .catch(() => (state.pastFailed = true))
     .finally(() => (pastReading = null)));
+// Nothing read and nothing kept (the 讀不到新聞 screen): read again in 30
+// seconds while it's in view, and the moment the phone is back online, not
+// at the next 5-minute look (the screen said it tries again on its own).
+let againTimer = 0;
+function again() {
+  clearTimeout(againTimer);
+  againTimer = setTimeout(() => !state.page && document.visibilityState === 'visible' && load(), 30_000);
+}
+addEventListener('online', () => !state.page && load());
 // A new build every 10 minutes: looked for every 5 while the app is in view.
 setInterval(() => document.visibilityState === 'visible' && load(), 5 * 60_000);
 

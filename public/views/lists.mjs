@@ -41,7 +41,13 @@ function notYet(box) {
   if (state.page) return false;
   box.replaceChildren(
     state.failed
-      ? empty({ icon: 'list', title: W('讀不到新聞', 'Couldn’t get the news'), body: W('連上網路後再試一次。', 'Try again once you’re online.'), action: { label: W('再試一次', 'Try again'), onTap: () => hooks.reload() } })
+      ? empty({
+          icon: 'list',
+          title: W('讀不到新聞', 'Couldn’t get the news'),
+          // (Online, it's the news' source not answering: never "once you're online", and it's read again on its own, app.mjs.)
+          body: navigator.onLine === false ? W('連上網路後再試一次。', 'Try again once you’re online.') : W('暫時讀不到，稍後會自動再試。', 'Not answering right now; trying again shortly.'),
+          action: { label: W('再試一次', 'Try again'), onTap: () => hooks.reload() }
+        })
       : kitUI.waiting(h('div', { class: 'nw-wait' }, [h('div', { class: 'nw-lead' }, [h('span', { class: 'nw-lead-pic' }), h('span', { class: 'nw-lead-body' }, [h('span', { class: 'nw-lead-title', text: W('今天的頭條新聞標題，兩行左右的長度', 'Today’s top headline, about two lines long') })])]), storyList([], open)]))
   );
   return true;
