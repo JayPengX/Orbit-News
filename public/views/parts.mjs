@@ -101,9 +101,9 @@ const tapStory = (story, onOpen, list) => e => {
   const clip = e.target.closest?.('.nw-thumb, .nw-card-pic, .nw-lead-pic') && story.clips?.find(c => c[1])?.[1];
   return clip ? hooks.play(story.id, clip, list) : onOpen(story, list);
 };
-// The headline as the reader sees it (a world story's in Chinese, by the
-// AI, from the outlets' own) and the AI's neutral one line under it, its
-// spark marking it the AI's (lib/lines.mjs).
+// The headline as the reader sees it: a story in the other language by its
+// plain translation once it has come (lib/lines.mjs, lib/tr.mjs), else the
+// outlet's own.
 export const shownTitle = story => titleOf(story, en, foreign(story.title, en) ? trCache.get(story.title) : null);
 // The outlet's summary as the reader sees it: in their language where it's
 // been translated (lib/tr.mjs), else as the outlet wrote it.

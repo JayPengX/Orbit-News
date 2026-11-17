@@ -1,9 +1,9 @@
 // 搜尋 (Jay 11-11: "a search bar, now it's more passive news watching"):
 // every story the phone holds (the 3 days' page, the older ones kept once
-// read), found by any of its words: its headline and the AI's in the other
-// language, the outlet's summary, every outlet's own headline, the outlets'
-// names, its topics and the parties it names. All on the phone: nothing sent,
-// nothing paid for, an answer as each letter is typed.
+// read), found by any of its words: its headline, the outlet's summary,
+// every outlet's own headline, the outlets' names, its topics and the
+// parties it names. All on the phone: nothing sent, nothing paid for, an
+// answer as each letter is typed.
 //
 // Matching: the text and the query folded alike (full-width to half, case,
 // 臺 → 台, punctuation to spaces); every word of the query must be found in

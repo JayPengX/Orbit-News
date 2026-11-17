@@ -137,7 +137,6 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
   text-wrap: pretty;
 }
-/* The Orbit AI mark (an AI title's kicker, 預測市場's head). */
 @media (hover: hover) {
   .nw-row:hover { background: var(--q-fill-4); }
 }
