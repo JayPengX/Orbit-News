@@ -29,18 +29,22 @@ export const wordsOf = q => [...new Set(fold(q).split(' ').filter(Boolean))];
 // fewer where it ends too (AI, US, UN, 16). Anywhere, 「AI」 found Ukraine,
 // said and again first (200 of the day's 497 stories), 「UN」 171, 「K-pop」
 // the Pope, 「F-16」 a fire on the 16th; a followed AI lifted them all.
-// Longer ones run on (tariff finds tariffs, Trump Trump's). → (text) => index or -1.
+// Longer ones run on (tariff finds tariffs, Trump Trump's). `loose`: a
+// short one where a word starts too (a search found nothing with it whole:
+// Tru, Tai and Ukr, half typed, found nothing till Trum, Taiw, Ukra).
+// → (text) => index or -1.
 const LATIN = /^[a-z0-9]+$/;
-export function finder(w) {
+const short = w => LATIN.test(w) && w.length <= 3;
+export function finder(w, loose = false) {
   if (!LATIN.test(w)) return (text, from = 0) => text.indexOf(w, from);
-  const re = new RegExp(`(?<![a-z0-9])${w}${w.length <= 3 ? '(?![a-z0-9])' : ''}`, 'g');
+  const re = new RegExp(`(?<![a-z0-9])${w}${short(w) && !loose ? '(?![a-z0-9])' : ''}`, 'g');
   return (text, from = 0) => {
     re.lastIndex = from;
     return re.exec(text)?.index ?? -1;
   };
 }
-const finds = w => {
-  const at = finder(w);
+const finds = (w, loose) => {
+  const at = finder(w, loose);
   return text => at(text) >= 0;
 };
 
@@ -71,11 +75,16 @@ function indexOf(story, { outletName, topicName, tr }) {
 // (the names in the page's language), `now`. `strong`: a word counts only
 // in the headline, the summary or two outlets' headlines (a followed name,
 // lib/follows.mjs: never one outlet's passing mention, an outlet's or a
-// topic's name).
-export function findStories(pages, q, ctx = {}, { most = 200, strong = false } = {}) {
+// topic's name). A short Latin word found nowhere whole is looked for where
+// a word starts (each found then `loose`, its words marked so: marked's).
+export function findStories(pages, q, ctx = {}, opts = {}) {
   const words = wordsOf(q);
   if (!words.length) return [];
-  const has = new Map(words.map(w => [w, finds(w)]));
+  const whole = findWith(pages, words, ctx, opts, new Map(words.map(w => [w, finds(w)])));
+  if (whole.length || !words.some(short)) return whole;
+  return findWith(pages, words, ctx, opts, new Map(words.map(w => [w, finds(w, true)]))).map(x => ({ ...x, loose: true }));
+}
+function findWith(pages, words, ctx, { most = 200, strong = false }, has) {
   const now = ctx.now ?? Date.now();
   const seen = new Set();
   const out = [];
@@ -127,7 +136,7 @@ export function findOutlets(outlets, q, most = 4) {
 // The text cut into pieces, those with a query word marked: [[text, marked]].
 // (Folding keeps a character a character for Chinese and Latin text, so the
 // places found in the folded text are the places in the shown one.)
-export function marked(text, q) {
+export function marked(text, q, { loose = false } = {}) {
   const words = wordsOf(q);
   const s = String(text ?? '');
   if (!words.length || !s) return [[s, false]];
@@ -135,7 +144,7 @@ export function marked(text, q) {
   if (low.length !== s.length) return [[s, false]];
   const on = new Array(s.length).fill(false);
   for (const w of words) {
-    const at = finder(w);
+    const at = finder(w, loose);
     for (let i = at(low); i >= 0 && w; i = at(low, i + 1)) for (let k = i; k < i + w.length; k++) on[k] = true;
   }
   const out = [];

@@ -45,7 +45,9 @@ let timer = 0;
 let cache = new WeakMap();
 let pastAsked = false;
 
-const markedNodes = text => marked(text, query).map(([t, on]) => (on ? h('mark', { class: 'nw-found-mark', text: t }) : t));
+// (`loose`: what's found found a short word where a word starts, lib/search.mjs.)
+let loose = false;
+const markedNodes = text => marked(text, query, { loose }).map(([t, on]) => (on ? h('mark', { class: 'nw-found-mark', text: t }) : t));
 
 function drawRecent() {
   const finds = readFinds();
@@ -76,6 +78,7 @@ function drawResults() {
   }
   const found = findStories([state.page, state.past], q, { outletName, topicName, cache, tr: t => trCache.get(t) });
   const outlets = findOutlets(OUTLETS, q);
+  loose = Boolean(found[0]?.loose);
   const list = found.map(f => f.story);
   const hits = new Map(found.map(f => [f.story.id, f.hit]));
   const open = s => (keep(q), openStory(s.id, { list }));

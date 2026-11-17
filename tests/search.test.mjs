@@ -93,3 +93,19 @@ test('a Latin word is found where a word starts, a short one only whole; Chinese
   assert.deepEqual(ids('台積'), ['tw']);
   assert.deepEqual(marked('Ukraine and AI said', 'ai'), [['Ukraine and ', false], ['AI', true], [' said', false]]);
 });
+
+// Half typed (proven 11-18 on the day's stories: 「Tru」, 「Tai」, 「Ukr」 and
+// 「Isr」 found nothing at all till the fourth letter, as each letter is typed).
+test('a short word found nowhere whole is found where a word starts, and marked there', () => {
+  const w = (id, title) => s(id, title, { region: 'intl' });
+  const pg = { tw: [], intl: [w('tr', 'Trump arrives in Manila'), w('tw', 'Taiwan students return'), w('ai', 'Seoul stocks fall on AI fears'), w('aid', 'Aid reaches Gaza')] };
+  const ids = q => findStories([pg], q, ctx).map(f => f.story.id).sort();
+  assert.deepEqual(ids('Tru'), ['tr']);
+  assert.deepEqual(ids('tai'), ['tw']);
+  assert.deepEqual(ids('Trump tai'), []);
+  // (Found whole, never where a word starts: AI isn't Aid.)
+  assert.deepEqual(ids('AI'), ['ai']);
+  assert.equal(findStories([pg], 'Tru', ctx)[0].loose, true);
+  assert.deepEqual(marked('Trump arrives', 'tru', { loose: true }), [['Tru', true], ['mp arrives', false]]);
+  assert.deepEqual(marked('Trump arrives', 'tru'), [['Trump arrives', false]]);
+});
