@@ -5,7 +5,7 @@
 // left · centre · right, China's state media apart), one over the other on a
 // phone. A headline opens the outlet's own page. A swipe sideways (or ‹ ›,
 // or the arrow keys) goes to the story beside it in the list it came from.
-import { h, sheet, tag, moreToggle, list, cell } from '#kit/ui.mjs';
+import { h, sheet, moreToggle, list, cell } from '#kit/ui.mjs';
 import * as kitUI from '#kit/ui.mjs';
 import { PARTY_WORDS } from '#kit/news-outlets.mjs';
 import { state, hooks, W, en, sideFull, ago, outletName, outletMark, outletLink, regionName, topicName, openOut } from '../shell.mjs';
