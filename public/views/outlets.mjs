@@ -80,7 +80,7 @@ export function renderOutlets(box) {
     section(W('台灣媒體', 'Taiwan’s outlets'), [h('p', { class: 'nw-lede', text: W('藍綠的位置依學術研究；各家在統獨上的位置也一樣排。', 'Placed blue–green by published research; each stands the same way on unification–independence.') }), places(TW_PLACES)]),
     section(W('國際媒體', 'World outlets'), [h('p', { class: 'nw-lede', text: W('左右的位置依 AllSides Media Bias Ratings™；AllSides 沒評過的，依 Media Bias/Fact Check。', 'Left and right as rated by AllSides Media Bias Ratings™; where AllSides has none, by Media Bias/Fact Check.') }), places(INTL_PLACES)]),
     sportsCard() ? section(W('運動媒體', 'Sports outlets'), [h('div', { class: 'nw-places' }, [sportsCard()])]) : null,
-    h('p', { class: 'nw-foot', text: W('點一家看它的擁有者、位置和依據。位置說的是一家媒體整體的傾向，不是每一篇報導。', 'Tap one for its owner, place and why. A place is an outlet’s lean as a whole, not each report’s.') })
+    h('p', { class: 'nw-foot', text: W('點一家看它的擁有者、位置和依據。位置說的是一家媒體整體的傾向，不是每一篇報導。兩邊的媒體家數不一樣多，每則新聞的長條已按家數拉平。', 'Tap one for its owner, place and why. A place is an outlet’s lean as a whole, not each report’s. The two ends have different numbers of outlets; each story’s bar weighs them evenly.') })
   ];
   box.replaceChildren(h('div', { class: 'q-flow nw-flow' }, parts));
   kitUI.flowColumns(box);

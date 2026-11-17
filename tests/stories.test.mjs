@@ -30,7 +30,8 @@ test('a page as read: broken stories and unknown outlets left out, each story kn
 });
 
 test("a story's bar: each side's count and share of the outlets with a side", () => {
-  const { parts, rated } = barOf(cleanPage(raw).tw[0]);
+  // (As counted: no pool. The ends weighed by the page's outlets: the test below.)
+  const { parts, rated } = barOf({ ...cleanPage(raw).tw[0], pool: null });
   assert.equal(rated, 4);
   assert.deepEqual(parts.map(p => [p.side, p.n, p.share]), [['g', 1, 0.25], ['c', 1, 0.25], ['b', 2, 0.5]]);
 });
@@ -167,4 +168,25 @@ test('a list drawn again keeps its order, fresh numbers in it, a new story at it
   assert.deepEqual(steady(held, 'tw', [s('b'), s('a')]).map(x => x.id), ['a', 'b'], 'a story gone leaves');
   held.clear();
   assert.deepEqual(steady(held, 'tw', [s('b'), s('a')]).map(x => x.id), ['b', 'a'], 'a pull ranks anew');
+});
+
+test('the bar weighs the two ends by their outlets on the page (Jay 11-17: more left outlets made every story look left)', () => {
+  const it = (o, t) => [o, t, `https://x.test/${o}/${t}`, T];
+  const left = ['nyt', 'wapo', 'cnn', 'nbc', 'cbs', 'abc'];
+  const right = ['fox', 'nypost', 'wexam'];
+  const raw = {
+    built: T,
+    intl: [
+      story('a', 'intl', { l: 4, c: 0, r: 2 }, [...left.slice(0, 4), ...right.slice(0, 2)].map(o => it(o, 'a'))),
+      story('b', 'intl', { l: 2, c: 0, r: 1 }, [...left.slice(4), right[2]].map(o => it(o, 'b')))
+    ]
+  };
+  const page = cleanPage(raw);
+  assert.deepEqual(page.intl[0].pool, { l: 6, r: 3 });
+  // 4 of 6 left, 2 of 3 right: the same share of each end's outlets, an even bar; the counts as written.
+  const { parts } = barOf(page.intl[0]);
+  assert.deepEqual(parts.map(p => p.n), [4, 0, 2]);
+  assert.ok(Math.abs(parts[0].share - parts[2].share) < 1e-9);
+  // No pool (a reading's own count): as counted.
+  assert.deepEqual(barOf({ region: 'tw', sides: { g: 3, c: 1, b: 1 } }).parts.map(p => p.share), [0.6, 0.2, 0.2]);
 });

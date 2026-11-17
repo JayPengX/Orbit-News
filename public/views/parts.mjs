@@ -156,12 +156,13 @@ export function aboutLine(story, { days = true, when = false, topic: withTopic =
 }
 
 // The bar: a segment for each side that carries the story, as long as its
-// count (the counts in words for a screen reader: 偏綠 1、中間 4、偏藍 3).
+// count, the ends weighed by their outlets (barOf; the counts in words for
+// a screen reader: 偏綠 1、中間 4、偏藍 3).
 export function bar(story, { big = false } = {}) {
   const { parts, rated } = barOf(story);
   const words = parts.map(p => `${sideFull(p.side)} ${p.n}`).join(W('、', ', '));
   const el = h('span', { class: `nw-bar${big ? ' big' : ''}${rated ? '' : ' none'}`, role: 'img', 'aria-label': rated ? words : W('沒有可分邊的媒體', 'No outlet on a side') });
-  for (const p of parts) if (p.n) el.append(h('i', { class: `nw-s-${p.side}`, style: { flexGrow: String(p.n) } }));
+  for (const p of parts) if (p.n) el.append(h('i', { class: `nw-s-${p.side}`, style: { flexGrow: String(Math.round(p.w * 100) / 100) } }));
   return el;
 }
 // Each side's count in words (綠 1 中 4 藍 3), China's state media apart

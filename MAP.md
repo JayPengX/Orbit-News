@@ -44,6 +44,7 @@ Jay's, dated (Taiwan day; 11-10's by the hour), newest wins; the family's are in
 - 11-17 No AI made ahead at all (the ultra stable cut): 預測市場 went (its pairs were the AI's, paused since 11-14, so it had stopped showing anything new) and so did the AI's titles; a title in the other language is the plain translation.
 - 11-17 No 單邊 (Jay: "Remove 單邊 tab as it's really useless"): no tab, no 頭條 section, no 偏藍沒報 mark on a row and no line of who carried it in a story's sheet; the other tabs keep their order and 頭條 still opens first. The builder's `blind` is read only by 你可能錯過.
 - 11-17 Orbit Sports' 相關新聞 no longer opens here: News reads no `news/sport.json`; a story still opens by `#s=<id>` (Securities' and Law's links).
+- 11-17 A story's bar weighs its two ends by how many outlets each has on the page (`barOf`, `story.pool` from `cleanPage`), as if both had as many; the counts in words stay the outlets' own, the middle as counted (Jay: "left news outlet is more than right so often time it looked like all news lean left": the world's 37 left to 23 right made 145 of 223 stories look left, 26 right; weighed, 74 · 80 even · 69). A reading's own bar (你讀的媒體) as counted.
 - The sides' colours are their own (`--nw-g` `--nw-c` `--nw-b` `--nw-l` `--nw-r`), never the app's violet.
 
 ## Where the stories come from

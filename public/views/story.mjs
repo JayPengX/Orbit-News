@@ -457,7 +457,7 @@ function growthOf(story) {
 function taiwanPart(story) {
   const tw = story.tw;
   if (story.region !== 'intl' || !tw?.items?.length) return null;
-  const fake = { region: 'tw', sides: tw.sides, n: tw.n, items: tw.items };
+  const fake = { region: 'tw', sides: tw.sides, n: tw.n, items: tw.items, pool: tw.pool };
   const groups = bySide(fake);
   const cards = Object.keys(groups)
     .filter(k => k !== 'none' && k !== 'free' && groups[k].length)

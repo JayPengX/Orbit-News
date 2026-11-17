@@ -21,7 +21,7 @@ const web = u => /^https?:\/\//.test(u || '');
 // (its headlines and clips from known outlets, a clip's id YouTube's shape).
 export function cleanPage(x) {
   const page = { built: Number(x?.built) || 0, tw: [], intl: [] };
-  for (const r of REGIONS)
+  for (const r of REGIONS) {
     for (const s of Array.isArray(x?.[r]) ? x[r] : [])
       if (s && typeof s.id === 'string' && typeof s.title === 'string' && Array.isArray(s.items))
         page[r].push({
@@ -36,7 +36,24 @@ export function cleanPage(x) {
           // (Taiwan's outlets on a world story: their own count and headlines.)
           tw: twOf(s.tw)
         });
+    // (Each side's outlets on the page, for the bar: barOf.)
+    const pool = poolOf(page[r].flatMap(s => s.items), r);
+    const twPool = poolOf(page[r].flatMap(s => s.tw?.items || []), 'tw');
+    for (const s of page[r]) {
+      s.pool = pool;
+      if (s.tw) s.tw.pool = twPool;
+    }
+  }
   return page;
+}
+// How many outlets of each side wrote any of these headlines: { g, c, b } (or l, c, r).
+export function poolOf(items, region) {
+  const sets = {};
+  for (const it of items) {
+    const side = sideOf(it[0], region);
+    if (side) (sets[side] ||= new Set()).add(it[0]);
+  }
+  return Object.fromEntries(Object.entries(sets).map(([k, v]) => [k, v.size]));
 }
 
 // Taiwan's outlets on a world story ({ n, sides: { g, c, b }, items }), or null.
@@ -137,11 +154,22 @@ export const daysOf = story => Math.max(1, Math.floor(((story.at || 0) - (story.
 
 // The bar: each side of the region with its count and share (of the outlets
 // with a side), in the line's order; `rated` how many have one.
+// The two ends weighed by how many outlets each has (`story.pool`, the
+// page's: cleanPage), as if both had as many (Jay 11-17: the world's left
+// outlets are 37 to the right's 23, "so often time it looked like all news
+// lean left"): a story 6 left to 4 right, a third of each end's outlets, is
+// even. The counts stay the outlets' own; the middle as counted.
 export function barOf(story) {
   const order = SIDES[story.region] || SIDES.tw;
+  const [left, , right] = order;
+  const pl = story.pool?.[left] || 0;
+  const pr = story.pool?.[right] || 0;
+  const weight = { [left]: pl && pr ? (pl + pr) / 2 / pl : 1, [right]: pl && pr ? (pl + pr) / 2 / pr : 1 };
   const counts = order.map(s => [s, Number(story.sides?.[s]) || 0]);
   const rated = counts.reduce((a, [, n]) => a + n, 0);
-  return { rated, parts: counts.map(([side, n]) => ({ side, n, share: rated ? n / rated : 0 })) };
+  const weighed = counts.map(([s, n]) => n * (weight[s] ?? 1));
+  const all = weighed.reduce((a, w) => a + w, 0);
+  return { rated, parts: counts.map(([side, n], i) => ({ side, n, w: weighed[i], share: all ? weighed[i] / all : 0 })) };
 }
 
 // A story's headlines by side: { <side>: [[outlet, headline, url, at]…], none: […], free: […] },
