@@ -74,7 +74,3 @@ test('a clip counts as read once, when chosen', () => {
 
 // The English sheet named every law in Chinese (勞動基準法): the builder
 // carries the ministry's English name (`ne`, Orbit-Core news-laws.js).
-test('a law on the English sheet by its English name where it has one', () => {
-  const story = readFileSync(new URL('../public/views/story.mjs', import.meta.url), 'utf8');
-  assert.match(story, /title: \(en && typeof l\.ne === 'string' && l\.ne\) \|\| l\.n,/);
-});

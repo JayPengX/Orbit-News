@@ -162,7 +162,6 @@ hooks.render = () => render();
 // (What the lists were drawn from: views/lists.mjs keeps each topic's list till it changes.)
 hooks.stamp = () => stamp;
 hooks.tab = tab => showTab(tab, { top: true });
-hooks.law = hash => q.go('law', hash);
 // A pull (or the refresh button, or a list's own 重新整理): read again, and the
 // lists ranked anew now, a new build or not (only drawn with a new one, the
 // pull did nothing to see and the lists reshuffled later on their own).
@@ -174,21 +173,8 @@ hooks.reload = pulled;
 // Read through the kit (memory, the phone's copy, then /data/): a copy two
 // minutes old is used as is; a failed read keeps the last one.
 let reading = null;
-// 看法案: the laws Taiwan's stories name (Orbit-Core's builders/news-laws.js), read with the stories.
-const LAWS = 'news/laws.json';
-let lawsBuilt = null;
-function loadLaws(fresh) {
-  return packJson(LAWS, { ttl: fresh ? 0 : 120_000, timeout: 20_000 })
-    .then(raw => {
-      if (raw?.built === lawsBuilt) return;
-      lawsBuilt = raw?.built ?? null;
-      state.laws = raw?.stories && typeof raw.stories === 'object' ? raw.stories : {};
-    })
-    .catch(() => {});
-}
 function load({ fresh = false } = {}) {
   if (reading) return reading;
-  loadLaws(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');
   if (button) button.disabled = true;
@@ -265,8 +251,8 @@ function showTab(tab, { top = false } = {}) {
   tabNav.select(tab, top ? { top: true } : undefined);
   render({ ifChanged: true });
 }
-// (Many reads land together as News opens: the stories, the translations,
-// the laws. One draw for them all, not a whole page each:
+// (Many reads land together as News opens: the stories and the
+// translations. One draw for them all, not a whole page each:
 // the page froze two seconds on a phone, Jay 11-13.)
 let redraw = 0;
 // (Never drawn under a finger or while the page still moves: a list drawn

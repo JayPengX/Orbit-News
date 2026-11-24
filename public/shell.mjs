@@ -29,8 +29,6 @@ export const state = {
   past: null,
   pastFor: null,
   pastFailed: false,
-  // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
-  laws: {},
   // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.
   log: emptyLog(),
   // What's followed on the page: id → { why, lift } (lib/follows.mjs followedOf), made each 頭條, 台灣 or 國際 draw.

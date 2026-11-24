@@ -350,7 +350,6 @@ function storyParts(story, { clip = '', start = 0, goesOn = false } = {}) {
       h('h3', { class: 'nw-story-h', text: sidesTaken(story) ? W('各邊怎麼下標', 'How each side puts it') : W('各家怎麼下標', 'How each outlet puts it') }),
       h('div', { class: 'q-sheet-cols nw-sides' }, cards)
     ]),
-    lawPart(story),
     taiwanPart(story),
     worldLink(story),
     timeline(story),
@@ -442,20 +441,6 @@ function relatedPart(story) {
   const near = relatedOf(story, [state.page, state.past]).map(x => x.story);
   if (!near.length) return null;
   return h('section', { class: 'nw-related' }, [h('h3', { class: 'nw-story-h', text: W('相關新聞', 'Related stories') }), storyList(near, s => openStory(s.id, { list: near }))]);
-}
-
-// 看法案: the laws its headlines name, each opening in Orbit Law: its bill
-// when a headline speaks of changing it (修法, 草案, 三讀…), else the law
-// itself (Orbit-Core's builders/news-laws.js, code only).
-function lawPart(story) {
-  const laws = (state.laws?.[story.id] || []).filter(l => l?.n && /^[A-Z]\d{7}$/.test(l.p || '') && /^\d+:\d+$/.test(l.k || ''));
-  if (!laws.length) return null;
-  const sub = l => (!l.bill ? W('法規全文', 'The law') : l.open > 0 || !l.passed ? W('法案 · 審議中', 'Bill · before the Legislative Yuan') : W(`法案 · ${l.passed} 三讀`, `Bill · passed ${l.passed}`));
-  return list(
-    // (In English the ministry's English name where it has one: `ne`.)
-    laws.map(l => cell({ title: (en && typeof l.ne === 'string' && l.ne) || l.n, sub: sub(l), chevron: true, onClick: () => hooks.law(l.bill ? `item=${l.k.replace(':', '-')}` : `law=${l.p}`) })),
-    { head: W('提到的法律', 'Laws it names'), big: true, foot: W('在 Orbit Law 打開', 'Opens in Orbit Law') }
-  );
 }
 
 // How coverage grew, a bar a day (only past its first day). Most stories
