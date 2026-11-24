@@ -75,12 +75,11 @@ const leadsOf = (tw, intl, live = []) => {
 const dateLine = () => new Date().toLocaleDateString(en ? 'en-GB' : 'zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
 
 // What's followed on the page (lib/follows.mjs followedOf), kept in state
-// for every list's tag: News' follows and the family's.
+// for every list's tag.
 export function followedNow() {
   const outlets = followsOf(state.log).filter(f => f.kind === 'o').map(f => f.id);
   state.followed = followedOf(state.page, {
     finds: followFinds(state.log, state.page, { outletName, topicName, wordName, tr: t => trCache.get(t) }),
-    interests: state.interests,
     outlets,
     log: state.log,
     live: s => isLive(s, state.page.built)
@@ -181,12 +180,12 @@ function briefNow(mine, skip) {
   return b.list;
 }
 
-// What's followed, in a line under the date (the family's too): a tap
+// What's followed, in a line under the date: a tap
 // opens 我的追蹤. Nothing followed, nothing shown: each topic, outlet and
 // search has its own follow button.
 const byId = id => state.page.tw.find(s => s.id === id) || state.page.intl.find(s => s.id === id);
 function followLine() {
-  const names = [...followsOf(state.log).map(followName), ...(state.interests || []).map(i => i.label)];
+  const names = followsOf(state.log).map(followName);
   if (!names.length) return null;
   return h('button', { type: 'button', class: 'nw-follow-line', onclick: openFollows }, [
     h('span', { class: 'nw-follow-line-k', text: W('追蹤', 'Following') }),

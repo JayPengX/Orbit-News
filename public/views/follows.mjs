@@ -68,7 +68,6 @@ export function openFollows() {
     const all = followsOf(state.log);
     const words = all.filter(f => f.kind === 'w');
     const outlets = all.filter(f => f.kind === 'o');
-    const family = state.interests || [];
     body.replaceChildren(...[
       h('section', { class: 'nw-follow-sec' }, [
         h('h3', { class: 'nw-story-h', text: W('人物與關鍵字', 'People and words') }),
@@ -86,13 +85,7 @@ export function openFollows() {
       h('section', { class: 'nw-follow-sec' }, [
         h('h3', { class: 'nw-story-h', text: W('媒體', 'Outlets') }),
         outlets.length ? h('div', { class: 'q-list' }, outlets.map(f => row(f, outletMark(f.id, 28)))) : h('p', { class: 'nw-lede', text: W('在「媒體」點一家就能追蹤。', 'Follow one from any outlet’s page in Outlets.') })
-      ]),
-      family.length
-        ? h('section', { class: 'nw-follow-sec' }, [
-            h('h3', { class: 'nw-story-h', text: W('來自其他 Orbit', 'From your other Orbit apps') }),
-            h('div', { class: 'q-chips' }, family.map(i => h('span', { class: 'q-chip nw-follow-family', text: `${i.kind === 'hold' ? W('持股', 'Held') : W('追蹤', 'Following')} ${i.label}` })))
-          ])
-        : null
+      ])
     ].filter(Boolean));
   };
   paint();

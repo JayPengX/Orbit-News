@@ -19,7 +19,6 @@ import { orbitSession, tabBar, topActions, installGate, watchUpdates, keepOfflin
 import { state, hooks, lang, en, W, today, pastOld } from './shell.mjs';
 import { cleanPage, hasStories } from './lib/stories.mjs';
 import { watchTitles } from './lib/tr.mjs';
-import { interestsOf } from './lib/mine.mjs';
 import { decodeLog, encodeLog, mergeLogs, trimLog, addRead, markRead, markDeep, setFollow } from './lib/reading.mjs';
 import { renderTop, renderRegion, keptLists } from './views/lists.mjs';
 import { renderOutlets } from './views/outlets.mjs';
@@ -187,21 +186,8 @@ function loadLaws(fresh) {
     })
     .catch(() => {});
 }
-// (你關心的: the family's notebook, read again with each load; a holding or team gone, its stories go.)
-function loadInterests() {
-  return import('#kit/family.mjs')
-    .then(f => {
-      const next = interestsOf(f.heard?.('stock', 'holds') || [], f.heard?.('sports', 'follows') || []);
-      if (next.map(i => i.label).join() === state.interests.map(i => i.label).join()) return;
-      state.interests = next;
-      stamp++;
-      quietRefresh();
-    })
-    .catch(() => {});
-}
 function load({ fresh = false } = {}) {
   if (reading) return reading;
-  loadInterests();
   loadLaws(fresh);
   // (The 測試工具's newsFail: the read fails as a real one would.)
   const button = document.getElementById('refresh');

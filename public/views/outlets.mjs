@@ -67,7 +67,7 @@ export function renderOutlets(box) {
   const intl = mine('intl');
   // 我的追蹤: what's followed in a line, the sheet a tap away.
   const follows = followsOf(state.log);
-  const names = [...follows.map(followName), ...(state.interests || []).map(i => i.label)];
+  const names = follows.map(followName);
   const followRow = list([cell({ icon: kitUI.icons?.star || null, title: W('我的追蹤', 'Following'), sub: names.length ? names.slice(0, 6).join(W('、', ', ')) : W('人物、主題、媒體', 'People, topics, outlets'), chevron: true, onClick: openFollows })]);
   const reading = section(W('我的閱讀', 'Your reading'), [
     tw || intl

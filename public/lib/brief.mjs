@@ -2,8 +2,8 @@
 // for this person, one line each (the headline), ready from 7:00 Taiwan time
 // and kept all day, so the five don't shuffle while they're read. Picked by
 // code: the day's order (the builder's weight) lifted by what the person
-// opens (the kit's feedback.mjs, by topic and region) and by what they hold
-// and follow (你關心的, lib/mine.mjs); never a story the page's top already
+// opens (the kit's feedback.mjs, by topic and region) and by what they
+// follow; never a story the page's top already
 // shows; two at most from one topic, at most two of the world's. No AI, nothing sent.
 
 // From this hour (Taiwan's) the day's five are ready.

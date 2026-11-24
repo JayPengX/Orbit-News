@@ -29,8 +29,6 @@ export const state = {
   past: null,
   pastFor: null,
   pastFailed: false,
-  // 你關心的: what Securities holds and Sports follows on this phone (lib/mine.mjs interestsOf).
-  interests: [],
   // 看法案: the laws each Taiwan story names, by story id (news/laws.json), {} until read.
   laws: {},
   // 我的閱讀's log, the read marks and the follows (lib/reading.mjs), on the Pass.

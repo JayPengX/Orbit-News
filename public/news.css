@@ -775,7 +775,6 @@ h1, h2, h3, p { margin: 0; }
 .nw-follow-x { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; margin-left: auto; border: 0; border-radius: 50%; background: transparent; color: var(--q-label-3); cursor: pointer; }
 .nw-follow-x svg { width: 16px; height: 16px; }
 .nw-follow-topics { display: flex; flex-wrap: wrap; gap: 8px; }
-.nw-follow-family { cursor: default; }
 .nw-missed { display: grid; gap: 4px; margin-top: 8px; }
 .nw-missed .nw-story-h { font: 600 15px/20px var(--q-font); color: var(--q-label-2); padding: 0 2px; }
 

@@ -1,14 +1,13 @@
 // 你關心的 at the top of 頭條 (Jay 11-13: "like Sports' design idea": what
 // you follow first, as Sports' 我的比賽 heads 首頁): the stories about what
 // the person follows here (people and any words, topics, outlets: the
-// reading log's `follow`, lib/reading.mjs) and in the family (what they hold
-// in Orbit Securities, follow in Orbit Sports: lib/mine.mjs), each with what
-// of theirs it's about; and 你可能錯過 (stories their usual side's outlets
+// reading log's `follow`, lib/reading.mjs), each with what of theirs it's
+// about (what Securities holds and Sports follows lifted them too till 11-24,
+// cut with the thin cross-app features); and 你可能錯過 (stories their usual side's outlets
 // leave out or barely carry). On the phone, nothing sent, no AI.
 import { REGIONS, ENDS } from './stories.mjs';
 import { findStories } from './search.mjs';
 import { followsOf, readState, leanOf, balanceOf } from './reading.mjs';
-import { isAbout } from './mine.mjs';
 
 // What each follow finds: { label, kind: 'follow', key, has(story) }.
 // Words (a person, a company) as a search finds them, only where they're in
@@ -33,14 +32,12 @@ export function followFinds(log, page, ctx = {}) {
 // The stories for the top of 頭條: [{ story, why }], the most important first
 // (both regions together), `each` at most for any one thing followed (a busy
 // topic doesn't fill it), the most specific first when a story is about
-// several (words, then what's held and followed in the family, then topics,
-// then outlets). Stories already read sink below the rest (one with big news
-// since stays up). `interests`: lib/mine.mjs interestsOf's; `finds`:
-// followFinds'.
-const ORDER = { follow: 0, hold: 1, topic: 2, outlet: 3 };
-export function yourStories(page, { finds = [], interests = [], log = null, now = Date.now(), live = () => false, most = 5, each = 2, skip = new Set() } = {}) {
+// several (words, then topics, then outlets). Stories already read sink
+// below the rest (one with big news since stays up). `finds`: followFinds'.
+const ORDER = { follow: 0, topic: 2, outlet: 3 };
+export function yourStories(page, { finds = [], log = null, now = Date.now(), live = () => false, most = 5, each = 2, skip = new Set() } = {}) {
   if (!page) return [];
-  const all = [...finds, ...interests.map(i => ({ ...i, has: s => isAbout(s, i) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
+  const all = [...finds].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
   if (!all.length) return [];
   const stories = REGIONS.flatMap(r => page[r] || [])
     .filter(s => !skip.has(s.id))
@@ -71,12 +68,12 @@ export function yourStories(page, { finds = [], interests = [], log = null, now 
 // followed outlet's stories rise untagged (its mark first in the story's
 // marks), on a big story only a little (it's on most of them). Read stories keep their tag and their place. `outlets`: the ids
 // of the outlets followed.
-const LIFT = { follow: 3, hold: 3, topic: 2, outlet: 2 };
+const LIFT = { follow: 3, topic: 2, outlet: 2 };
 export const CARRIES = 1.5;
-export function followedOf(page, { finds = [], interests = [], outlets = [], log = null, now = Date.now(), live = () => false } = {}) {
+export function followedOf(page, { finds = [], outlets = [], log = null, now = Date.now(), live = () => false } = {}) {
   const out = new Map();
   if (!page) return out;
-  const all = [...finds, ...interests.map(i => ({ ...i, has: s => isAbout(s, i) }))].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
+  const all = [...finds].sort((a, b) => (ORDER[a.kind] ?? 1) - (ORDER[b.kind] ?? 1));
   if (!all.length && !outlets.length) return out;
   for (const s of REGIONS.flatMap(r => page[r] || [])) {
     const hit = all.find(i => i.has(s));
